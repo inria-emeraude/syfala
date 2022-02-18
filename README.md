@@ -13,7 +13,7 @@ Syfala gitlab repository, automatic compilation of  Faust programs onto the Zybo
 see documentation in file syfala-getting-started.pdf
 
 ### Check Zybo switches and Jumpers
-**Jumper JP5 should be on "JTAG"**
+**Jumper JP5 should be on "JTAG"**__
 **Jumper J2 should be on**
 **Power select Jumper should be on "USB"**
 **Swicth SW0 should be up (LD0)**
