@@ -87,7 +87,7 @@ remove_app:
 
 
 #flash bitstream, download ARM application and boot
-standalone_boot: build/sw_export/faust_v6_app.elf
+boot: build/sw_export/faust_v6_app.elf
 	@echo "************ BOOT IN STANDALONE (JTAG) ******************"
 	xsct ./scripts/program_jtag.tcl faust_v6_app.elf
 	@ date
