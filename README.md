@@ -23,13 +23,12 @@ see documentation in file syfala-getting-started.pdf
 
 First check the compilation flow parameters: 
 *Name of the Faust program compil (``virtualAnalog.dsp`` by default)*  
-
 *Parameters in configFAUST.h*  
 
 
 ### Build
 
-To build the project, just do :  
+To build the project:  
 
 ```
 make
