@@ -1,0 +1,5 @@
+v6.3-os tested with
+vitis_hls, vivado, vitis, 2020.2
+Faust 2.39.3
+Faust option -os2 
+virtualAnalog example OK
