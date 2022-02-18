@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<autopilotfilemapping:AutoPilotFileMapping xmlns:autopilotfilemapping="www.autoesl.com/autopilotfilemapping">
-  <source/>
-  <testbench>
-    <originFiles name="testbench_faust_v3.cpp" path="/home/trisset/technical/syfala/v4-no-axi/testbench_faust_vivado_HLS_v3/testbench_faust_v3.cpp"/>
-  </testbench>
-</autopilotfilemapping:AutoPilotFileMapping>
