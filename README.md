@@ -47,8 +47,6 @@ Then, you can upload and execute it on the board with:
 make boot
 ```
 
-### Control
-
 ```
 make controlUI
 ```
@@ -77,6 +75,10 @@ SW3: NC
 SW2: Audio codec input select (ADAU=external or SSM=onboard). Does not affect output.  
 SW1: DEBUG, doesn't matter  
 SW0: Mute onboard audio codec (SSM)  
+
+
+
+
 
 ### SD card files
 
