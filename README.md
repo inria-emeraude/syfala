@@ -1,11 +1,7 @@
 
 # Syfala repo
  
-<<<<<<< HEAD
-Syfala gitlab repository, automatic compilation of  Faust programs onto the Zybo-Z7 FPGA 
-=======
 Syfala gitlab repository, automatic compilation of Faust programs onto the Zybo-Z7 FPGA. The compiler is in the ``syfala`` directory:
->>>>>>> modified main branch README.md
 
 ```
 cd syfala
