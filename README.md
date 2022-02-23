@@ -15,7 +15,7 @@ make boot
 *FAUST Version: 2.39.3*
 
 ## Getting started
-see documentation in file syfala-getting-started.pdf
+See documentation in file `syfala-getting-started.pdf`
 
 ### Check Zybo switches and Jumpers
 *Jumper JP5 should be on "JTAG"*  
@@ -27,9 +27,9 @@ see documentation in file syfala-getting-started.pdf
 ### Configure
 
 First check the compilation flow parameters: 
-*Name of the Faust program compil (``virtualAnalog.dsp`` by default)*  
-*Parameters in configFAUST.h*  
 
+- Name of the Faust program compil (`virtualAnalog.dsp` by default)  
+- Parameters in `configFAUST.h` 
 
 ### Build
 
@@ -46,25 +46,20 @@ Then, you can upload and execute it on the board with:
 ```
 make boot
 ```
-  
 
 ### Control
 
-
 ```
 make controlUI
-
 ```
 
 To control your DSP, you can either use a Hardware Controller Board or a GUI on your computer.  
-Please edit the configFAUST file to choose one of the two by modifying the `CONTROLLER_TYPE` field.  
+Please edit the `configFAUST.h` file to choose one of the two by modifying the `CONTROLLER_TYPE` field.  
   
 - If you use a Hardware Controller Board, just connect it to the Zybo before booting.  
 - If you use GUI, open the GUI controller after booting with the following command:
 
-*Note: You can change `CONTROLLER_TYPE` without a full rebuid. Just delete the app with `make remove_app` and then rebuild only the app with `make`*
-
-
+*Note: You can change `CONTROLLER_TYPE` without a full rebuid. Just delete the app with `make remove_app` and then rebuild only the app with `make`*.
 
 ### Switch description
 Default config in **bold**  
@@ -83,7 +78,6 @@ SW2: Audio codec input select (ADAU=external or SSM=onboard). Does not affect ou
 SW1: DEBUG, doesn't matter  
 SW0: Mute onboard audio codec (SSM)  
 
-
 ### SD card files
 
 You can put the program on an SD card (if you want something reproductible and easily launchable, for the demos...).  
@@ -97,9 +91,11 @@ You can find a history of all .xsa you generate for this version.
 **Please, don't git this folder!**  
   
 To use it:  
-1- Replace the `main_wrapper.xsa` in `hw_export` with the wanted .xsa in the backup file (and rename it `main_wrapper.xsa`).  
-2- Change the name of the DSP in the makefile with the one you use to generate the .xsa you choose in the backup folder.  
-3-Just do
+- Replace the `main_wrapper.xsa` in `hw_export` with the wanted .xsa in the backup file (and rename it `main_wrapper.xsa`).  
+- Change the name of the DSP in the makefile with the one you use to generate the .xsa you choose in the backup folder.  
+
+Just do:
+
 ```
 make remove_app
 make app
