@@ -47,7 +47,6 @@ Then, you can upload and execute it on the board with:
 make boot
 ```
 
-### Control
 
 ```
 make controlUI
@@ -77,6 +76,29 @@ SW3: NC
 SW2: Audio codec input select (ADAU=external or SSM=onboard). Does not affect output.  
 SW1: DEBUG, doesn't matter  
 SW0: Mute onboard audio codec (SSM)  
+=======
+*Note: You can change `CONTROLLER_TYPE` without a full rebuid. Just delete the app with `make remove_app` and then rebuild only the app with `make`*
+>>>>>>> main
+
+
+
+### Switch description
+Default config in **bold**  
+<pre>
+  SW3   SW2   SW1   SW0
++-----+-----+-----+------+
+|  NC | ADAU|  NC |<b>UNMUTE</b>|
+|     |     |     |      |
+|     |     |     |      |
+|  NC | <b>SSM</b> |  <b>NC</b> | MUTE |
++-----+-----+-----+------+
+</pre>
+  
+SW3: NC  
+SW2: Audio codec input select (ADAU=external or SSM=onboard). Does not affect output.  
+SW1: DEBUG, doesn't matter  
+SW0: Mute onboard audio codec (SSM)  
+
 
 ### SD card files
 
