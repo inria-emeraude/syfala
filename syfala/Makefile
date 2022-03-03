@@ -40,7 +40,7 @@ build/faust_v6_application/generated_src/faust_v6_app.cpp: $(DSP) arm.cpp
 	@echo "********************* $(DSP) -> faust_v6_app.cpp **************"
 	rm -rf build/faust_v6_application
 	mkdir -p build/faust_v6_application && mkdir -p build/faust_v6_application/generated_src
-	faust -i -lang cpp -os2 -mcd 0 -a arm.cpp $(DSP) -o $@
+	faust -i -lang cpp -os2 -mcd 0 -uim -a arm.cpp $(DSP) -o $@
 
 # running hls on DSP C++ file: building Faust IP
 build/faust_v6_ip/faust_v6/impl/ip/faust_v6_info.xml: build/faust_v6_ip/faust_v6.cpp
@@ -83,7 +83,7 @@ build/sw_export/faust_v6_app.elf: build/hw_export/main_wrapper.xsa build/faust_v
 remove_app:
 	 rm -rf build/sw_export
 	 rm -rf build/faust_v6_application
-
+	 rm -rf build/GUI
 
 
 #flash bitstream, download ARM application and boot
@@ -119,7 +119,7 @@ build/GUI/controlUI.cpp: src/UI/pcUI.cpp $(DSP)
 build/GUI/controlUI: build/GUI/controlUI.cpp
 	@echo "************ GENERATE GUI for CONTROLLER ******************"
 	mkdir -p build/GUI
-	c++ -std=c++11 build/GUI/controlUI.cpp src/UI/pcUartInterface.h -Isrc/UI src/UI/serialLib/serialib.cpp -Isrc/UI/serialLib `pkg-config --cflags --libs gtk+-2.0` -o build/GUI/controlUI
+	c++ -std=c++11 build/GUI/controlUI.cpp src/UI/pcUartInterface.h -Isrc/UI `pkg-config --cflags --libs gtk+-2.0` -o build/GUI/controlUI
 
 #run GUI controlUI running on host computer
 controlUI: build/GUI/controlUI

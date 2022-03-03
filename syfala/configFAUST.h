@@ -23,24 +23,24 @@
  ************************************************************************
  ************************************************************************/
 
-
+//#define LOG_UART
 
 /* ####################### Controller ################################# */
-/** 
-  * @brief Define the controller used to drive the controls (see bottom 
+/**
+  * @brief Define the controller used to drive the controls (see bottom
   *      left corner for PCB number)
   *         SOFT: software Control with PC (default)
   *         DEMO: Popophone demo box
   *         PCB1: Emeraude PCB config 1: 4 knobs, 2 switchs, 2 sliders
-  *	    PCB2: Emeraude PCB config 2: 8 knobs	
+  *	    PCB2: Emeraude PCB config 2: 8 knobs
   *	    PCB3: Emeraude PCB config 3: 4 knob, 4 switch
-  *	    PCB4: Emeraude PCB config 4: 4 knods above, 4 switch below  
+  *	    PCB4: Emeraude PCB config 4: 4 knods above, 4 switch below
   */
 #define CONTROLLER_TYPE	SOFT
 
 
 /* ######################### DDR ##################################### */
-/** 
+/**
   * @brief select if external DDR3 is used. Enable if you use some delay,
   *     disable if you do want any  memory access (should not be disable)
 */
@@ -48,7 +48,7 @@
 
 
 /* ######################## Sample rate ############################### */
-/** 
+/**
   * @brief Change sample rate value (Hz).
   *	Only 48k is available for SSM embeded codec
   *	 	24000 (ADAU only)
@@ -57,12 +57,12 @@
   *	 	192000 (ADAU only)
   *	 	384000 (ADAU only)
   *	 	768000 (ADAU only AND DATA_WIDTH=16b only)
-  *	
+  *
 */
 #define SAMPLE_RATE 48000
 
 /* ########################### Data width ############################# */
-/** 
+/**
   * @brief Define sample bit depth
   *	 	16
   *	 	24 (default)
@@ -72,9 +72,8 @@
 
 
 
-
 /* ####################### SSM Codec volume ############################ */
-/** 
+/**
   * @brief Choose audio codec to use. For now, it only changes the scale factor
   *        FULL: Maximum !WARNING! For speaker only. Do not use with headphone.
   *        HEADPHONE: Slower volume for headphone use
@@ -157,7 +156,7 @@ SWITCH	//Channel 8,
 //no controler
 0
 
-#endif 
+#endif
 };
 
 
@@ -166,14 +165,14 @@ SWITCH	//Channel 8,
 #define DEFAULT 0b001111010 //(+1db because the true 0db (0b001111001) decreases the signal a little bit)
 
 
-/* SSM_R07 is used to tune I2S Bclk depending on sample bit depth */ 
+/* SSM_R07 is used to tune I2S Bclk depending on sample bit depth */
 #if DATA_WIDTH == 16
 	#define SSM_R07 0b000000010
 #elif DATA_WIDTH == 24
 	#define SSM_R07 0b000001010
 #elif DATA_WIDTH == 32
 	#define SSM_R07 0b000001110
-#endif 
+#endif
 
 
 

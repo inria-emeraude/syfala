@@ -1,8 +1,8 @@
 --Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 ----------------------------------------------------------------------------------
 --Tool Version: Vivado v.2020.2 (lin64) Build 3064766 Wed Nov 18 09:12:47 MST 2020
---Date        : Wed Dec  8 18:27:17 2021
---Host        : maxime-Latitude-7410 running 64-bit Ubuntu 20.04.2 LTS
+--Date        : Wed Feb 16 16:25:54 2022
+--Host        : maxime-Latitude-7410 running 64-bit Ubuntu 20.04.3 LTS
 --Command     : generate_target main_wrapper.bd
 --Design      : main_wrapper
 --Purpose     : IP block netlist
@@ -57,13 +57,12 @@ entity main_wrapper is
     debugSwitch : in STD_LOGIC;
     in_mute : in STD_LOGIC;
     reset : in STD_LOGIC;
-    rgb_led_tri_o : out STD_LOGIC_VECTOR ( 2 downto 0 );
+    rgb_led_tri_o : out STD_LOGIC_VECTOR ( 3 downto 0 );
     spi_MISO : in STD_LOGIC;
     spi_MOSI : out STD_LOGIC;
     spi_SS : out STD_LOGIC;
     spi_clk : out STD_LOGIC;
     sys_clk : in STD_LOGIC;
-    testGPIO1 : out STD_LOGIC;
     testGPIO2 : out STD_LOGIC
   );
 end main_wrapper;
@@ -71,35 +70,6 @@ end main_wrapper;
 architecture STRUCTURE of main_wrapper is
   component main is
   port (
-    PMOD_bclk : out STD_LOGIC;
-    PMOD_bclk_GND : out STD_LOGIC_VECTOR ( 0 to 0 );
-    PMOD_mclk : out STD_LOGIC;
-    PMOD_mclk_GND : out STD_LOGIC_VECTOR ( 0 to 0 );
-    PMOD_sd_rx : in STD_LOGIC;
-    PMOD_sd_rx_GND : out STD_LOGIC_VECTOR ( 0 to 0 );
-    PMOD_sd_tx : out STD_LOGIC;
-    PMOD_sd_tx_GND : out STD_LOGIC_VECTOR ( 0 to 0 );
-    PMOD_ws : out STD_LOGIC;
-    PMOD_ws_GND : out STD_LOGIC_VECTOR ( 0 to 0 );
-    SSM_bclk : out STD_LOGIC;
-    SSM_mclk : out STD_LOGIC;
-    SSM_out_mute : out STD_LOGIC;
-    SSM_sd_rx : in STD_LOGIC;
-    SSM_sd_tx : out STD_LOGIC;
-    SSM_ws_rx : out STD_LOGIC;
-    SSM_ws_tx : out STD_LOGIC;
-    codecSelect : in STD_LOGIC;
-    debugSwitch : in STD_LOGIC;
-    in_mute : in STD_LOGIC;
-    reset : in STD_LOGIC;
-    spi_MISO : in STD_LOGIC;
-    spi_MOSI : out STD_LOGIC;
-    spi_SS : out STD_LOGIC;
-    spi_clk : out STD_LOGIC;
-    sys_clk : in STD_LOGIC;
-    testGPIO1 : out STD_LOGIC;
-    testGPIO2 : out STD_LOGIC;
-    rgb_led_tri_o : out STD_LOGIC_VECTOR ( 2 downto 0 );
     DDR_cas_n : inout STD_LOGIC;
     DDR_cke : inout STD_LOGIC;
     DDR_ck_n : inout STD_LOGIC;
@@ -121,12 +91,40 @@ architecture STRUCTURE of main_wrapper is
     FIXED_IO_ps_srstb : inout STD_LOGIC;
     FIXED_IO_ps_clk : inout STD_LOGIC;
     FIXED_IO_ps_porb : inout STD_LOGIC;
+    rgb_led_tri_o : out STD_LOGIC_VECTOR ( 3 downto 0 );
+    sys_clk : in STD_LOGIC;
+    testGPIO2 : out STD_LOGIC;
+    SSM_ws_rx : out STD_LOGIC;
+    SSM_bclk : out STD_LOGIC;
+    SSM_sd_tx : out STD_LOGIC;
+    SSM_ws_tx : out STD_LOGIC;
+    SSM_mclk : out STD_LOGIC;
+    SSM_out_mute : out STD_LOGIC;
+    PMOD_mclk : out STD_LOGIC;
+    PMOD_bclk : out STD_LOGIC;
+    PMOD_ws : out STD_LOGIC;
+    PMOD_sd_tx : out STD_LOGIC;
+    PMOD_bclk_GND : out STD_LOGIC_VECTOR ( 0 to 0 );
+    PMOD_mclk_GND : out STD_LOGIC_VECTOR ( 0 to 0 );
+    PMOD_sd_rx_GND : out STD_LOGIC_VECTOR ( 0 to 0 );
+    PMOD_sd_tx_GND : out STD_LOGIC_VECTOR ( 0 to 0 );
+    PMOD_ws_GND : out STD_LOGIC_VECTOR ( 0 to 0 );
     IIC_0_sda_i : in STD_LOGIC;
     IIC_0_sda_o : out STD_LOGIC;
     IIC_0_sda_t : out STD_LOGIC;
     IIC_0_scl_i : in STD_LOGIC;
     IIC_0_scl_o : out STD_LOGIC;
-    IIC_0_scl_t : out STD_LOGIC
+    IIC_0_scl_t : out STD_LOGIC;
+    spi_MOSI : out STD_LOGIC;
+    spi_SS : out STD_LOGIC;
+    spi_clk : out STD_LOGIC;
+    spi_MISO : in STD_LOGIC;
+    debugSwitch : in STD_LOGIC;
+    codecSelect : in STD_LOGIC;
+    PMOD_sd_rx : in STD_LOGIC;
+    SSM_sd_rx : in STD_LOGIC;
+    in_mute : in STD_LOGIC;
+    reset : in STD_LOGIC
   );
   end component main;
   component IOBUF is
@@ -208,13 +206,12 @@ main_i: component main
       debugSwitch => debugSwitch,
       in_mute => in_mute,
       reset => reset,
-      rgb_led_tri_o(2 downto 0) => rgb_led_tri_o(2 downto 0),
+      rgb_led_tri_o(3 downto 0) => rgb_led_tri_o(3 downto 0),
       spi_MISO => spi_MISO,
       spi_MOSI => spi_MOSI,
       spi_SS => spi_SS,
       spi_clk => spi_clk,
       sys_clk => sys_clk,
-      testGPIO1 => testGPIO1,
       testGPIO2 => testGPIO2
     );
 end STRUCTURE;

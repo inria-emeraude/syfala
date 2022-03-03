@@ -90,14 +90,14 @@ static void receiveFromARM(ap_int<32> *ARM_active_controller)
 }
 
 /* send passive controllers values to ARM */
-static void sendToARM(ap_int<32>* ARM_passive_controller)
+static void sendToARM(int* ARM_passive_controller)
 {
     //std::cout << "sendToARM\n";
     int field = 0;
     //  Macro ACTIVE_ELEMENT_IN copy DSP struct values to  ARM_passive_controller array
 #define ACTIVE_ELEMENT_IN(type, ident, name, var, def, min, max, step) ARM_passive_controller[field++] = *(ap_int<32>*)&DSP.var;
     // apply ACTIVE_ELEMENT_IN on all existing passive controllers
-    FAUST_LIST_ACTIVES(ACTIVE_ELEMENT_IN);
+    FAUST_LIST_PASSIVES(ACTIVE_ELEMENT_IN);
 }
 
 void copyARMControl(int* ARM_fControl, int* ARM_iControl, float* RESTRICT fControl, int* RESTRICT iControl)
@@ -127,7 +127,7 @@ const float scaleFactor = SCALE_FACTOR; //Why can't we just call the define dire
 /************************************************************************************************/
 void faust_v6(ap_int<DATA_WIDTH> in_left_V, ap_int<DATA_WIDTH> in_right_V, ap_int<DATA_WIDTH> *out_left_V,
 	      ap_int<DATA_WIDTH> *out_right_V, FAUSTFLOAT *ram,  bool *outGPIO1, bool *outGPIO2,
-	      bool debugSwitch, int ARM_fControl[16], int ARM_iControl[16], int DEBUG_toIP_tab[32],
+	      bool debugSwitch, int ARM_fControl[32], int ARM_iControl[32], int DEBUG_toIP_tab[32],
 	      int ARM_passive_controller[32], int soft_reset, int ramBaseAddr, int ramDepth,
 	      int userVar, bool enable_RAM_access)
 {
@@ -178,7 +178,7 @@ void faust_v6(ap_int<DATA_WIDTH> in_left_V, ap_int<DATA_WIDTH> in_right_V, ap_in
       {
 	/* all other iterations: compute one sample */
         computemydsp(&DSP, inputs, outputs, icontrol, fcontrol, I_ZONE, F_ZONE);
-
+		sendToARM(ARM_passive_controller);
       }
   } else {
     /* if RAM access is not enable, simple bypass */

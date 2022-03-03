@@ -34,7 +34,6 @@
 
 /* Xilinx includes */
 #include "sleep.h"
-#include "platform.h"
 #include "xuartps.h"
 #include "xfaust_v6.h"
 /* Syfala application includes */
@@ -46,6 +45,18 @@
 #include "iic_config.h"
 /* faust IP configuration */
 #include "configFAUST.h"
+
+#define FAUST_UIMACROS 1
+
+/* generic definition used to accept a variable
+ number of controllers */
+#define FAUST_ADDBUTTON(l,f)
+#define FAUST_ADDCHECKBOX(l,f)
+#define FAUST_ADDVERTICALSLIDER(l,f,i,a,b,s)
+#define FAUST_ADDHORIZONTALSLIDER(l,f,i,a,b,s)
+#define FAUST_ADDNUMENTRY(l,f,i,a,b,s)
+#define FAUST_ADDVERTICALBARGRAPH(l,f,a,b)
+#define FAUST_ADDHORIZONTALBARGRAPH(l,f,a,b)
 
 /* DDR zone coherent with linker script lscript.ld */
 #define FRAME_BUFFER_BASEADDR 0x1D000000
@@ -273,6 +284,9 @@ struct ARMController {
   int iControl[FAUST_INT_CONTROLS];
   float fControl[FAUST_REAL_CONTROLS];
 
+  // Passive controllers
+  float passiveControl[FAUST_PASSIVES];
+  
   // izone and fzone memory
 #ifdef USE_DDR
   int* iZone;
@@ -358,13 +372,26 @@ struct ARMController {
     XFaust_v6_Write_ARM_fControl_Words(&faust_v6, 0,(u32*)fControl, FAUST_REAL_CONTROLS);
     XFaust_v6_Write_ARM_iControl_Words(&faust_v6, 0,(u32*)iControl, FAUST_INT_CONTROLS);
   }
+  void readControlFromFPGA()
+  {
+    int field = 0;
+              
+    XFaust_v6_Read_ARM_passive_controller_Words(&faust_v6, 0, (u32*)passiveControl, FAUST_PASSIVES);
+
+    // Macro ACTIVE_ELEMENT_OUT copy ARM_active_controller values in DSP struct
+    #define ACTIVE_ELEMENT_IN(type, ident, name, var, def, min, max, step) fDSP->var = *(float*)&passiveControl[field++];
+    // apply ACTIVE_ELEMENT_OUT on all existing controllers
+    FAUST_LIST_PASSIVES(ACTIVE_ELEMENT_IN);
+  }
 
   void controlFPGA()
   {
     // Compute iControl and fControl from controllers value
     fDSP->control(iControl, fControl, iZone, fZone);
-    // send iControl and fControl to FPGA
+    // Send iControl and fControl to FPGA
     sendControlToFPGA();
+    // Read passive controlers
+    readControlFromFPGA();
   }
 
   void init_ip()
@@ -471,7 +498,6 @@ struct ARMController {
       else
 	{
 	  controlFPGA();
-
 	  fControlUI->update();
 	}
     }
