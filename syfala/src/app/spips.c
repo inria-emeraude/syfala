@@ -15,13 +15,12 @@ u8 ReadBuf[MAX_DATA];
 u8 SendBuf[MAX_DATA];
 
 XSpiPs SpiInstance;
+XSpiPs_Config *SpiConfig;
 
 int SpiPs_Init(u16 SpiDeviceId)
 {
 	int Status;
 	// u8 *BufferPtr;
-	XSpiPs_Config *SpiConfig;
-
 	/*
 	 * Initialize the SPI driver so that it's ready to use
 	 */
@@ -51,11 +50,15 @@ int SpiPs_Init(u16 SpiDeviceId)
 	/*
 	 * Enable the device.
 	 */
-	XSpiPs_Enable((&SpiInstance));
-
+	XSpiPs_Enable(&SpiInstance);
 	return XST_SUCCESS;
 }
 
+void SpiPs_Reset()
+{
+	XSpiPs_Reset(&SpiInstance);
+  XSpiPs_ResetHw(SpiConfig->BaseAddress);
+}
 void SpiPs_Read(u8 *ReadBuffer,int ByteCount)
 {
 	int Count;
@@ -142,7 +145,3 @@ int readADC(int channel)
 	int adc_value_decimal= ((ReadBuf[1] & 0b00000011) << 8) | ReadBuf[2] ;
 	return adc_value_decimal;
 }
-
-
-
-

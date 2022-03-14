@@ -65,6 +65,12 @@
 u32* ddr_ptr = (u32*)FRAME_BUFFER_BASEADDR;
 #endif
 
+#define WAITING_LED 0b001
+#define WARNING_LED 0b110
+#define OK_LED 0b010
+#define ERROR_LED 0b100
+
+
 using namespace std;
 
 // The Faust compiler will insert the C++ code here
@@ -78,7 +84,7 @@ using namespace std;
 struct ARMControlUIBase : public GenericUI {
 
     typedef function<void(FAUSTFLOAT value)> updateFunction;
-
+    virtual bool isHardControl() = 0;
     // Keep all information needed for a controller
     struct Controller {
         updateFunction fUpdateFunIn;
@@ -176,7 +182,7 @@ struct ARMControlUIMetadata : public ARMControlUIBase {
 
     // To decode metadata
     string fKey, fValue;
-
+    bool isHardControl() { return true; }
     // -- active widgets
     void addButton(const char* label, FAUSTFLOAT* zone)
     {
@@ -243,7 +249,7 @@ struct ARMControlUIMetadata : public ARMControlUIBase {
 struct ARMControlUIAll : public ARMControlUIBase {
 
     UartReceiverUI fUartUI;
-
+    bool isHardControl() { return false; }
     ARMControlUIAll(dsp* DSP){
     	DSP->buildUserInterface(&fUartUI);
     }
@@ -273,7 +279,7 @@ struct ARMControlUIAll : public ARMControlUIBase {
 };
 
 struct ARMController {
-
+  int timer=0;
   // Control
   ARMControlUIBase* fControlUI;
 
@@ -286,7 +292,7 @@ struct ARMController {
 
   // Passive controllers
   float passiveControl[FAUST_PASSIVES];
-  
+
   // izone and fzone memory
 #ifdef USE_DDR
   int* iZone;
@@ -300,14 +306,15 @@ struct ARMController {
   XFaust_v6 faust_v6;
 
   //GPIO
-  XGpio gpio;
+  XGpio gpioLED;
+  XGpio gpioSW;
 
   ARMController()
   {
     init_gpio();
 
     //switch on LEDs
-    XGpio_DiscreteWrite(&gpio, 2, 0b100);
+    XGpio_DiscreteWrite(&gpioLED, 2, WAITING_LED);
 
     /* 1 - Configure faust IP */
     init_ip();
@@ -323,14 +330,18 @@ struct ARMController {
     // Init DSP part (after reset DDR)
     fDSP->init(SAMPLE_RATE, iZone, fZone);
 
-    /* 4 - Define UI type using DSP object*/
-#if CONTROLLER_TYPE == 0U
-    // software control: Use all controllers
-    fControlUI = new ARMControlUIAll(fDSP);
-#else
-    // Use meta-data
-    fControlUI = new ARMControlUIMetadata();
-#endif
+    /* 4 - Define UI type using DSP object based on SW3 state*/
+    // SW3= UP:use hard controlers, DOWN:use SOFT
+    if (XGpio_DiscreteRead(&gpioSW, 1) & (1 << 3))
+    {
+      // Use meta-data
+      fControlUI = new ARMControlUIMetadata();
+    }
+    else
+    {
+      // software control: Use all controllers
+      fControlUI = new ARMControlUIAll(fDSP);
+    }
 
     /* 5 - Build UI */
     fDSP->buildUserInterface(fControlUI);
@@ -341,12 +352,7 @@ struct ARMController {
     /* 7 - Init Peripherals */
     init_spi();
 
-    /* 8 - Enable RAM access for the IP */
-    XFaust_v6_Set_userVar(&faust_v6, 0);
-
-    /* 9 reset Faust IP, mandatory after init */
-    reset_ip();
-    /* enable ram access from fpga after init */
+    /* 8 - Enable ram access from fpga after init */
     XFaust_v6_Set_enable_RAM_access(&faust_v6, 1);
 
     /* I2C peripheral init */
@@ -358,7 +364,7 @@ struct ARMController {
     }
 
     //switch on LEDs 0b101
-    XGpio_DiscreteWrite(&gpio, 2, LED_COLOR);	//write data to the LEDs
+    XGpio_DiscreteWrite(&gpioLED, 2, OK_LED);	//write data to the LEDs
   }
 
   ~ARMController()
@@ -375,7 +381,7 @@ struct ARMController {
   void readControlFromFPGA()
   {
     int field = 0;
-              
+
     XFaust_v6_Read_ARM_passive_controller_Words(&faust_v6, 0, (u32*)passiveControl, FAUST_PASSIVES);
 
     // Macro ACTIVE_ELEMENT_OUT copy ARM_active_controller values in DSP struct
@@ -442,11 +448,14 @@ struct ARMController {
   void init_gpio()
   {
     //initialize input XGpio variable
-    XGpio_Initialize(&gpio, XPAR_AXI_GPIO_0_DEVICE_ID);
-    //set first channel tristate buffer to input (switch)
-    XGpio_SetDataDirection(&gpio, 1, 0xF);
+    XGpio_Initialize(&gpioLED, XPAR_AXI_GPIO_LED_DEVICE_ID);
+    XGpio_Initialize(&gpioSW, XPAR_AXI_GPIO_SW_DEVICE_ID);
+    //set first channel tristate buffer to output (RGB led)
+    XGpio_SetDataDirection(&gpioLED, 1, 0x0);
     //set second channel tristate buffer to output (LED)
-    XGpio_SetDataDirection(&gpio, 2, 0x0);
+    XGpio_SetDataDirection(&gpioLED, 2, 0x0);
+    //set first channel tristate buffer to input (switch)
+    XGpio_SetDataDirection(&gpioSW, 1, 0xF);
     }
 
   void init_spi()
@@ -455,16 +464,6 @@ struct ARMController {
     int Status = SpiPs_Init(XPAR_PS7_SPI_0_DEVICE_ID);
     if (Status == XST_SUCCESS) printf("SPI OK\r\n");
     else printf("Initialization error\r\n");
-    }
-
-  /* reset Faust IP */
-  void reset_ip()
-  {
-    printf("Reset IP...");
-    XFaust_v6_Set_soft_reset(&faust_v6, 1);
-    usleep(100);
-    XFaust_v6_Set_soft_reset(&faust_v6, 0);
-    printf(" OK\r\n");
   }
 
   void reset_ddr(void)
@@ -476,30 +475,61 @@ struct ARMController {
     Xil_DCacheDisable();
   }
 
+  void UIhandler(void)
+  {
+    timer++;
+    if (timer>10000) timer=0; //loop sur modulo?
+
+    int ledState=0b0000;
+    int rgbState=OK_LED;
+    /* if mute enable, LED 0 flash and WARNING, else LED 0 off*/
+    if (!(XGpio_DiscreteRead(&gpioSW, 1) & 1 << 0)) ledState |= 0 << 0;
+    else{
+      rgbState=WARNING_LED;
+      ledState |= (timer<5000?0:1) << 0;
+    }
+    /* if bypass enable, LED 1 flash and WARNING, else LED 1 off */
+    if (!(XGpio_DiscreteRead(&gpioSW, 1) & 1 << 1)) ledState |= 0 << 1;
+    else{
+      rgbState=WARNING_LED;
+      ledState |= (timer<5000?0:1) << 1;
+    }
+    /* if SSM selected on incompatible config, LED 2 flash, else LED 2 on when ADAU selected*/
+    if (XGpio_DiscreteRead(&gpioSW, 1) & (1 << 2)) ledState |= 1 << 2;
+    else{
+      if(SAMPLE_RATE>96000)
+      {
+        ledState |= (timer<5000?0:1) << 2;
+        rgbState=ERROR_LED;
+      }
+      else ledState |= 0 << 2;
+    }
+
+    /* SW3 used to select the controler type. LED 3 is on when hard controler selected, off when soft */
+    int SW3State=(XGpio_DiscreteRead(&gpioSW, 1) & (1 << 3))>>3;
+    if (SW3State!=fControlUI->isHardControl())
+    {
+      delete fControlUI;
+      if (SW3State)
+      {
+        fControlUI = new ARMControlUIMetadata();
+      }
+      else{
+        fControlUI = new ARMControlUIAll(fDSP);
+      }
+      fDSP->buildUserInterface(fControlUI);
+    }
+    ledState |= SW3State << 3;
+    XGpio_DiscreteWrite(&gpioLED, 1, ledState);
+    XGpio_DiscreteWrite(&gpioLED, 2, rgbState);
+  }
   // infinit loop
   void run()
   {
     while (true) {
-      //check if reset btn is pressed (verify if it's not too long)
-      if (XGpio_DiscreteRead(&gpio, 1))
-	{
-	  for (int i=0; i<0x0000FFFF; i++);	//tempo reset
-	  XGpio_DiscreteWrite(&gpio, 2, 0b100);	//write 0b100 to LEDs
-	  XFaust_v6_Set_enable_RAM_access(&faust_v6, 0);   //disable ram access
-#ifdef USE_DDR
-	  reset_ddr();
-#endif
-    SSMSetRegister(VOLUME_SSM,SSM_R07,SSM_R08);
-	  fDSP->init(SAMPLE_RATE, iZone, fZone);
-	  reset_ip();
-	  XFaust_v6_Set_enable_RAM_access(&faust_v6, 1);
-	  XGpio_DiscreteWrite(&gpio, 2, LED_COLOR);	//write 0b101 to the LEDs
-	}
-      else
-	{
 	  controlFPGA();
+    UIhandler();
 	  fControlUI->update();
-	}
     }
   }
 

@@ -85,7 +85,8 @@ class UartReceiverUI : public MapUI
     {
       for (int receivedChar=0; receivedChar<NumBytes; receivedChar++)
       {
-        receivedString[receivedChar]=(char)XUartPs_RecvByte(STDIN_BASEADDRESS); //Read byte to byte in blocking mode, we can't miss a byte.
+        /* blocking mode */
+        receivedString[receivedChar]=(char)XUartPs_RecvByte(STDIN_BASEADDRESS);
       }
     }
 
@@ -144,8 +145,11 @@ class UartReceiverUI : public MapUI
 
     void update()
     {
-      send();
-      receive();
+      if(XUartPs_IsReceiveData(STDIN_BASEADDRESS))
+      {
+        receive();
+        send();
+      }
     }
 };
 #endif // FAUST_UARTRECEIVERUI_H

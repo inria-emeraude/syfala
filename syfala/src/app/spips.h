@@ -9,6 +9,7 @@
 void SpiPs_Read (u8 *ReadBuffer, int ByteCount);
 void SpiPs_Send (u8 *SendBuffer, int ByteCount);
 int  SpiPs_Init (u16 SpiDeviceId);
+void SpiPs_Reset(void);
 int readADC(int channel);
 
 

@@ -125,20 +125,16 @@ const float scaleFactor = SCALE_FACTOR; //Why can't we just call the define dire
 /************************************************************************************************/
 /*************** FAUST IP                                                           *************/
 /************************************************************************************************/
-void faust_v6(ap_int<DATA_WIDTH> in_left_V, ap_int<DATA_WIDTH> in_right_V, ap_int<DATA_WIDTH> *out_left_V,
-	      ap_int<DATA_WIDTH> *out_right_V, FAUSTFLOAT *ram,  bool *outGPIO1, bool *outGPIO2,
-	      bool debugSwitch, int ARM_fControl[32], int ARM_iControl[32], int DEBUG_toIP_tab[32],
-	      int ARM_passive_controller[32], int soft_reset, int ramBaseAddr, int ramDepth,
-	      int userVar, bool enable_RAM_access)
+void faust_v6(ap_int<DATA_WIDTH> in_left_V, ap_int<DATA_WIDTH> in_right_V, ap_int<DATA_WIDTH> *out_left_V, ap_int<DATA_WIDTH> *out_right_V,
+	      bool *outGPIO, bool debugBtn, bool mute, bool bypass,
+	      int ARM_fControl[32], int ARM_iControl[32], int ARM_passive_controller[32],
+	      FAUSTFLOAT *ram, int ramBaseAddr, int ramDepth, bool enable_RAM_access)
 {
 #pragma HLS INTERFACE s_axilite port=ARM_fControl
 #pragma HLS INTERFACE s_axilite port=ARM_iControl
 #pragma HLS INTERFACE s_axilite port=ARM_passive_controller
-#pragma HLS INTERFACE s_axilite port=DEBUG_toIP_tab
-#pragma HLS INTERFACE s_axilite port=soft_reset
 #pragma HLS INTERFACE s_axilite port=ramBaseAddr
 #pragma HLS INTERFACE s_axilite port=ramDepth
-#pragma HLS INTERFACE s_axilite port=userVar
 #pragma HLS INTERFACE s_axilite port=enable_RAM_access
 #pragma HLS INTERFACE m_axi port=ram latency=50
 
@@ -188,17 +184,29 @@ void faust_v6(ap_int<DATA_WIDTH> in_left_V, ap_int<DATA_WIDTH> in_right_V, ap_in
 
   /* debug: change state of GPIO each cycle to see cycle time */
   state=!state;
-  *outGPIO2=state;
-
-  // Copy produced outputs
-  if (outputs[0]> 1.0) outputs[0]=1.0;
-  else if (outputs[0]< -1.0) outputs[0]=-1.0;
-  *out_left_V = ap_int<DATA_WIDTH>(outputs[0] * scaleFactor);
+  *outGPIO=state;
+  if(bypass)
+  {
+    *out_right_V=in_right_V;
+    *out_left_V=in_left_V;
+  }
+  else if(mute)
+  {
+    *out_right_V=0;
+    *out_left_V=0;
+  }
+  else
+  {
+    // Copy produced outputs
+    if (outputs[0]> 1.0) outputs[0]=1.0;
+    else if (outputs[0]< -1.0) outputs[0]=-1.0;
+    *out_left_V = ap_int<DATA_WIDTH>(outputs[0] * scaleFactor);
 #if FAUST_OUTPUTS > 1
-  if (outputs[1]> 1.0) outputs[1]=1.0;
-  else if (outputs[1]< -1.0) outputs[1]=-1.0;
-  *out_right_V = ap_int<DATA_WIDTH>(outputs[1] * scaleFactor);
+    if (outputs[1]> 1.0) outputs[1]=1.0;
+    else if (outputs[1]< -1.0) outputs[1]=-1.0;
+    *out_right_V = ap_int<DATA_WIDTH>(outputs[1] * scaleFactor);
 #else
-  *out_right_V = ap_int<DATA_WIDTH>(outputs[0] * scaleFactor);
+    *out_right_V = ap_int<DATA_WIDTH>(outputs[0] * scaleFactor);
 #endif
+  }
 }

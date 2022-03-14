@@ -135,6 +135,7 @@ build/sw_export/BOOT.bin: build/sw_export/faust_v6_app.elf
 
 #show vitis_hls report after HLS
 rpt: build/faust_v6_ip/faust_v6/syn/report
+	mkdir -p backup
 	cp build/faust_v6_ip/faust_v6/syn/report/faust_v6_csynth.rpt backup/$(mydsp)_$(shell date +%FT%T).rpt
 	less build/faust_v6_ip/faust_v6/syn/report/faust_v6_csynth.rpt
 

@@ -3,16 +3,16 @@ set_property -dict { PACKAGE_PIN K17   IOSTANDARD LVCMOS33 } [get_ports { sys_cl
 create_clock -add -name sys_clk_pin -period 8.00 -waveform {0 4} [get_ports { sys_clk }];
 
 ##Switches
-set_property -dict { PACKAGE_PIN G15   IOSTANDARD LVCMOS33 } [get_ports { in_mute }]; #IO_L19N_T3_VREF_35 Sch=sw[0]
-set_property -dict { PACKAGE_PIN P15   IOSTANDARD LVCMOS33 } [get_ports { debugSwitch }]; #IO_L24P_T3_34 Sch=sw[1]
-set_property -dict { PACKAGE_PIN W13   IOSTANDARD LVCMOS33 } [get_ports { codecSelect }]; #IO_L24P_T3_34 Sch=sw[1]
-#set_property -dict { PACKAGE_PIN T16   IOSTANDARD LVCMOS33 } [get_ports { bypass_analog }]; #IO_L24P_T3_34 Sch=sw[1]
+set_property -dict { PACKAGE_PIN G15   IOSTANDARD LVCMOS33 } [get_ports { switches[0] }]; #IO_L19N_T3_VREF_35 Sch=sw[0]
+set_property -dict { PACKAGE_PIN P15   IOSTANDARD LVCMOS33 } [get_ports { switches[1] }]; #IO_L24P_T3_34 Sch=sw[1]
+set_property -dict { PACKAGE_PIN W13   IOSTANDARD LVCMOS33 } [get_ports { switches[2] }]; #IO_L24P_T3_34 Sch=sw[1]
+set_property -dict { PACKAGE_PIN T16   IOSTANDARD LVCMOS33 } [get_ports { switches[3] }]; #IO_L24P_T3_34 Sch=sw[1]
                      
 ##Buttons
 #set_property -dict { PACKAGE_PIN K18   IOSTANDARD LVCMOS33 } [get_ports { vol_up }]; #IO_L12N_T1_MRCC_35 Sch=btn[0]
 #set_property -dict { PACKAGE_PIN P16   IOSTANDARD LVCMOS33 } [get_ports { vol_down }]; #IO_L24N_T3_34 Sch=btn[1]
 #set_property -dict { PACKAGE_PIN K19   IOSTANDARD LVCMOS33 } [get_ports { reset_clk }]; #IO_L24N_T3_34 Sch=btn[1]
-set_property -dict { PACKAGE_PIN Y16   IOSTANDARD LVCMOS33 } [get_ports { reset }]; #IO_L24N_T3_34 Sch=btn[1]
+set_property -dict { PACKAGE_PIN Y16   IOSTANDARD LVCMOS33 } [get_ports { debug_btn }]; #IO_L24N_T3_34 Sch=btn[1]
 
 #RGB LED 6
 #set_property -dict { PACKAGE_PIN V16   IOSTANDARD LVCMOS33 } [get_ports { led6_r }]; #IO_L18P_T2_34 Sch=led6_r
@@ -63,7 +63,7 @@ set_property -dict { PACKAGE_PIN V18   IOSTANDARD LVCMOS33     } [get_ports { PM
 #set_property -dict { PACKAGE_PIN W15   IOSTANDARD LVCMOS33     } [get_ports { jc[1] }]; #IO_L10N_T1_34 Sch=jc_n[1]		     
 set_property -dict { PACKAGE_PIN T11   IOSTANDARD LVCMOS33     } [get_ports { PMOD_mclk }]; #IO_L1P_T0_34 Sch=jc_p[2]              
 set_property -dict { PACKAGE_PIN T10   IOSTANDARD LVCMOS33     } [get_ports { PMOD_mclk_GND }]; #IO_L1N_T0_34 Sch=jc_n[2]              
-set_property -dict { PACKAGE_PIN W14   IOSTANDARD LVCMOS33     } [get_ports { testGPIO2 }]; #IO_L8P_T1_34 Sch=jc_p[3]              
+set_property -dict { PACKAGE_PIN W14   IOSTANDARD LVCMOS33     } [get_ports { faustIP_debug }]; #IO_L8P_T1_34 Sch=jc_p[3]              
 #set_property -dict { PACKAGE_PIN Y14   IOSTANDARD LVCMOS33     } [get_ports { jc[5] }]; #IO_L8N_T1_34 Sch=jc_n[3]              
 #set_property -dict { PACKAGE_PIN T12   IOSTANDARD LVCMOS33     } [get_ports { jc[6] }]; #IO_L2P_T0_34 Sch=jc_p[4]              
 #set_property -dict { PACKAGE_PIN U12   IOSTANDARD LVCMOS33     } [get_ports { jc[7] }]; #IO_L2N_T0_34 Sch=jc_n[4]              

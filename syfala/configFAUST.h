@@ -28,15 +28,14 @@
 /* ####################### Controller ################################# */
 /**
   * @brief Define the controller used to drive the controls (see bottom
-  *      left corner for PCB number)
-  *         SOFT: software Control with PC (default)
-  *         DEMO: Popophone demo box
-  *         PCB1: Emeraude PCB config 1: 4 knobs, 2 switchs, 2 sliders
+  *      left corner for PCB number) when SW3 is UP. (SW3 DONW for software control)
+  *     DEMO: Popophone demo box
+  *     PCB1: Emeraude PCB config 1: 4 knobs, 2 switchs, 2 sliders (default)
   *	    PCB2: Emeraude PCB config 2: 8 knobs
   *	    PCB3: Emeraude PCB config 3: 4 knob, 4 switch
   *	    PCB4: Emeraude PCB config 4: 4 knods above, 4 switch below
   */
-#define CONTROLLER_TYPE	SOFT
+#define CONTROLLER_TYPE	PCB1
 
 
 /* ######################### DDR ##################################### */
@@ -50,13 +49,12 @@
 /* ######################## Sample rate ############################### */
 /**
   * @brief Change sample rate value (Hz).
-  *	Only 48k is available for SSM embeded codec
-  *	 	24000 (ADAU only)
+  *	Only 48k and 96k is available for SSM embeded codec
   *	 	48000 (default)
   *	 	96000
-  *	 	192000 (ADAU only)
-  *	 	384000 (ADAU only)
-  *	 	768000 (ADAU only AND DATA_WIDTH=16b only)
+  *	 	192000 (ADAU1777 and ADAU1787 only)
+  *	 	384000 (ADAU1787 only)
+  *	 	768000 (ADAU1787 only AND DATA_WIDTH=16b only)
   *
 */
 #define SAMPLE_RATE 48000
@@ -75,9 +73,9 @@
 /* ####################### SSM Codec volume ############################ */
 /**
   * @brief Choose audio codec to use. For now, it only changes the scale factor
-  *        FULL: Maximum !WARNING! For speaker only. Do not use with headphone.
-  *        HEADPHONE: Slower volume for headphone use
-  *		     DEFAULT: Default value +1db because the true 0db (0b001111001) decreases the signal a little bit
+  *      FULL: Maximum !WARNING! For speaker only. Do not use with headphone.
+  *      HEADPHONE: Slower volume for headphone use
+  *		   DEFAULT: Default value +1db because the true 0db (0b001111001) decreases the signal a little bit
 */
 #define VOLUME_SSM HEADPHONE
 
@@ -87,7 +85,7 @@
   *        DEFAULT: 48khz sample rate
   *        FAST: 96Khz sample rate
 */
-#define SSM_SPEED FAST
+#define SSM_SPEED DEFAULT
 
 /* #################################################################### */
 /* ###################### END OF USER CONFIG ########################## */
@@ -100,7 +98,6 @@
 #define SWITCH 1U
 #define SLIDER KNOB
 
-#define SOFT 0U
 #define DEMO 1U
 #define PCB0 2U
 #define PCB1 1U
@@ -181,5 +178,3 @@ SWITCH	//Channel 8,
 #elif SSM_SPEED == DEFAULT
 	#define SSM_R08 0b000000000
 #endif
-
-#define LED_COLOR 0b101 //RGB LED COLOR (use to identify uploded program)
