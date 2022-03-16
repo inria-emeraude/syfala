@@ -33,6 +33,19 @@
 #
 #*****************************************************************************************
 
+################################################################################
+# POPOFF M.: Please keep this block if you change this tcl.
+######################### START configFAUST READING ########################
+
+puts "Reading configFAUST.h Zybo version"
+set fd [open ../configFAUST.h r]
+set data [read $fd]
+set input_list [split $data "\n"]
+close $fd
+foreach elem [lsearch -all -inline $input_list "*define ZYBO_VERSION*"] {
+    set zybo_version "[lindex $elem 2]"
+}
+
 # Check file required for this script exists
 proc checkRequiredFiles { origin_dir} {
   set status true
@@ -139,20 +152,35 @@ if { $validate_required } {
 }
 
 # Create project
-create_project ${_xil_proj_name_} ./${_xil_proj_name_} -part xc7z010clg400-1 -force
-
+if { $zybo_version == "Z10" } {
+    create_project ${_xil_proj_name_} ./${_xil_proj_name_} -part xc7z010clg400-1 -force
+} elseif { $zybo_version == "Z20" } {
+    create_project ${_xil_proj_name_} ./${_xil_proj_name_} -part xc7z020clg400-1 -force
+} else {
+     puts {[ERROR] No valid Zybo version found in configFAUST.h };
+     exit 2;
+}
 # Set the directory path for the new project
 set proj_dir [get_property directory [current_project]]
 
 # Set project properties
 set obj [current_project]
-set_property -name "board_part" -value "digilentinc.com:zybo-z7-10:part0:1.0" -objects $obj
+
+if { $zybo_version == "Z10" } {
+    set_property -name "board_part" -value "digilentinc.com:zybo-z7-10:part0:1.0" -objects $obj
+    set_property -name "platform.board_id" -value "zybo-z7-10" -objects $obj
+} elseif { $zybo_version == "Z20" } {
+    set_property -name "board_part" -value "digilentinc.com:zybo-z7-20:part0:1.0" -objects $obj
+    set_property -name "platform.board_id" -value "zybo-z7-20" -objects $obj
+} else {
+     puts {[ERROR] No valid Zybo version found in configFAUST.h };
+     exit 2;
+}
 set_property -name "default_lib" -value "xil_defaultlib" -objects $obj
 set_property -name "enable_vhdl_2008" -value "1" -objects $obj
 set_property -name "ip_cache_permissions" -value "read write" -objects $obj
 set_property -name "ip_output_repo" -value "$proj_dir/${_xil_proj_name_}.cache/ip" -objects $obj
 set_property -name "mem.enable_memory_map_generation" -value "1" -objects $obj
-set_property -name "platform.board_id" -value "zybo-z7-10" -objects $obj
 set_property -name "sim.central_dir" -value "$proj_dir/${_xil_proj_name_}.ip_user_files" -objects $obj
 set_property -name "sim.ip.auto_export_scripts" -value "1" -objects $obj
 set_property -name "simulator_language" -value "Mixed" -objects $obj
@@ -251,7 +279,7 @@ if { [get_files i2s_transceiver.vhd] == "" } {
 
 # Proc to create BD main
 proc cr_bd_main { parentCell } {
-# The design that will be created by this Tcl proc contains the following 
+# The design that will be created by this Tcl proc contains the following
 # module references:
 # i2s_transceiver, mux_2to1
 
@@ -270,7 +298,7 @@ proc cr_bd_main { parentCell } {
   ##################################################################
   set bCheckIPs 1
   if { $bCheckIPs == 1 } {
-     set list_check_ips "\ 
+     set list_check_ips "\
   xilinx.com:ip:xlconstant:1.1\
   xilinx.com:ip:axi_gpio:2.0\
   xilinx.com:ip:clk_wiz:6.0\
@@ -302,7 +330,7 @@ proc cr_bd_main { parentCell } {
   ##################################################################
   set bCheckModules 1
   if { $bCheckModules == 1 } {
-     set list_check_mods "\ 
+     set list_check_mods "\
   i2s_transceiver\
   mux_2to1\
   "
@@ -432,7 +460,7 @@ proc cr_bd_main { parentCell } {
 ################################################################################
 # POPOFF M.: Please keep this block if you change this tcl. It creates the right clock with the asked sample frequency
 ######################### START CLOCK GENERATOR SWITCH ########################
-puts "Reading SAMPLE_RATE value"
+puts "Reading configFAUST.h sample_rate and d_width"
 set fd [open ../configFAUST.h r]
 set data [read $fd]
 set input_list [split $data "\n"]
@@ -660,7 +688,7 @@ if { ($sample_rate == "384000" && ( $d_width == "24" || $d_width == "32")) || ($
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-  
+
   # Create instance: mux_2to1_0, and set properties
   set block_name mux_2to1
   set block_cell_name mux_2to1_0
@@ -671,7 +699,7 @@ if { ($sample_rate == "384000" && ( $d_width == "24" || $d_width == "32")) || ($
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-  
+
   # Create instance: processing_system7_0, and set properties
   set processing_system7_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_system7_0 ]
   set_property -dict [ list \
@@ -1477,12 +1505,12 @@ pagesize -pg 1 -db -bbox -sgen -150 0 2700 1090
 
   validate_bd_design
   save_bd_design
-  close_bd_design $design_name 
+  close_bd_design $design_name
 }
 # End of cr_bd_main()
 cr_bd_main ""
-set_property REGISTERED_WITH_MANAGER "1" [get_files main.bd ] 
-set_property SYNTH_CHECKPOINT_MODE "Hierarchical" [get_files main.bd ] 
+set_property REGISTERED_WITH_MANAGER "1" [get_files main.bd ]
+set_property SYNTH_CHECKPOINT_MODE "Hierarchical" [get_files main.bd ]
 
 #call make_wrapper to create wrapper files
 if { [get_property IS_LOCKED [ get_files -norecurse main.bd] ] == 1  } {
@@ -1495,7 +1523,14 @@ if { [get_property IS_LOCKED [ get_files -norecurse main.bd] ] == 1  } {
 
 # Create 'synth_1' run (if not found)
 if {[string equal [get_runs -quiet synth_1] ""]} {
-    create_run -name synth_1 -part xc7z010clg400-1 -flow {Vivado Synthesis 2020} -strategy "Vivado Synthesis Defaults" -report_strategy {No Reports} -constrset constrs_1
+  if { $zybo_version == "Z10" } {
+      create_run -name synth_1 -part xc7z010clg400-1 -flow {Vivado Synthesis 2020} -strategy "Vivado Synthesis Defaults" -report_strategy {No Reports} -constrset constrs_1
+  } elseif { $zybo_version == "Z20" } {
+      create_run -name synth_1 -part xc7z020clg400-1 -flow {Vivado Synthesis 2020} -strategy "Vivado Synthesis Defaults" -report_strategy {No Reports} -constrset constrs_1
+  } else {
+       puts {[ERROR] No valid Zybo version found in configFAUST.h };
+       exit 2;
+  }
 } else {
   set_property strategy "Vivado Synthesis Defaults" [get_runs synth_1]
   set_property flow "Vivado Synthesis 2020" [get_runs synth_1]
@@ -1520,7 +1555,14 @@ current_run -synthesis [get_runs synth_1]
 
 # Create 'impl_1' run (if not found)
 if {[string equal [get_runs -quiet impl_1] ""]} {
-    create_run -name impl_1 -part xc7z010clg400-1 -flow {Vivado Implementation 2020} -strategy "Vivado Implementation Defaults" -report_strategy {No Reports} -constrset constrs_1 -parent_run synth_1
+    if { $zybo_version == "Z10" } {
+        create_run -name impl_1 -part xc7z010clg400-1 -flow {Vivado Implementation 2020} -strategy "Vivado Implementation Defaults" -report_strategy {No Reports} -constrset constrs_1 -parent_run synth_1
+    } elseif { $zybo_version == "Z20" } {
+        create_run -name impl_1 -part xc7z020clg400-1 -flow {Vivado Implementation 2020} -strategy "Vivado Implementation Defaults" -report_strategy {No Reports} -constrset constrs_1 -parent_run synth_1
+    } else {
+         puts {[ERROR] No valid Zybo version found in configFAUST.h };
+         exit 2;
+    }
 } else {
   set_property strategy "Vivado Implementation Defaults" [get_runs impl_1]
   set_property flow "Vivado Implementation 2020" [get_runs impl_1]

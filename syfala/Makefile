@@ -54,13 +54,13 @@ build/faust_v6_project/faust_v6_project.xpr: build/faust_v6_ip/faust_v6/impl/ip/
 	@echo "****************************************************"
 	@echo "******************* PROJECT CREATION ***************"
 	mkdir -p build
-	cd build && vivado -mode batch -source ../scripts/project_v6.tcl -tclargs --origin_dir ${ORIGIN_DIR}
+	cd build && vivado -mode batch -notrace -source ../scripts/project_v6.tcl -tclargs --origin_dir ${ORIGIN_DIR}
 
 #running vivado project Faust_v6_project.xpr producing bitstream
 build/faust_v6_project/faust_v6_project.runs/impl_1/main_wrapper.bit: build/faust_v6_project/faust_v6_project.xpr
 	@echo "****************************************************"
 	@echo "********************** SYNTHESIS ******************"
-	cd build && vivado -mode batch -source ../scripts/build_project_v6.tcl
+	cd build && vivado -mode batch -notrace -source ../scripts/build_project_v6.tcl
 	@echo "*********** SYNTHESIS DONE ************************"
 	@echo "**** main_wapprer.xsa generated in hw_export ******"
 	mkdir -p backup && cp build/hw_export/main_wrapper.xsa backup/$(mydsp)_$(shell date +%FT%T).xsa

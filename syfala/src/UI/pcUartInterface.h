@@ -254,7 +254,8 @@ class UARTSenderUI : public MapUI
     {
       // Sample current values
       for (const auto& it : fPathZoneMap) {
-          fValues.push_back(*it.second);
+          //fValues.push_back(*it.second);
+          fValues.push_back(0); //set all to 0 to force to send all value at launch
       }
       fRunning = true;
       fThread = new std::thread(update_cb, this);

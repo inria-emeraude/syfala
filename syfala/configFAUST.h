@@ -22,8 +22,21 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  ************************************************************************
  ************************************************************************/
-
+ /* ####################### UART log ################################# */
+ /**
+   * @brief  Enable UART log in uart.log file.
+	*/
 //#define LOG_UART
+
+/* ####################### Zybo version ################################# */
+/**
+  * @brief Define zybo version. Z10 and Z20 only, old zybo is not supported.
+	*If you have a VGA port (rather than 2 HDMI port), you have an old zybo version
+	* which is not supported.
+  *     Z10: Zybo Z10
+  *     Z20: Zybo Z20
+  */
+#define ZYBO_VERSION Z20
 
 /* ####################### Controller ################################# */
 /**

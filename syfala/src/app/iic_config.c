@@ -38,7 +38,7 @@ XIicPs Iic;		/* Instance of the IIC Device */
 **	Errors:
 **
 **	Description:
-**		Not a true reset, it disable and enable digital core. 
+**		Not a true reset, it disable and enable digital core.
 **		If we use the non patched value in R6, it will act like the old bad behavior we had
 **
 */
@@ -140,16 +140,16 @@ int SSMSetRegister(int volume, int R7, int R8)
 	Status |= AudioRegSet(&Iic, 6, 0b010011111); //Power up F**KING PATCHED
 	Status |= AudioRegSet(&Iic, 0, 0b000010111);
 	Status |= AudioRegSet(&Iic, 1, 0b000010111);
-	Status |= AudioRegSet(&Iic, 2, volume); 
-	Status |= AudioRegSet(&Iic, 3, volume); 
-	Status |= AudioRegSet(&Iic, 4, 0b000010010);
+	Status |= AudioRegSet(&Iic, 2, volume);
+	Status |= AudioRegSet(&Iic, 3, volume);
+	Status |= AudioRegSet(&Iic, 4, 0b000010010); //000001010 to bypass (enable bypass, disable DAC)
 	Status |= AudioRegSet(&Iic, 5, 0b000000000);
 	Status |= AudioRegSet(&Iic, 7, R7); //Changed so Word length is 24
 	Status |= AudioRegSet(&Iic, 8, R8); //Changed so no CLKDIV2
 	usleep(75000);
 	Status |= AudioRegSet(&Iic, 9, 0b000000001);
 	Status |= AudioRegSet(&Iic, 6, 0b000100000);
-	
+
 	if (Status != XST_SUCCESS) {
 		return XST_FAILURE;
 	}
