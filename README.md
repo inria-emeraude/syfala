@@ -52,7 +52,7 @@ make boot
 
 To control your DSP, you can either use a Hardware Controller Board or a GUI on your computer.  
 
-** GUI (SW3 DOWN) **  
+**GUI (SW3 DOWN)**  
 SW3 should be down (0).
 If you use GUI, open the GUI controller after booting with the following command:
 
@@ -60,7 +60,7 @@ If you use GUI, open the GUI controller after booting with the following command
 make controlUI
 ```
 
-** Syfala Hardware Controller Board (SW3 UP) **  
+**Syfala Hardware Controller Board (SW3 UP)**  
 SW3 should be up (1).
 If you use a Hardware Controller Board, please edit the `configFAUST.h` file to choose the right one by modifying the `CONTROLLER_TYPE` field.  
 And just connect it to the Zybo on port JE.  
@@ -118,7 +118,8 @@ You can find a history of all .xsa you generate for this version.
 To use it:  
 - Replace the `main_wrapper.xsa` in `hw_export` with the wanted .xsa in the backup file (and rename it `main_wrapper.xsa`).  
 - Change the name of the DSP in the makefile with the one you use to generate the .xsa you choose in the backup folder.  
-* WARNING: The DSP must be the same as the one used to compile the .xsa you are using (no code change)*  
+
+*WARNING: The DSP must be the same as the one used to compile the .xsa you are using (no code change)*
 
 Just do:
 
