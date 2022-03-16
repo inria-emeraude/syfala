@@ -21,7 +21,7 @@ See documentation in file `syfala-getting-started.pdf`
 *Jumper JP5 should be on "JTAG"*  
 *Power select Jumper should be on "USB"*  
 *Switches SW0, SW1, SW2, SW3 should be down*  
-*The audio input is "LINE IN", not "MIC IN"*  
+*The audio input is "LINE IN" (blue), not "MIC IN"*  
 *The audio output is the black "HPH OUT" jack*  
 *SyFaLa is only compatible with Zybo-Z10 and Zybo-Z20 for now*  
 
@@ -30,7 +30,7 @@ See documentation in file `syfala-getting-started.pdf`
 First check the compilation flow parameters:
 
 - Name of the Faust program compil (`virtualAnalog.dsp` by default) in the Makefile
-- Parameters in `configFAUST.h`
+- Parameters in `configFAUST.h` (especially Zybo version)
 
 ### Build
 
