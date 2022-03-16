@@ -21,9 +21,9 @@ See documentation in file `syfala-getting-started.pdf`
 *Jumper JP5 should be on "JTAG"*  
 *Power select Jumper should be on "USB"*  
 *Switches SW0, SW1, SW2, SW3 should be down*  
-*The audio input is "LINE IN", not "MIC IN"*
-*The audio output is the black "HPH OUT" jack*
-*SyFaLa is only compatible with Zybo-Z10 and Zybo-Z20 for now*
+*The audio input is "LINE IN", not "MIC IN"*  
+*The audio output is the black "HPH OUT" jack*  
+*SyFaLa is only compatible with Zybo-Z10 and Zybo-Z20 for now*  
 
 ### Configure
 
@@ -52,7 +52,7 @@ make boot
 
 To control your DSP, you can either use a Hardware Controller Board or a GUI on your computer.  
 
-#### GUI (SW3 DOWN)
+** GUI (SW3 DOWN) **  
 SW3 should be down (0).
 If you use GUI, open the GUI controller after booting with the following command:
 
@@ -60,7 +60,7 @@ If you use GUI, open the GUI controller after booting with the following command
 make controlUI
 ```
 
-#### Syfala Hardware Controller Board (SW3 UP)
+** Syfala Hardware Controller Board (SW3 UP) **  
 SW3 should be up (1).
 If you use a Hardware Controller Board, please edit the `configFAUST.h` file to choose the right one by modifying the `CONTROLLER_TYPE` field.  
 And just connect it to the Zybo on port JE.  
@@ -73,19 +73,19 @@ You can swap from hardware to software controller during dsp execution by changi
 ### Switch description
 Default config in **bold**  
 <pre>
-  SW3   SW2   SW1   SW0
-+-----+-----+-----+------+
-|  Hard | ADAU|  BYPASS | MUTE |
-|     |     |     |      |
-|     |     |     |      |
-|  GUI | <b>SSM</b> |  <b>USE DSP</b> | <b>UNMUTE</b> |
-+-----+-----+-----+------+
+  SW3   SW2    SW1    SW0
++-----+-----+-------+------+
+| Hard| ADAU| BYPASS| MUTE |
+|     |     |       |      |
+|     |     |       |      |
+| <b>GUI</b> | <b>SSM</b> |<b>USE DSP</b>|<b>UNMUTE</b>|
++-----+-----+-------+------+
 </pre>
 
-SW3: Controller type select: hardware (Controller board) or software (GUI)
+SW3: Controller type select: hardware (Controller board) or software (GUI).  
 SW2: Audio codec input select (ADAU=external or SSM=onboard). Does not affect output.  
-SW1: Bypass audio dsp
-SW0: Mute  
+SW1: Bypass audio dsp.  
+SW0: Mute.  
 
 ### Status LEDs
 
@@ -118,7 +118,7 @@ You can find a history of all .xsa you generate for this version.
 To use it:  
 - Replace the `main_wrapper.xsa` in `hw_export` with the wanted .xsa in the backup file (and rename it `main_wrapper.xsa`).  
 - Change the name of the DSP in the makefile with the one you use to generate the .xsa you choose in the backup folder.  
-* WARNING: The DSP must be the same as the one used to compile the .xsa you are using (no code change)
+* WARNING: The DSP must be the same as the one used to compile the .xsa you are using (no code change)*  
 
 Just do:
 
