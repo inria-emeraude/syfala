@@ -36,7 +36,7 @@
   *     Z10: Zybo Z10
   *     Z20: Zybo Z20
   */
-#define ZYBO_VERSION Z20
+#define ZYBO_VERSION Z10
 
 /* ####################### Controller ################################# */
 /**
