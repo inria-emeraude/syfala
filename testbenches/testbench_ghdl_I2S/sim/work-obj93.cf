@@ -1,0 +1,7 @@
+v 4
+file "/home/trisset/technical/syfala-project/testbenches/testbench_ghdl_I2S/" "./test_bench_i2s.vhd" "82823616a5c950bd10bb4a7290cfd4f9bcdad1fb" "20220315090817.270":
+  entity test_bench_i2s at 12( 457) + 0 on 13;
+  architecture logic of test_bench_i2s at 22( 601) + 0 on 14;
+file "/home/trisset/technical/syfala-project/testbenches/testbench_ghdl_I2S/" "i2stranciever.vhd" "e360098b977329f0aba893f7b9d617efd82a94de" "20220315090817.267":
+  entity i2s_transceiver at 30( 1411) + 0 on 11;
+  architecture logic of i2s_transceiver at 54( 2624) + 0 on 12;
