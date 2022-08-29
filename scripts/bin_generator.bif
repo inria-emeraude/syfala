@@ -1,0 +1,7 @@
+//arch = zynq; split = false; format = BIN
+the_ROM_image:
+{
+    [bootloader]syfala_application/platform/zynq_fsbl/fsbl.elf
+    ./syfala_project/syfala_project.runs/impl_1/main_wrapper.bit
+    ./sw_export/application.elf
+}

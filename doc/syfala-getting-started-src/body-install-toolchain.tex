@@ -1,0 +1,194 @@
+\section{Install the syfala toolchain for syfala 6.3}
+\label{annex}
+\label{install}
+The Syfala toolchain is a compilation toolchain of Faust program on FPGA (currently Xilinx Zynq xc7z010clg400-1 present on Zybo-Z10 board). This document explains how to install and run the toolchain from version 6.3 and up (i.e. version without petalinux), on a linux\footnote{tested on Ubuntu 18.04 and Ubuntu 20.04} machine. In practice, installing the Syfala tool chain  means:
+\begin{itemize}
+\item Installing the Faust compiler, see section~\ref{faust-install} below.
+\item Creating a Xilinx account and downloading/installing a  version 2020.2 of Xilinx {\tt vivado} toolchain: {\tt vitis\_hls}, {\tt vivado} and {\tt vitis}. See section~\ref{vitis-install} below.
+\item Installing Vivado Board Files for Digilent Boards, see section~\ref{board-file-install}
+\item Installing udev rules to use JTAG connection, see section~\ref{sec-udev}  
+\item Cloning the Syfala directory and running a simple example as explained in Section~\ref{sec:example}.
+\end{itemize}
+
+      {\bf Warning:} You need approximately 50GB of disk space to install the tool chain, and a good connection. The installation take several hours. If the installer prompts a choice for which version to install, select the {\bf WebPack Edition} 
+           
+{\bf Warning} all the tools of Vivado come with shell scripts that set up your {\tt \$PATH} to use them. It is quite dangerous to source them in the {\tt .bashrc} file because it provides older version of important utilities (such as {\tt cmake} for instance). We strongly advise you to use a fonction defined in your {\tt .bashrc} file such as the following:
+~\\
+
+\begin{boxedminipage}{\textwidth}
+\begin{verbatim}
+  function use_vitis
+  {
+    source $myXilinxToolDirectory/Vivado/2020.2/settings64.sh
+    source $myXilinxToolDirectory/Vitis_HLS/2020.2/settings64.sh
+    source $myXilinxToolDirectory/Vitis/2020.2/settings64.sh
+  }
+\end{verbatim}
+\end{boxedminipage}
+
+\subsection{Installing Faust}
+\label{faust-install}
+It is recommanded to clone Faust from the github repository: \url{https://github.com/grame-cncm/faust}:
+\begin{verbatim}
+  git clone https://github.com/grame-cncm/faust faust
+  cd faust
+  make
+  sudo make install
+\end{verbatim}
+If you are using older version of Syfala, you might need to use older version of Faust (see {\tt version} files in Syfala directory). the procedure is to get the commit number of the version you need here: \url{https://github.com/grame-cncm/faust/releases}. For instance, if you use Syfala v5.4, it requires Faust version 2.31.1 (at least), it commit number is:  32a2e92c955c4e057d424ab69a84801740d37920, then execute:
+\begin{verbatim}
+cd faust 
+git checkout  32a2e92c955c4e057d424ab69a84801740d37920
+make 
+sudo make install
+\end{verbatim}
+
+\subsection{Installing {\tt Vivado}, {\tt Vitis} and {\tt Vitis\_hls} }
+\label{vitis-install}
+
+\red{If you encounter a bug during the installation, please see Section~\ref{bug}.}
+
+The procedure is the following
+\begin{itemize}
+\item Open an account on \url{https://www.xilinx.com/registration}
+\item The Xilinx download page
+  (\url{https://www.xilinx.com/support/download.html}) contains links for
+  downloading the ”Vivado Design Suite - HLx Edi-tions - Full Product”.
+  It is available for both Linux and Windows.  Download the  Linux installer\footnote{\url{https://www.xilinx.com/member/forms/download/xef.html?filename=Xilinx_Unified_2020.2_1118_1232_Lin64.bin}}
+\item Download \verb#Xilinx_Unified_2020.2_1118_1232_Lin64.bin#
+\item \verb#chmod a+x Xilinx_Unified_2020.2_1118_1232_Lin64.bin#
+\item \verb#./ Xilinx_Unified_2020.2_1118_1232_Lin64.bin# (is takes one hour and {\bf 100GB} on your hard drive).
+  We suggest to use the `` Download Image (Install Separately)'' option. It creates a directory with a {\tt xsetup} file to execute for installing that you can reuse in case of failure during the installation . See Section~\ref{installSave}.
+\item Launch {\tt xsetup}
+\item Choose to install {\tt Vitis} (it will install {\tt vivado, vitis and vitis\_hls}), It will need 110GB of disk space. If you uncheck Ultrascale, Ultrascale+, Versal ACAP and Alveo acceleration platform,  it uses less space and still work.
+\item Agree with everything and choose a directory to install 
+\item Install and wait for hours
+\item Setup the {\tt use\_vitis} function as explained above.
+\item Install missing Vivado board files for Digilent boards and drivers for linux (explained in Section~\ref{board-file-install} below).
+\end{itemize}
+
+\knownbug{You HAVE to follow sections~\ref{localSetting} and \ref{2k22patch}. If you do not, you might end up with unpredictible behaviour of Vivado.
+}
+
+
+
+
+\subsection{Installing Vivado Board Files and Linux drivers}
+\label{board-file-install}
+
+\subsubsection{Vivado Board Files for Digilent Boards}
+{\bf Important}: This step is needed to enable vivado to generate code for the Zybo Z10
+
+Look at \url{https://reference.digilentinc.com/learn/programmable-logic/tutorials/zybo-getting-started-with-zynq/start?redirect=1}
+
+it explains that you still have to install Vivado Board Files for Digilent Boards (Legacy). Basicaly, you gave to download a ZIP file and install it in a particular directory
+(for example: \verb#$HOME/vivado/Vivado/2020.2/data/boards/board_files#)
+
+\subsubsection{Cable drivers (Linux only)}
+For the Board to be recognized by the Linux system, it is necessary to install additional drivers. See \url{https://digilent.com/reference/programmable-logic/guides/install-cable-drivers}
+
+
+
+\subsection{Installing udev rules to use JTAG connection}
+\label{sec-udev}
+The udev rules must be configured to use the JTAG connection through USB. The udev rules configuration files are provided by {\tt Vivado}, they must be installed manually on your Linux.
+
+Here are the action to perform on Linux:
+\begin{itemize}
+\item Get the {\tt 52-digilent-usb.rules} file is directory:\\
+  {\tt Vivado/2020.2/data/xicom/cable\_drivers/lin64/}
+\item Copy it (as sudo) in /etc/udev/rules.d
+\end{itemize}
+That's it, you should be able to program the Zybo (using {\tt make standalone\_boot} in syfala or using the hardware manager in Vivado IDE). 
+
+\subsection{Clone the Syfala git and compile a Syfala application}
+The syfala repository is freely accessible (reading only) on  github (\url{https://github.com/inria-emeraude/syfala}), you have to have a github account of course to clone it. As mentionned before, there may be several sub-directories with different version of Syfala (i.e. different interface for Faust hardware IP). Here are the step needed to run Syfala:
+\begin{enumerate}
+  \item {\bf Clone Syfala github:} to clone the version needed and compile a first architecture you can use the following commands:
+
+\begin{boxedminipage}{\textwidth}
+  \begin{verbatim}
+    git clone https://github.com/inria-emeraude/syfala.git mysyfala
+\end{verbatim}
+\end{boxedminipage}
+
+
+\item {\bf Configure the parameter of your compilation action.}
+  A ``Syfala application'' in V6.3 is from from a unique source {\tt .dsp} Faust program that should be choosen in the {\tt Makefile}. Other parameter can be tuned in the {\tt configFAUST.h} file.
+
+  \begin{itemize}
+  \item {\bf choose the DSP to compile.} The {\tt Makefile} can perform all the step automatically, the {\tt .dsp} and {\tt .c} file are indicated at the beguinning. For instance, in the Makefile in the subdirectory {\tt syfala}:\\
+    \begin{boxedminipage}{\textwidth}
+\begin{verbatim}
+  mydsp?=virtualAnalog
+  DSP = ../faust/$(mydsp).dsp
+\end{verbatim}
+    \end{boxedminipage}
+    \item {\tt Choose the parameter of the compilation flow:} The application that will run on the Zybo ARM --  used to control the sliders of the {\tt .dsp} file-- is generated automatically . The parameters that can be changed are located in the {\tt configFAUST.h} file they consist of:
+\begin{itemize}
+\item Type of control: hardware or software (default)
+\item use DDR (default) or not
+\item sample rate (default 48000Hz)
+\item sample bit depth (default 24 bits)
+\item output volume (for headphone by default)
+\end{itemize}
+
+\item {\bf Generate hardware IP {\tt main\_wrapper.xsa}.} Go in the {\tt syfala} directory  and type {\tt make}:\\
+\begin{boxedminipage}{\textwidth}
+\begin{verbatim}
+cd syfala
+make
+\end{verbatim}
+\end{boxedminipage}
+\item {\bf This will take approximately 15 minutes }
+
+the {\tt main\_wrapper.xsa} file containing the Faust hardware IP is in directory {\tt build/hw\_export}. The files to be compiled on the ARM are in directory {\tt build/sw\_export}
+\end{itemize}
+\item {\bf Program the Zybo.}   Download the configuration on the Zybo: connect the Zybo by USB, make sure that the jumper are correctly positiionned (see {\tt README.md} file) 
+\begin{boxedminipage}{\textwidth}
+\begin{verbatim}
+make boot
+\end{verbatim}
+\end{boxedminipage}
+And  listen to the line output.
+
+\end{enumerate}
+
+
+\section{The \syfala team objectives}
+The \syfala project ({\em Synthetiseur Faible Latence pour FPGA}) has started as a FIL project, it will probably continue for a while. This docment explains the technical choices that have been made on the first versions of the \syfala toolchain.
+
+The \syfala toolchain is a compilation toolchain of Faust program on FPGA (currently Xilinx Zynq present on Zybo-Z7-10 board). The installation of the toolchain itself is explained  in Annex here (from p~\pageref{Annex1}).
+
+The objective is to compile Faust\footnote{\url{https://faust.grame.fr/}} programs on a FPGA platform with the objective of obtaining a short latency between input and output of the signal.
+
+Audio signal is sampled at (say) 48kHz. Hence one audio sample (i.e. one on each channel, two channels for stereo audio) arrives roughly every $2.083 \times 10^{-5}$ seconds, hence approximately every 20$\mu s$. In general it is considered that the latency (i.e. the time between the input of a sample and its effect on output) cannot go below 1 sample delay (i.e. 20$\mu s$). Our current syfala version is able to reach a latency of 191 $\mu s$ with the intergrated Analog Device SSM2603 codec and a latency 11.1 $\mu s$ with a more efficient codec (Analog Device ADAU 1787).
+
+%% When performing audio processing with a software system, such as on Linux OS, the sound processing is performed by the audio driver which handles the samples coming from the audio codec. The typical application on these systems will  play music files or apply an effect on a stream. Ultra-low latency is usually not a problem on this kind of software, but efficiency is. Efficiency is needed for audio real time (computing at least on sample every 20$\mu s$) and for having as few CPU cycles as possible, as audio processing is usually sharing the CPU resources  with many other tasks.
+
+%% For efficiency reason, all audio drivers are using buffers to communicate with the audio codec, it means that one driver activation will compute a bunch of samples, usually 64 or more. If a buffer of 64 samples is used, the latency is at least $1.3m s$ (i.e  roughly 64*20$\mu s$), then one have to add the time for interruption handling and audio processing itself. This latency has to be added to the codec latency itself (which usually can be configured, but is not negligible), which makes software solution inaplicable for low latency applications.
+
+%% Using and FPGA to realize audio processing would take advantage of $(i)$ high computing power (parallelism can be quite high on a FPGA circuit), and  more important $(ii)$ low latency (as samples are directly coming from/going to  audio codec to/from the FPGA circuit).
+
+Few examples of professional FPGA-based real-time audio DSP systems (i.e., Antelope Audio,\footnote{\url{https://en.antelopeaudio.com}} Korora Audio,\footnote{\url{https://www.kororaaudio.com}} etc.) and in these applications, FPGAs are dedicated to a specific task, limiting creativity and flexibility. Moreover, these designs where realized ``by hand'' i.e. by register transfer level design (in VHDL or Verilog) of the realized circuits. The idea of the \syfala project is to {\em compile} an FPGA configuration from a Faust audio processing specification. This is made possible by {\em High Level synthesis} (HLS) which is a compilation flow that transforms a software code (usually based on C-like syntax) into a HDL representation that can be further compiled with classical FPGA programming suites. The most well known HLS tools are {\tt vivadoHLS} (from {\tt Xilinx}), {\tt C2H} (from {\tt Altera}), {\tt CatapultC} (from {\tt Mentor Graphics}), but other tools are proposed today to bridge the gap between algorithmic representation and hardware level representation of a computation\footnote{See~\url{https://en.wikipedia.org/wiki/High-level_synthesis} for instance}. 
+This project has been launched by the Emeraude team\footnote{\url{https://team.inria.fr/emeraude/admin}} which is  a collaboration between Grame research department\footnote{\url{https://www.grame.fr/recherche}} and Citi laboratory.
+\subsection{The syfala team}
+Here is a list of person that have contributed to the Syfala project:
+\begin{itemize}
+\item Tanguy Risset
+\item Yann Orlarey
+\item Romain Michon
+\item Stephane Letz
+\item Florent de Dinechin
+\item Alain Darte
+\item Yohan Uguen
+\item Gero Müller
+\item Adeyemi Gbadamosi
+\item Ousmane Touat
+\item Luc Forget
+\item Antonin Dudermel
+\item Maxime Popoff
+\item Thomas Delmas
+\item Oussama Bouksim
+\end{itemize}
+

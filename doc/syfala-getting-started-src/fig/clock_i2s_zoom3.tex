@@ -1,0 +1,121 @@
+\def\decalage{.7}
+\def\shift{.8}
+
+\setlength{\unitlength}{1cm}
+%mclk
+\newcommand*{\mclki}{
+  \draw (t_cur) -- ++(0,.3) -- ++(0.25,0) -- ++(0,-.6) -- ++(0.25,0) -- ++(0,.3)
+    node[time] (t_cur) {};
+}
+
+
+% advance clock one cycle, not to be called directly
+\newcommand*{\clki}{
+  \draw (t_cur) -- ++(0,-.3) -- ++(1,0) -- ++(0,.6) node[time] (t_cur) {};
+  \draw[dotted] (t_cur) +(0.5,-3.7)  -- ++(0.5,0.4);
+  \draw (t_cur)  -- ++(1,0) -- ++(0,-.3)    node[time] (t_cur) {};
+}
+
+%ws clock = 32 * clock
+\newcommand*{\wsi}{
+  \draw (t_cur) -- ++(0,.3) -- ++(14,0)
+    node[time] (t_cur) {};
+}
+\newcommand*{\wsil}{
+  \draw (t_cur) +(0,-.3) -- ++(2,-.3) -- ++(0,.6) -- ++(12,0)
+    node[time] (t_cur) {};
+}
+
+\newcommand*{\bitvector}[3]{
+  \draw[fill=#3] (t_cur) -- ++( .1, .3) -- ++(#2-.2,0) -- ++(.1, -.3)
+                         -- ++(-.1,-.3) -- ++(.2-#2,0) -- cycle;
+  \path (t_cur) -- node[anchor=mid] {#1} ++(#2,0) node[time] (t_cur) {};
+}
+
+% \known{val}{length}
+\newcommand*{\known}[2]{
+    \bitvector{{\tiny #1}}{#2}{white}
+}
+
+% \unknown{length}
+\newcommand*{\unknown}[2][XXX]{
+    \bitvector{{\tiny ..}}{#2}{black!2}
+}
+
+% \bit{1 or 0}{length}
+\newcommand*{\bit}[2]{
+  \draw (t_cur) -- ++(0,.6*#1-.3) -- ++(#2,0) -- ++(0,.3-.6*#1)
+    node[time] (t_cur) {};
+}
+
+% \unknownbit{length}
+\newcommand*{\unknownbit}[1]{
+  \draw[ultra thick,black!50] (t_cur) -- ++(#1,0) node[time] (t_cur) {};
+}
+
+% \nextwave{name}
+\newcommand{\nextwave}[1]{
+  \path (0,\value{wavenum}) node[left] {#1} node[time] (t_cur) {};
+  \addtocounter{wavenum}{-1}
+}
+
+% \clk{name}{period}
+\newcommand{\clk}[2]{
+    \nextwave{#1}
+    \FPeval{\res}{(\wavewidth+1)/#2}
+    \FPeval{\reshalf}{#2/2}
+    \foreach \t in {1,2,...,\res}{
+        \bit{\reshalf}{1}
+        \bit{\reshalf}{0}
+    }
+}
+
+% \ws{name}{period}
+\newcommand{\ws}[2]{
+    \nextwave{#1}
+    \FPeval{\res}{(\wavewidth+1)/#2}
+    \FPeval{\reshalf}{#2/2}
+    \foreach \t in {1,2,...,\res}{
+        \bit{\reshalf}{1}
+        \bit{\reshalf}{0}
+    }
+}
+
+% \begin{wave}[clkname]{num_waves}{clock_cycles}
+\newenvironment{wave}[3][bclk]{
+  \begin{tikzpicture}[draw=black, yscale=.7,xscale=1,scale=0.8,every node/.style={scale=0.8}]
+    \tikzstyle{time}=[coordinate]
+    \setlength{\unitlength}{1cm}
+    \setcounter{wavenum}{0}
+    \nextwave{mclk}
+    \foreach \t in {0,1,...,12}{
+      \mclki
+      }
+    \draw[dotted] (t_cur) -- ++(1,0);
+    \nextwave{bclk}
+    \foreach \t in {0,1,...,2}{
+      \draw[dotted] (t_cur) +(0,1.5) node[above] {{\tiny \t}} -- ++(0,.4-#2);
+      \clki 
+      }
+    \draw[dotted] (t_cur) -- ++(1,0);
+}{\end{tikzpicture}}
+
+\begin{wave}{3}{3}
+  \nextwave{{ sd\_tx}}
+  \known{$Left^{i-1}(15)$}{2} \known{$Right^{i}(0)$}{2} \known{$Right^{i}(1)$}{2} -- ++(1,0);
+  \nextwave{~}
+  \draw[very thick] (t_cur) ++(0, 0.3) -- ++(0,-.6);
+  \draw[very thick] (t_cur) ++(\decalage, .3) -- ++(0,-.6);
+  \draw[<->,thick] (t_cur)++(0,0)  --  node[below] {\tiny $T_{sod}$} ++(\decalage,0) node[time] (t_cur) {};
+  
+  \draw[very thick] (t_cur) ++(\shift, .3) -- ++(0,-1.2);
+  \draw[<->,thick] (t_cur)++(0,0)  --  node[above,yshift=0.2] {\tiny $^{shifter}$} ++(\shift,0);
+  \nextwave{{ sd\_rx}}
+      \draw (t_cur)  ++(0, .3) -- ++(\decalage+\shift-.1,0) -- ++(.1, -.3);
+      \draw (t_cur)  ++(0, -.3) -- ++(\decalage+\shift-.1,0) -- ++(.1, .3);
+  %                       -- ++(-.1,-.3) -- ++(.2-.5,0)   -- cycle;
+  \path (t_cur) -- node[anchor=mid] {~} ++(\decalage+\shift,0) node[time] (t_cur) {};
+  \known{$Left^{i-1}(15)$}{2} %\draw[dotted] (t_cur) +(0,3.7)  -- ++(0,0);
+\known{$Right^{i}(0)$}{2} %\draw[dotted] (t_cur) +(0,3.7)  -- ++(0,0);
+\known{$Right^{i}(1)$}{2}  %\draw[dotted] (t_cur) +(0,3.7)  -- ++(0,3.7);
+\end{wave}

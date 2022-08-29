@@ -1,0 +1,131 @@
+%knob: piqué sur internet: https://tex.stackexchange.com/questions/525535/creating-a-audio-volume-dial-using-tikz
+\def\centerarc[#1](#2)(#3:#4:#5)
+              { \draw[#1] ($(#2)+({#5*cos(#3)},{#5*sin(#3)})$) arc (#3:#4:#5); }
+
+\newcommand\knob[1]{
+\centerarc[name path=arcc,fill=none,draw=black,line width=0.2]($(#1)$)(-60:240:2mm)
+\foreach \t [count=\i from 0] in {240,210,...,-60}{
+\path [name path=\t]($(#1)$)--++(\t:8.2mm);
+\path [name intersections={of=arcc and \t,by={\t1}}];
+\draw [line cap=round, line width=0.2](\t1)--++(\t:0.5mm);
+\path (\t1)--++(\t:1.5mm)node{\scalebox{0.5}{$\i$}};
+}
+}
+
+% taken from https://tex.stackexchange.com/questions/103688/folded-paper-shape-tikz
+\makeatletter
+\pgfdeclareshape{document}{
+\inheritsavedanchors[from=rectangle] % this is nearly a rectangle
+\inheritanchorborder[from=rectangle]
+\inheritanchor[from=rectangle]{center}
+\inheritanchor[from=rectangle]{north}
+\inheritanchor[from=rectangle]{south}
+\inheritanchor[from=rectangle]{west}
+\inheritanchor[from=rectangle]{east}
+% ... and possibly more
+\backgroundpath{% this is new
+% store lower right in xa/ya and upper right in xb/yb
+\southwest \pgf@xa=\pgf@x \pgf@ya=\pgf@y
+\northeast \pgf@xb=\pgf@x \pgf@yb=\pgf@y
+% compute corner of ‘‘flipped page’’
+\pgf@xc=\pgf@xb \advance\pgf@xc by-10pt % this should be a parameter
+\pgf@yc=\pgf@yb \advance\pgf@yc by-10pt
+% construct main path
+\pgfpathmoveto{\pgfpoint{\pgf@xa}{\pgf@ya}}
+\pgfpathlineto{\pgfpoint{\pgf@xa}{\pgf@yb}}
+\pgfpathlineto{\pgfpoint{\pgf@xc}{\pgf@yb}}
+\pgfpathlineto{\pgfpoint{\pgf@xb}{\pgf@yc}}
+\pgfpathlineto{\pgfpoint{\pgf@xb}{\pgf@ya}}
+\pgfpathclose
+% add little corner
+\pgfpathmoveto{\pgfpoint{\pgf@xc}{\pgf@yb}}
+\pgfpathlineto{\pgfpoint{\pgf@xc}{\pgf@yc}}
+\pgfpathlineto{\pgfpoint{\pgf@xb}{\pgf@yc}}
+\pgfpathlineto{\pgfpoint{\pgf@xc}{\pgf@yc}}
+}
+}
+\makeatother
+
+\begin{tikzpicture}
+
+  %.cpp level
+  \node[fill=gray!20,draw=black,minimum width=2cm,label={[xshift=0.9cm,yshift=-0.1cm]\tiny IP}] (ipcpp) {sine.cpp};
+  \node[fill=gray!20,draw=black, right of=ipcpp,xshift=2cm,minimum width=2cm,label={[xshift=-0.8cm,yshift=-0.1cm]\tiny App}] (appcpp) {sineApp.cpp};
+  \node[fit=(ipcpp)(appcpp),yshift=0.5cm] (cpp) {};
+  %Architecture files    
+  \node[above of=appcpp,yshift=-0.5cm,xshift=0.4cm](armcpp){};
+  \draw[fill=white](armcpp)  ++(-10pt,8pt) --++(32pt,0pt) --++(0pt,-14pt) --++(-14pt,0pt) --++(-4pt,-4pt) --++(-4pt,+4pt) --++(-10pt,0pt) --++(0pt,14pt) --cycle;
+  \draw[fill=white] (armcpp)node[xshift=0.2cm]{\footnotesize arm.cpp};
+  
+  \node[above of=ipcpp,yshift=-0.5cm,xshift=-0.8cm](fpgacpp){};
+  \draw[fill=white](fpgacpp)  ++(-12pt,8pt) --++(36pt,0pt) --++(0pt,-14pt) --++(-12pt,0pt) --++(-4pt,-4pt) --++(-4pt,+4pt) --++(-16pt,0pt) --++(0pt,14pt) --cycle;
+  \draw[fill=white] (fpgacpp)node[xshift=0.2cm]{\footnotesize fpga.cpp};
+  
+  %Faust compilers and dsp
+  \node[rounded corners=0.15cm, draw=black, above of=cpp] (compil) { Faust compiler};
+    \node[draw,
+        thick,
+        align=center,
+        color=black,
+        shape=document,
+        minimum height=16mm,
+        shape=document,
+        left of=compil,
+        xshift=-1.5cm,
+        yshift=0.4cm,
+        inner sep=2pt,
+        label={[xshift=-0.35cm, yshift=-0.35cm] \tiny Faust}] (dsp) {sine.dsp};
+        
+  
+
+  %Vitis/vivado level
+  \node[rounded corners=0.15cm, draw=black, below of=ipcpp,yshift=0.2cm,minimum height=0.55cm] (hls) {vitis\_hls / vivado};
+  \node[rounded corners=0.15cm, draw=black, below of=appcpp,yshift=0.2cm ] (vitis) {vitis / gcc};
+  
+
+  %Zybo
+  \node[fill=gray!20,draw=black, below of=vitis,minimum height=0.8cm,yshift=-1cm,xshift=-0.5cm] (elf) {app.elf};
+  \node[draw=black, fit=(elf),minimum height=1.6cm,minimum width=1.6cm,yshift=0.2cm,label={[yshift=-0.4cm,xshift=-0.4cm]\footnotesize ARM}] (arm) {};
+  
+  \node[fill=gray!20,draw=black,thick, left of=elf,minimum width=1.5cm,minimum height=0.8cm,xshift=-1.4cm,yshift=0.4cm] (ip) {IP Faust};
+  
+  \node[draw=black, fill=gray!20, below of=ip,xshift=-0.3cm,minimum width=0.8cm,] (iis) {\footnotesize I2S};
+
+
+  \node[draw=black, fit=(arm)(ip)(iis),minimum width=3cm,minimum height=2.2cm,label={[xshift=1.8cm,yshift=-2.25cm]\footnotesize SoC}] (soc) {};
+  \node[draw=black, below of=soc, minimum width=3.5cm,yshift=-0.5cm] (ddr) {\footnotesize DDR};
+  \node[draw=black, fit=(soc)(ddr)][thick] (zybo) {};
+  \node[above of=zybo,yshift=0.7cm] (zyboLabel) {\footnotesize ZYBO};
+
+ %GPIO
+ \node[draw=black,minimum width=0.5cm,minimum height=0.5cm, left of=iis,xshift=-0.4cm] (codec) {{\footnotesize Codec}};
+ \draw[<-] ($(codec)+(0.1cm,0.9cm)$) -- ($(codec)+(0.1cm,0.4cm)$);
+ \draw[->] ($(codec)+(-0.1cm,0.9cm)$) -- ($(codec)+(-0.1cm,0.4cm)$);
+ \node[above of=codec, yshift=0.2cm](audio){Audio};
+ \node[right of=arm,xshift=0.7cm,yshift=-1cm](knob){\tiny Controls};
+ \knob{$(knob)-(0cm,-0.5cm)$};
+ \node[above of=knob,yshift=0.7cm,xshift=-0.1cm] (spiLabel) {\tiny SPI/UART};
+
+%Up to down arrow
+  \draw[-] (compil) ++(-33pt,0pt) -- ++(-19pt,0pt);
+  \draw[->] (compil) -- (ipcpp);
+  \draw[->] (compil) -- (appcpp);
+  \draw[-] (ipcpp) -- (hls);
+  \draw[-] (appcpp) -- (vitis);
+  \draw[->] (hls) -- ++(0pt,-33pt);
+  \draw[->] (vitis) ++(0pt,-8pt) --++(0pt,-5pt)-- ++(-10pt,0pt) -- ++(0pt,-32pt);
+
+
+%Zybo arrow
+  \draw[thick][<->] (ip) ++(12pt,-12pt) --++(0pt,-33pt);
+  \draw[thick][<->] (elf) ++(-8pt,-17pt) --++(0pt,-16pt);
+  \draw[thick][<->] (iis) -- ++(0pt,16pt);
+  \draw[line width=0.7mm,draw=white][-] (iis) -- (codec);
+  \draw[thick][<->] (iis) -- (codec);
+
+  \draw[thick][<->] (ip) ++(22pt,-5pt) -- ++(24pt,0pt);
+  \draw[line width=0.7mm,draw=white][-](arm) ++(23pt,15pt) -- ++(25pt,0pt)-- ++(0pt,-15pt);
+  \draw[thick][<-] (arm) ++(23pt,15pt) -- ++(25pt,0pt)-- ++(0pt,-15pt);
+
+
+\end{tikzpicture}

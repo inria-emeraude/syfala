@@ -1,0 +1,92 @@
+\newcounter{wavenum}
+
+\setlength{\unitlength}{1cm}
+% advance clock one cycle, not to be called directly
+\newcommand*{\clki}{
+  \draw (t_cur) -- ++(0,-.3) -- ++(.2,0) -- ++(0,.6) -- ++(.2,0) -- ++(0,-.3)
+    node[time] (t_cur) {};
+}
+%ws clock = 32 * clock
+\newcommand*{\wsi}{
+  \draw (t_cur) -- ++(0,.3) -- ++(6.4,0) -- ++(0,-.6) -- ++(6.4,0) -- ++(0,.6) -- ++(0.4,0)
+    node[time] (t_cur) {};
+}
+
+\newcommand*{\bitvector}[3]{
+  \draw[fill=#3] (t_cur) -- ++( .1, .3) -- ++(#2-.2,0) -- ++(.1, -.3)
+                         -- ++(-.1,-.3) -- ++(.2-#2,0) -- cycle;
+  \path (t_cur) -- node[anchor=mid] {#1} ++(#2,0) node[time] (t_cur) {};
+}
+
+% \known{val}{length}
+\newcommand*{\known}[2]{
+    \bitvector{{\tiny #1}}{#2}{white}
+}
+
+% \unknown{length}
+\newcommand*{\unknown}[2][XXX]{
+    \bitvector{{\tiny ..}}{#2}{black!2}
+}
+
+% \bit{1 or 0}{length}
+\newcommand*{\bit}[2]{
+  \draw (t_cur) -- ++(0,.6*#1-.3) -- ++(#2,0) -- ++(0,.3-.6*#1)
+    node[time] (t_cur) {};
+}
+
+% \unknownbit{length}
+\newcommand*{\unknownbit}[1]{
+  \draw[ultra thick,black!50] (t_cur) -- ++(#1,0) node[time] (t_cur) {};
+}
+% \nextwave{name}
+\newcommand{\nextwave}[1]{
+  \path (0,\value{wavenum}) node[left] {#1} node[time] (t_cur) {};
+  \addtocounter{wavenum}{-1}
+}
+
+% \clk{name}{period}
+\newcommand{\clk}[2]{
+    \nextwave{#1}
+    \FPeval{\res}{(\wavewidth+1)/#2}
+    \FPeval{\reshalf}{#2/2}
+    \foreach \t in {1,2,...,\res}{
+        \bit{\reshalf}{1}
+        \bit{\reshalf}{0}
+    }
+}
+
+% \ws{name}{period}
+\newcommand{\ws}[2]{
+    \nextwave{#1}
+    \FPeval{\res}{(\wavewidth+1)/#2}
+    \FPeval{\reshalf}{#2/2}
+    \foreach \t in {1,2,...,\res}{
+        \bit{\reshalf}{1}
+        \bit{\reshalf}{0}
+    }
+}
+
+% \begin{wave}[clkname]{num_waves}{clock_cycles}
+\newenvironment{wave}[3][bclk]{
+  \begin{tikzpicture}[draw=black, yscale=.7,xscale=1]
+    \tikzstyle{time}=[coordinate]
+    \setlength{\unitlength}{1cm}
+    \def\wavewidth{#3}
+    \setcounter{wavenum}{0}
+    \nextwave{#1}
+    \foreach \t in {0,1,...,\wavewidth}{
+      \draw[dotted] (t_cur) +(0,.5) node[above] {{\tiny \t}} -- ++(0,.4-#2);
+      \clki
+      }
+    \nextwave{ws}
+    \wsi
+}{\end{tikzpicture}}
+
+\begin{wave}{2}{32}
+  \nextwave{{ sd\_tx}}
+  \known{x}{.4} \known{1}{.4} \known{2}{.4}
+  \unknown[ ]{.4} \unknown[ ]{.4} \unknown[ ]{.4} \unknown[ ]{.4} \unknown[ ]{.4}\unknown[ ]{.4} \unknown[ ]{.4} \unknown[ ]{.4} \unknown[ ]{.4} \unknown[ ]{.4} \known{13}{.4} \known{14}{.4} \known{15}{.4} \known{16}{.4}
+ \known{1}{.4} \known{2}{.4} \known{3}{.4} \known{4}{.4}
+  \unknown[ ]{.4} \unknown[ ]{.4} \unknown[ ]{.4} \unknown[ ]{.4} \unknown[ ]{.4}\unknown[ ]{.4} \unknown[ ]{.4} \unknown[ ]{.4} \unknown[ ]{.4} \unknown[ ]{.4} \known{15}{.4} \known{16}{.4} 
+  
+\end{wave}

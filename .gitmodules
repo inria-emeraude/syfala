@@ -1,0 +1,3 @@
+[submodule "misc/vivado-boards"]
+	path = misc/vivado-boards
+	url = https://github.com/Digilent/vivado-boards
