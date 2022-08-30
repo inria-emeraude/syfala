@@ -172,7 +172,7 @@ if { $BOARD == "Z10" || $BOARD == "Z20" } {
   set IN_CLK_FREQ 125
   # SYS_CLK_FREQ Values= 122.885835 (-period 8.137634) |  737.5 (-period 1.355932)
   set SYS_CLK_FREQ 122.885835
-  set SYSCLK_I2S_RATIO 60
+  set SYSCLK_I2S_RATIO 10
 } elseif { $BOARD == "GENESYS" } {
   set IN_CLK_FREQ 25
   set SYS_CLK_FREQ 122.875
