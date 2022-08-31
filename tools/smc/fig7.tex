@@ -1,0 +1,205 @@
+% -----------------------------------------------
+% Template for SMC 2022
+% based on SMC 2022 template
+% -----------------------------------------------
+
+\documentclass{article}
+\usepackage{smc}
+\usepackage{times}
+\usepackage{ifpdf}
+\usepackage[english]{babel}
+\usepackage{cite}
+\usepackage{tablefootnote}
+\usepackage{xspace}
+\usepackage[binary-units=true]{siunitx}
+\DeclareSIUnit\kilohertz{\kilo\hertz}
+\DeclareSIUnit\megahertz{\mega\hertz}
+\DeclareSIUnit\microsecond{\micro\second}
+\DeclareSIUnit\megabyte{\mega\byte}
+
+\usepackage{boxedminipage}
+\usepackage{moreverb}
+%\PassOptionsToPackage{\graphicspath{{./fig/}}}{graphicx}
+
+\usepackage{enumitem}
+
+%%%%%%%%%%%%%%%%%%%%%%%% Some useful packages %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%% See related documentation %%%%%%%%%%%%%%%%%%%%%%%%%%
+%\usepackage{amsmath} % popular packages from Am. Math. Soc. Please use the 
+%\usepackage{amssymb} % related math environments (split, subequation, cases,
+%\usepackage{amsfonts}% multline, etc.)
+%\usepackage{bm}      % Bold Math package, defines the command \bf{}
+%\usepackage{paralist}% extended list environments
+%%subfig.sty is the modern replacement for subfigure.sty. However, subfig.sty 
+%%requires and automatically loads caption.sty which overrides class handling 
+%%of captions. To prevent this problem, preload caption.sty with caption=false 
+%\usepackage[caption=false]{caption}
+%\usepackage[font=footnotesize]{subfig}
+
+% for using twice the sale footnote: https://tex.stackexchange.com/questions/35043/reference-different-places-to-the-same-footnote
+\makeatletter
+\newcommand\footnoteref[1]{\protected@xdef\@thefnmark{\ref{#1}}\@footnotemark}
+\makeatother
+
+
+\newcommand{\F}{{\sc Faust}}
+\newcommand{\FTFP}{{\sc Faust2FPGA}}
+
+%user defined variables
+%\def\papertitle{Towards an Accessible FPGA-Based Platform for Ultra-Low Real-Time Audio Signal Processing}
+\def\papertitle{Towards an FPGA-Based Compilation Flow for\\Ultra-Low Latency Audio Signal Processing}
+\def\firstauthor{Maxime Popoff,$^a$ Romain Michon,$^b$ Tanguy Risset,$^a$ Yann Orlarey,$^c$ and St\'ephane Letz$^c$}
+
+% adds the automatic
+% Saves a lot of output space in PDF... after conversion with the distiller
+% Delete if you cannot get PS fonts working on your system.
+
+% pdf-tex settings: detect automatically if run by latex or pdflatex
+\newif\ifpdf
+\ifx\pdfoutput\relax
+\else
+   \ifcase\pdfoutput
+      \pdffalse
+   \else
+      \pdftrue
+\fi
+
+\ifpdf % compiling with pdflatex
+\usepackage[pdftex,
+ %pdftitle={Towards an FPGA-Based Compilation Flow for Ultra-Low Latency Audio Signal Processing},
+  pdfauthor={Maxime Popoff, Romain Michon, Tanguy Risset, Yann Orlarey, and Stephane Letz},
+  bookmarksnumbered, % use section numbers with bookmarks
+  pdfstartview=XYZ % start with zoom=100% instead of full screen; 
+  % especially useful if working with a big screen :-)
+]{hyperref}
+  %\pdfcompresslevel=9
+  \usepackage[pdftex]{graphicx}
+  % declare the path(s) where your graphic files aere and their extensions so 
+  %you won't have to specify these with every instance of \includegraphics
+  \graphicspath{{fig/}}
+  \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
+
+  \usepackage[figure,table]{hypcap}
+
+\else % compiling with latex
+  \usepackage[dvips,
+    bookmarksnumbered, % use section numbers with bookmarks
+    pdfstartview=XYZ % start with zoom=100% instead of full screen
+  ]{hyperref}  % hyperrefs are active in the pdf file after conversion
+
+  %\usepackage[dvips]{epsfig,graphicx}
+  % declare the path(s) where your graphic files are and their extensions so 
+  %you won't have to specify these with every instance of \includegraphics
+  \usepackage[pdftex]{graphicx}
+  \graphicspath{{fig/}}
+  \DeclareGraphicsExtensions{.eps}
+
+  \usepackage[figure,table]{hypcap}
+\fi
+
+%\usepackage{geometry}
+\usepackage{tikz}
+\usetikzlibrary{calc, arrows, shapes, fit}
+\usetikzlibrary{positioning,intersections}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.8}
+
+
+%setup the hyperref package - make the links black without a surrounding frame
+\hypersetup{
+    colorlinks,%
+    citecolor=black,%
+    filecolor=black,%
+    linkcolor=black,%
+    urlcolor=black
+}
+
+% Title.
+% ------
+\title{\papertitle}
+
+% Authors
+% Please note that submissions are NOT anonymous, therefore 
+% authors' names have to be VISIBLE in your manuscript. 
+%
+% Single address
+% To use with only one author or several with the same address
+% ---------------
+% RM: est-ce que mon affiliation pour l'INRIA est correcte ? Ça me semble bizarre comme ça...
+\oneauthor
+  {\firstauthor} {$^a$Univ Lyon, INSA Lyon, Inria, CITI, EA3720, 69621 Villeurbanne, France \\ $^b$Univ Lyon, Inria, INSA Lyon, CITI, EA3720, 69621 Villeurbanne, France
+% \\ $^c$GRAME - Centre National de Cr\'eation Musicale, 11 cours de Verdun-Gensoul, 69002 Lyon, France \\ %
+\\ $^c$Univ Lyon, GRAME-CNCM, INSA Lyon, Inria, CITI, EA3720, 69621 Villeurbanne, France \\
+    {\tt \href{mailto:maxime.popoff@insa-lyon.fr}{maxime.popoff@insa-lyon.fr}}}
+
+%Two addresses
+%--------------
+% \twoauthors
+%   {\firstauthor} {Affiliation1 \\ %
+%     {\tt \href{mailto:author1@smcnetwork.org}{author1@smcnetwork.org}}}
+%   {\secondauthor} {Affiliation2 \\ %
+%     {\tt \href{mailto:author2@smcnetwork.org}{author2@smcnetwork.org}}}
+
+% Three addresses
+% --------------
+%  \threeauthors
+%   {\firstauthor} {Affiliation1 \\ %
+%      {\tt \href{mailto:author1@smcnetwork.org}{author1@smcnetwork.org}}}
+%   {\secondauthor} {Affiliation2 \\ %
+%      {\tt \href{mailto:author2@smcnetwork.org}{author2@smcnetwork.org}}}
+%   {\thirdauthor} { Affiliation3 \\ %
+%      {\tt \href{mailto:author3@smcnetwork.org}{author3@smcnetwork.org}}}
+
+% ***************************************** the document starts here ***************
+
+\begin{document}
+%\pgfplotsset[compat=1.18]
+
+\begin{figure}
+\begin{boxedminipage}{\columnwidth}
+  \tiny
+\begin{verbatim}
+import("stdfaust.lib");
+
+t60 = 30;
+pulse = button("gate") : ba.impulsify;
+
+process = pulse : pm.frenchBellModel(N,0,t60,1,2.5);
+\end{verbatim}
+\end{boxedminipage}
+\caption{The {\tt bellN.dsp} program used to produce the results presented of Fig.~\ref{fig:init}. {\tt N} should be replaced by an integer value indicating the number of resonant filters used to provide the bell sound.}
+\label{fig:bell}
+\end{figure}
+
+\begin{figure} 
+\centering
+\begin{tikzpicture}[scale=0.8]
+  \begin{axis}[%title=\% of use of Zybo FPGA ressource for {\tt bell.dsp},
+      xlabel= N: Number of biquad used in {\tt bell.dsp},
+      ylabel=\% of use of FPGA resource,
+    legend entries={\%LUT (FPGA Init),\%LUT (ARM init),\%DSP (FPGA Init),\%DSP (ARM Init)}]
+  \addplot[scatter,only marks, point meta=explicit symbolic,
+    scatter/classes={
+      v6.1={mark=square,red},
+      v6.3={mark=square*,blue}}]
+  table [x=N, y=LUT, col sep=comma, meta=Version]{../reports/report-bell.csv};
+    \addplot[scatter,only marks, point meta=explicit symbolic,
+    scatter/classes={
+      v6.1={mark=triangle,red},
+      v6.3={mark=triangle*,blue}}]
+    table [x=N, y=DSP, col sep=comma, meta=Version]{../reports/report-bell.csv};
+    \addplot[black,domain=0:30,very thick]{100}
+    node[xshift=-2.7cm,yshift=0.2cm]{100\% FPGA usage};
+  \end{axis}
+\end{tikzpicture}
+\caption{Percentage of Zybo FPGA Look Up Tables (LUTs) and DSPs$^{22}$ usage for various sizes (i.e., number of biquads) of the {\tt bell.dsp} \F{} program (see Fig~\ref{fig:bell}), with initialization on the ARM processor (in blue) or on the FPGA (in red).}
+\label{fig:init}
+\end{figure}
+
+\begin{table}
+  \centering
+  \input{../reports/report-latency-bell.tex}
+  \caption{Latency (in FPGA sys\_clock cycles) of one sample computation for the experiments shown on Fig.~\ref{fig:init}. Should be less that 2500 (at 48kHz). In practice, v6.1 ``works'' (i.e. make a bell sound, with ``crachotements'') up to N=15 and nothing after, no problem with v6.3}
+  \label{tab:latency}
+\end{table}
+\end{document}

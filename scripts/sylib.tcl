@@ -23,18 +23,19 @@ set BUILD_INCLUDE_DIR           $BUILD_DIR/include
 set BUILD_SOURCES_DIR           $BUILD_DIR/sources
 set BUILD_GUI_DIR               $BUILD_DIR/gui
 set BUILD_CONFIG_FILE           $BUILD_INCLUDE_DIR/syconfig.hpp
+set BUILD_LOG                   $ROOT/syfala_log.txt
 
 set HLS_SCRIPT                  $Syfala::SCRIPTS_DIR/hls.tcl
 set FAUST2VHDL_SCRIPT           $Syfala::SCRIPTS_DIR/faust2vhdl.tcl
-set APPLICATION_SCRIPT		$Syfala::SCRIPTS_DIR/application.tcl
-set PROJECT_SCRIPT_TEMPLATE	$Syfala::SCRIPTS_DIR/project.tcl
-set PROJECT_SCRIPT		$Syfala::BUILD_SOURCES_DIR/project.tcl
-set SYNTHESIS_SCRIPT		$Syfala::SCRIPTS_DIR/synthesis.tcl
-set JTAG_SCRIPT			$Syfala::SCRIPTS_DIR/jtag.tcl
-set BIN_GENERATOR		$Syfala::SCRIPTS_DIR/bin_generator.bif
+set APPLICATION_SCRIPT          $Syfala::SCRIPTS_DIR/application.tcl
+set PROJECT_SCRIPT_TEMPLATE     $Syfala::SCRIPTS_DIR/project.tcl
+set PROJECT_SCRIPT              $Syfala::BUILD_SOURCES_DIR/project.tcl
+set SYNTHESIS_SCRIPT            $Syfala::SCRIPTS_DIR/synthesis.tcl
+set JTAG_SCRIPT                 $Syfala::SCRIPTS_DIR/jtag.tcl
+set BIN_GENERATOR               $Syfala::SCRIPTS_DIR/bin_generator.bif
 
 set VHDL_DIR                    $Syfala::SOURCE_DIR/vhdl
-set XDC_DIR		                  $Syfala::VHDL_DIR/constraints
+set XDC_DIR                     $Syfala::VHDL_DIR/constraints
 set FIXED_FLOAT_TYPES_C         $Syfala::VHDL_DIR/fixed_float_types_c.vhd
 set FIXED_PKG_C                 $Syfala::VHDL_DIR/fixed_pkg_c.vhd
 set FLOAT_PKG_C                 $Syfala::VHDL_DIR/float_pkg_c.vhd
@@ -49,7 +50,7 @@ color                           \
 print_ok                        \
 print_info                      \
 print_error                     \
-strctn                          \
+contains                        \
 rstbuild                        \
 check_xroot                     \
 set_xenv                        \
@@ -67,28 +68,44 @@ proc color { c t } {
     return [exec tput setaf $c]$t[exec tput sgr0]
 }
 
+proc basic_print { txt } {
+    set foutput [open $::Syfala::BUILD_LOG a+   ]
+    puts  $txt
+    puts  $foutput "[get_time] - $txt"
+    close $foutput
+}
+
 proc print_ok { txt } {
-    puts "\[  [color 2 OK]  \] $txt"
+    basic_print "\[  [color 2 OK]  \] $txt"
 }
 
 proc print_info { txt } {
-    puts "\[ [color 11 INFO] \] $txt"
+    basic_print "\[ [color 11 INFO] \] $txt"
 }
 
 proc print_error { txt } {
-    puts "\[ [color 1 ERR!] \] $txt"
+    basic_print "\[ [color 1 ERR!] \] $txt"
+}
+
+proc contains { s v } {
+     if {[string first $s $v] != -1} {
+         return 1
+     } else {
+         return 0
+     }
 }
 
 ## Resets build directory from syfala root directory
 proc rstbuild {} {
+    # we've got to print it first, because otherwise the log
+    # file will disappear...
+    print_ok "Reset build directory"
     file delete -force -- $::Syfala::BUILD_DIR
     file delete {*}[glob -nocomplain vivado_*]
     file delete {*}[glob -nocomplain vivado.*]
     file delete {*}[glob -nocomplain vitis_*]
     file delete {*}[glob -nocomplain *.log]
     file delete -force -- .Xil
-
-    print_ok "Reset build directory"
 }
 
 ## Checks installation of a specific Xilinx tool
@@ -121,10 +138,10 @@ proc set_xenv { x v t } {
 ## sets it to $v value
 proc set_syconfig_define { t v } {
     set found 0
-    set fr [open $Syfala::BUILD_CONFIG_FILE "r"]
+    set fr   [open $Syfala::BUILD_CONFIG_FILE "r"]
     set data [read $fr]
     close $fr
-    set fw [open $Syfala::BUILD_CONFIG_FILE "w"]
+    set fw   [open $Syfala::BUILD_CONFIG_FILE "w"]
     foreach l [split $data "\n"] {
 	if { !$found } {
 	    foreach w [regexp -all -inline {\S+} $l] {
@@ -141,6 +158,12 @@ proc set_syconfig_define { t v } {
     close $fw
 }
 
+proc get_time {} {
+    set stime [clock seconds]
+    set htime [clock format $stime -format %H:%M:%S]
+    return $htime
+}
+
 proc generate_build_id {} {
     set stime [clock seconds]
     set dtime [clock format $stime -format {%Y-%m-%d}]
@@ -153,6 +176,7 @@ proc print_elapsed_time { start } {
     set len  [expr $end - $start]
     set fmt  [clock format $len -format {%M minutes and %S seconds}]
     print_info "Script has been running for $fmt"
+    return $fmt
 }
 
 proc initialize_build {} {
@@ -199,16 +223,51 @@ set ARCH_HOST_DST_FILE       $ARCH_HOST_DST_DIR/syfala_application.cpp
 set GUI_SRC_FILE         $SOURCE_DIR/control/gui-controls.cpp
 set GUI_DST_FILE         $::Syfala::BUILD_GUI_DIR/faust-gui.cpp
 
+proc mem_access_count {} {
+    set target_file [open $Faust::ARCH_FPGA_DST_FILE r]
+    set data [read $target_file]
+    set compute_fn 0
+    set count 0
+    set done  0
+
+    print_info "Analyzing HLS IP memory accesses"
+    foreach line [split $data "\n"] {
+        if {[contains "computemydsp" $line]} {
+            set compute_fn 1
+            print_info "Entering 'computemydsp' function'"
+            print_info "Counting izone/fzone accesses"
+            continue
+        }
+        if {$compute_fn == 1} {
+            foreach w [regexp -all -inline {\S+} $line] {
+                if {[Syfala::contains "iZone" $w] || [Syfala::contains "fZone" $w]} {
+                    incr count
+                } elseif {$w == "\}"} {
+                    set done 1
+                    break
+                }
+            }
+            if {$done == 1} {
+                print_info "Exiting 'computemydsp' function"
+                break
+            }
+        }
+    }
+    print_info "There are a total of $count izone/fzone accesses in generated HLS IP"
+    close $target_file
+    return $count
+}
+
 ## Runs Faust compiler to generate FPGA IP from
 ## $ARCH_FPGA_SRC_FILE architecture file
 ## generated output will be located in $ARCH_FPGA_DST_FILE
 proc generate_ip_hls { dsp } {
     print_info "Generating Faust IP from Faust compiler & architecture file"
     file mkdir $Faust::ARCH_FPGA_DST_DIR
-    puts $dsp
-    exec faust $dsp -lang c -light -os2 -uim -mcd 0	\
-	 -a $Faust::ARCH_FPGA_SRC_FILE			\
-	 -o $Faust::ARCH_FPGA_DST_FILE
+    exec faust $dsp -lang c -light -os2 -uim -mcd 0  \
+     -a $Faust::ARCH_FPGA_SRC_FILE                   \
+     -o $Faust::ARCH_FPGA_DST_FILE                   \
+     -t 0
     print_ok "Generated $Faust::ARCH_FPGA_DST_FILE"
 }
 
@@ -228,7 +287,8 @@ proc generate_host { dsp src } {
     file mkdir $Faust::ARCH_HOST_DST_DIR
     exec faust $dsp -i -lang cpp -os2 -uim -mcd 0   \
          -a $src                                    \
-	 -o $Faust::ARCH_HOST_DST_FILE
+         -o $Faust::ARCH_HOST_DST_FILE              \
+         -t 0
     print_ok "Generated $Faust::ARCH_HOST_DST_FILE"
 }
 
@@ -241,7 +301,7 @@ proc generate_gui_app { dsp } {
     set pkgc [exec pkg-config --libs --cflags gtk+-2.0]
     lappend pkgc -I$::Syfala::INCLUDE_DIR
     set cmd "c++ -v -std=c++11 $Faust::GUI_DST_FILE $pkgc -o $::Syfala::BUILD_GUI_DIR/faust-gui"
-    exec {*}$cmd >&@stdout
+    exec {*}$cmd >&@stdout | tee -a $Syfala::BUILD_LOG
 }
 }
 
@@ -310,7 +370,7 @@ proc get_board_constraint { board } {
 
 proc compile_host { config board } {
     print_info "Compiling Host control application"
-    exec xsct $::Syfala::APPLICATION_SCRIPT $config $board >&@stdout |& tee vitis.log
+    exec xsct $::Syfala::APPLICATION_SCRIPT $config $board >&@stdout | tee -a $::Syfala::BUILD_LOG
     print_ok "Finished building host application"
     file mkdir sw_export
     file copy -force syfala_application/application/src sw_export
@@ -335,7 +395,7 @@ proc flash_jtag {board} {
 namespace eval Vitis_HLS {
     proc run { script args } {
         print_info "Running Vitis HLS on file $script"
-        exec vitis_hls -f $script $args >&@stdout
+        exec vitis_hls -f $script $args >&@stdout | tee -a $::Syfala::BUILD_LOG
         # copy report to BUILD_DIR
         file copy -force syfala_ip/syfala/syn/report/syfala_csynth.rpt $::Syfala::BUILD_DIR
     }
@@ -344,17 +404,17 @@ namespace eval Vitis_HLS {
     }
 }
 namespace eval Vivado {
-
     proc run { script args } {
 	print_info "Running Vivado on file $script"
-	exec vivado -mode batch			\
+    exec vivado -mode batch     \
 		    -notrace			\
 		    -source $script		\
-		    -tclargs $args >&@stdout
+            -tclargs $args      \
+            >&@stdout | tee -a $::Syfala::BUILD_LOG
     }
 
     proc get_cable_drivers_installer_path {x} {
-	return "$x/Vivado/$TOOLCHAIN_VERSION/data/xicom/cable_drivers/lin64/install_script/install_drivers"
+        return "$x/Vivado/$TOOLCHAIN_VERSION/data/xicom/cable_drivers/lin64/install_script/install_drivers"
     }
 }
 }

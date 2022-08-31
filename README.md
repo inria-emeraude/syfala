@@ -8,7 +8,7 @@ Please follow the instructions in the file [doc/dependencies.md](doc/dependencie
 
 ## Installing
 
-`$ ./syfala.tcl --install` will install a symlink in /usr/bin. After this you'll be able to just run: 
+the command `$ ./syfala.tcl install` will install a **symlink** in **/usr/bin**. After this you'll be able to just run: 
 
 `$ syfala myfaustprogram.dsp` 
 
@@ -24,18 +24,55 @@ export XILINX_ROOT_DIR=/my/path/to/Xilinx/root/directory
 
 ## Quick start
 
-Running syfala (all steps) on a .dsp file and export the build as a .zip: 
+#### build examples
 
-`$ syfala examples/virtualAnalog.dsp --export virtualanalog  `
+```shell
+$ syfala examples/virtualAnalog.dsp
+# -> runs full toolchain on the virtualAnalog.dsp Faust dsp file, which will be ready to be flashed afterwards on a Zybo Z710 board (by default)
+
+$ syfala examples/virtualAnalog.dsp --board GENESYS --sample-rate 96000
+# -> runs full toolchain for the Genesys board, with a sample-rate of 96000Hz
+
+$ syfala examples/phasor.dsp --export phasor-build
+# -> runs full toolchain on 'phasor.dsp', automatically exporting the build to 
+# export/phasor-build.zip
+
+$ syfala examples/fm.dsp --arch --hls --report
+# -> only run 'arch' & 'high-level synthesis' (HLS) step on 'fm.dsp', and show the report afterwards.
+
+$ syfala examples/fm.dsp --board Z20 --arch --hls --export z20-fm-hls-build
+# -> only run 'arch' & HLS step on 'fm.dsp' for Zybo Z20 board, and export the build.
+```
+
+### Additional 'one-shot' commands
+
+| name          | description                                                  | arguments         |
+| ------------- | ------------------------------------------------------------ | ----------------- |
+| `install`     | installs this script as a symlink in /usr/bin/               | none              |
+| `clean`       | deletes current build directory                              | none              |
+| `export`      | exports current build in a .zip file located in the 'export' directory | name of the build |
+| `report`      | prints HLS report of the current build                       | none              |
+| `demo`        | fully builds demo based on default example (virtualAnalog.dsp) | none              |
+| `flash`       | flashes current build onto target device                     | none              |
+| `gui`         | executes the Faust-generated gui application                 | none              |
+| `rebuild-app` | rebuilds the host control application, without re-synthesizing the whole project | none              |
+
+#### command examples
+
+```shell
+$ syfala clean
+$ syfala demo
+$ syfala export my-current-build
+$ syfala rebuild-app
+$ syfala flash
+```
 
 ### General Options
 
-| option               |        accepted values        | description                                                  |
-| -------------------- | :---------------------------: | ------------------------------------------------------------ |
-| **`--compiler, -c`** |         `HLS | VHDL`          | chooses between **HLS** (default) or **VHDL** for Faust IP generation |
-| **`--report, -r`**   |           no value            | displays **HLS report** at the end of the toolchain run (HLS only) |
-| **`--export, -e`**   | build identifier (any string) | exports build directory as a .zip file                       |
-| **`--demo `**        |           no value            | this runs the toolchain as follows: `syfala examples/virtualAnalog.dsp --all --export demo --report --gui --flash ` |
+| option          | accepted values | description                                                  |
+| --------------- | :-------------: | ------------------------------------------------------------ |
+| `-c --compiler` | `HLS* | VHDL `  | chooses between Vitis HLS and faust2vhdl for DSP IP generation. |
+| `--reset`       |        /        | resets current build directory before building (**careful**! all files from previous build will be lost) |
 
 ### Run steps
 
@@ -43,17 +80,17 @@ Running syfala (all steps) on a .dsp file and export the build as a .zip:
 
 `syfala myfaustdsp.dsp `
 
-| `--all`             | runs all toolchain compilation steps (from `--arch` to `--gui`) |
-| ------------------- | ------------------------------------------------------------ |
-| **`--reset`**       | resets current build directory (**careful, all files from previous build will be lost**) |
-| **`--arch`**        | uses Faust to generate ip/host cpp files for HLS  and Host application compilation |
-| **`--ip`**          | runs Vitis HLS on generated ip cpp file                      |
-| **`--project`**     | generates Vivado project                                     |
-| **`--syn`**         | synthesizes full Vivado project                              |
-| **`--app`**         | compiles Host application, exports sources and .elf output to `build/sw_export` |
-| **`--app-rebuild`** | recompiles Host application (running `--app` won't work if you only want to rebuild the application after some changes) |
-| **`--gui`**         | compiles Faust GUI controller                                |
-| **`--flash`**       | flashes boot files on device                                 |
+| `--all`            | runs all toolchain compilation steps (from `--arch` to `--gui`) |
+| ------------------ | ------------------------------------------------------------ |
+| **`--arch`**       | uses Faust to generate ip/host cpp files for HLS  and Host application compilation |
+| **`--hls --ip`**   | runs Vitis HLS on generated ip cpp file                      |
+| **`--project`**    | generates Vivado project                                     |
+| **`--synth`**      | synthesizes full Vivado project                              |
+| **`--host --app`** | compiles Host application, exports sources and .elf output to `build/sw_export` |
+| **`--gui`**        | compiles Faust GUI controller                                |
+| **`--flash`**      | flashes boot files on device at the end of the run           |
+| **`--report`**     | prints HLS report at the end of the run                      |
+| **`--export`**     | `<id>` exports build to export/ directory at the end of the run |
 
 ### Run parameters
 
