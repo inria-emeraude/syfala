@@ -1,0 +1,88 @@
++ With N = 2 (board: GENESYS)
+    - Memory accesses: 0 read(s), 0 write(s)
+    - IP & application files generated in 132 milliseconds
+    - High-level synthesis done in 00 minutes and 36 seconds
+    +---------+---------+----------+----------+-----+-----+---------+
+    |  Latency (cycles) |  Latency (absolute) |  Interval | Pipeline|
+    |   min   |   max   |    min   |    max   | min | max |   Type  |
+    +---------+---------+----------+----------+-----+-----+---------+
+    |       29|      178|  0.236 us|  1.449 us|   30|  179|     none|
+    +---------+---------+----------+----------+-----+-----+---------+
+
++ With N = 4 (board: GENESYS)
+    - Memory accesses: 0 read(s), 0 write(s)
+    - IP & application files generated in 162 milliseconds
+    - High-level synthesis done in 00 minutes and 36 seconds
+    +---------+---------+----------+----------+-----+-----+---------+
+    |  Latency (cycles) |  Latency (absolute) |  Interval | Pipeline|
+    |   min   |   max   |    min   |    max   | min | max |   Type  |
+    +---------+---------+----------+----------+-----+-----+---------+
+    |       50|      202|  0.407 us|  1.644 us|   51|  203|     none|
+    +---------+---------+----------+----------+-----+-----+---------+
+
++ With N = 8 (board: GENESYS)
+    - Memory accesses: 0 read(s), 0 write(s)
+    - IP & application files generated in 203 milliseconds
+    - High-level synthesis done in 00 minutes and 37 seconds
+    +---------+---------+----------+----------+-----+-----+---------+
+    |  Latency (cycles) |  Latency (absolute) |  Interval | Pipeline|
+    |   min   |   max   |    min   |    max   | min | max |   Type  |
+    +---------+---------+----------+----------+-----+-----+---------+
+    |       78|      236|  0.635 us|  1.921 us|   79|  237|     none|
+    +---------+---------+----------+----------+-----+-----+---------+
+
++ With N = 16 (board: GENESYS)
+    - Memory accesses: 0 read(s), 0 write(s)
+    - IP & application files generated in 371 milliseconds
+    - High-level synthesis done in 00 minutes and 37 seconds
+    +---------+---------+----------+----------+-----+-----+---------+
+    |  Latency (cycles) |  Latency (absolute) |  Interval | Pipeline|
+    |   min   |   max   |    min   |    max   | min | max |   Type  |
+    +---------+---------+----------+----------+-----+-----+---------+
+    |      134|      304|  1.090 us|  2.474 us|  135|  305|     none|
+    +---------+---------+----------+----------+-----+-----+---------+
+
++ With N = 32 (board: GENESYS)
+    - Memory accesses: 0 read(s), 0 write(s)
+    - IP & application files generated in 1167 milliseconds
+    - High-level synthesis done in 00 minutes and 39 seconds
+    +---------+---------+----------+----------+-----+-----+---------+
+    |  Latency (cycles) |  Latency (absolute) |  Interval | Pipeline|
+    |   min   |   max   |    min   |    max   | min | max |   Type  |
+    +---------+---------+----------+----------+-----+-----+---------+
+    |      246|      442|  2.002 us|  3.597 us|  247|  443|     none|
+    +---------+---------+----------+----------+-----+-----+---------+
+
++ With N = 64 (board: GENESYS)
+    - Memory accesses: 0 read(s), 0 write(s)
+    - IP & application files generated in 7252 milliseconds
+    - High-level synthesis done in 00 minutes and 39 seconds
+    +---------+---------+----------+----------+-----+-----+---------+
+    |  Latency (cycles) |  Latency (absolute) |  Interval | Pipeline|
+    |   min   |   max   |    min   |    max   | min | max |   Type  |
+    +---------+---------+----------+----------+-----+-----+---------+
+    |      470|      714|  3.825 us|  5.811 us|  471|  715|     none|
+    +---------+---------+----------+----------+-----+-----+---------+
+
++ With N = 128 (board: GENESYS)
+    - Memory accesses: 0 read(s), 0 write(s)
+    - IP & application files generated in 125206 milliseconds
+    - High-level synthesis done in 00 minutes and 42 seconds
+    +---------+---------+----------+-----------+-----+------+---------+
+    |  Latency (cycles) |  Latency (absolute)  |  Interval  | Pipeline|
+    |   min   |   max   |    min   |    max    | min |  max |   Type  |
+    +---------+---------+----------+-----------+-----+------+---------+
+    |      918|     1258|  7.471 us|  10.238 us|  919|  1259|     none|
+    +---------+---------+----------+-----------+-----+------+---------+
+
++ With N = 256 (board: GENESYS)
+    - Memory accesses: 0 read(s), 0 write(s)
+    - IP & application files generated in 1653800 milliseconds
+    - High-level synthesis done in 00 minutes and 47 seconds
+    +---------+---------+-----------+-----------+------+------+---------+
+    |  Latency (cycles) |   Latency (absolute)  |   Interval  | Pipeline|
+    |   min   |   max   |    min    |    max    |  min |  max |   Type  |
+    +---------+---------+-----------+-----------+------+------+---------+
+    |     1814|     2346|  14.762 us|  19.092 us|  1815|  2347|     none|
+    +---------+---------+-----------+-----------+------+------+---------+
+

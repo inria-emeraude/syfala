@@ -70,8 +70,8 @@ $ syfala flash
 ### General Options
 
 | option          | accepted values | description                                                  |
-| --------------- | :-------------: | ------------------------------------------------------------ |
-| `-c --compiler` | `HLS* | VHDL `  | chooses between Vitis HLS and faust2vhdl for DSP IP generation. |
+| --------------- | --------------- | ------------------------------------------------------------ |
+| `-c --compiler` | `HLS - VHDL`    | chooses between Vitis HLS and faust2vhdl for DSP IP generation. |
 | `--reset`       |        /        | resets current build directory before building (**careful**! all files from previous build will be lost) |
 
 ### Run steps
@@ -80,43 +80,43 @@ $ syfala flash
 
 `syfala myfaustdsp.dsp `
 
-| `--all`            | runs all toolchain compilation steps (from `--arch` to `--gui`) |
-| ------------------ | ------------------------------------------------------------ |
-| **`--arch`**       | uses Faust to generate ip/host cpp files for HLS  and Host application compilation |
-| **`--hls --ip`**   | runs Vitis HLS on generated ip cpp file                      |
-| **`--project`**    | generates Vivado project                                     |
-| **`--synth`**      | synthesizes full Vivado project                              |
-| **`--host --app`** | compiles Host application, exports sources and .elf output to `build/sw_export` |
-| **`--gui`**        | compiles Faust GUI controller                                |
-| **`--flash`**      | flashes boot files on device at the end of the run           |
-| **`--report`**     | prints HLS report at the end of the run                      |
-| **`--export`**     | `<id>` exports build to export/ directory at the end of the run |
+| `--all`        | runs all toolchain compilation steps (from `--arch` to `--gui`) |
+| -------------- | ------------------------------------------------------------ |
+| `--arch`       | uses Faust to generate ip/host cpp files for HLS  and Host application compilation |
+| `--hls --ip`   | runs Vitis HLS on generated ip cpp file                      |
+| `--project`    | generates Vivado project                                     |
+| `--synth`      | synthesizes full Vivado project                              |
+| `--host --app` | compiles Host application, exports sources and .elf output to `build/sw_export` |
+| `--gui`        | compiles Faust GUI controller                                |
+| `--flash`      | flashes boot files on device at the end of the run           |
+| `--report`     | prints HLS report at the end of the run                      |
+| `--export`     | `<id>` exports build to export/ directory at the end of the run |
 
 ### Run parameters
 
-| parameter                | accepted values                            | default value |
-| :----------------------- | ------------------------------------------ | ------------- |
-| **`--nchannels, -n`**    | an even number (`2`, `4`, `6`, etc.)       | `2`           |
-| **`--memory, -m`**       | `DDR | STATIC`                             | `DDR`         |
-| **`--board, -b`**        | `Z10 | Z20 | GENESYS`                      | `Z10`         |
-| **`--sample-rate`**      | `48000 | 96000 | 192000 | 384000 | 768000` | `48000`       |
-| **`--sample-width`**     | `16 | 24 | 32`                             | `24`          |
-| **`--controller-type`**  | `DEMO | PCB1 | PCB2 | PCB3 | PCB4`         | `PCB1`        |
-| **`--ssm-volume`**       | `FULL | HEADPHONE | DEFAULT`               | `DEFAULT`     |
-| **`--ssm-speed`**        | `FAST | DEFAULT`                           | `DEFAULT`     |
+| parameter           | accepted values                            | default value |
+| :------------------ | ------------------------------------------ | ------------- |
+| `--nchannels, -n`   | an even number (`2`, `4`, `6`, etc.)       | `2`           |
+| `--memory, -m`      | `DDR - STATIC`                             | `DDR`         |
+| `--board, -b`       | `Z10 - Z20 - GENESYS`                      | `Z10`         |
+| `--sample-rate`     | `48000 - 96000 - 192000 - 384000 - 768000` | `48000`       |
+| `--sample-width`    | `16 - 24 - 32`                             | `24`          |
+| `--controller-type` | `DEMO - PCB1 - PCB2 - PCB3 - PCB4`         | `PCB1`        |
+| `--ssm-volume`      | `FULL - HEADPHONE - DEFAULT`               | `DEFAULT`     |
+| `--ssm-speed`       | `FAST - DEFAULT`                           | `DEFAULT`     |
 
 ### Parameter description
 
-| parameter               | description                                                  |
-| ----------------------- | ------------------------------------------------------------ |
-| **`--nchannels, -n`**   | sets the project's number of channels, it is equal to the **maximum number of input/output channels** rounded to the superior even number (e.g: if 3 channels: `nchannels` would be 4) |
-| **`--memory, -m`**      | selects if **external** **DDR3** is used. Enable if you use some delay, disable if you do want any  memory access (should not be disabled) |
-| **`--board`**           | Defines target board. **Z10** ,**Z20** and **GENESYS** only. If you have a VGA port (rather than 2 HDMI ports), you have an old Zybo version, which is not supported. |
-| **`--sample-rate`**     | Changes **sample rate** value (Hz). Only 48kHz and 96kHz is available for **SSM** embeded codec. 192000 (**ADAU1777** and **ADAU1787** only)  384000 (**ADAU1787** only)  768000 (**ADAU1787** only and with `--sample--width 16` only) |
-| **`--sample-width`**    | Defines **sample bit depth** (16\|24\|32)                    |
-| **`--controller-type`** | Defines the controller used to drive the controls when **SW3** is **UP**. (**SW3** **DOWN** for **software** control), <u>**SEE BELOW**</u> for details on each value |
-| **`--ssm-volume`**      | Chooses audio codec to use. For now, it only changes the scale factor. **FULL**: Maximum (**WARNING**: for speaker only, do not use with headphones). **HEADPHONE**: Lower volume for headphone use. **DEFAULT**: Default value +1dB because the true 0dB (`0b001111001`) decreases the signal a little bit. |
-| **`--ssm-speed`**       | Changes **SSM ADC/DAC** sample rate. **DEFAULT**: 48kHz sample rate. **FAST**: 96Khz sample rate |
+| parameter           | description                                                  |
+| ------------------- | ------------------------------------------------------------ |
+| `--nchannels, -n`   | sets the project's number of channels, it is equal to the **maximum number of input/output channels** rounded to the superior even number (e.g: if 3 channels: `nchannels` would be 4) |
+| `--memory, -m`      | selects if **external** **DDR3** is used. Enable if you use some delay, disable if you do want any  memory access (should not be disabled) |
+| `--board`           | Defines target board. **Z10** ,**Z20** and **GENESYS** only. If you have a VGA port (rather than 2 HDMI ports), you have an old Zybo version, which is not supported. |
+| `--sample-rate`     | Changes **sample rate** value (Hz). Only 48kHz and 96kHz is available for **SSM** embeded codec. 192000 (**ADAU1777** and **ADAU1787** only)  384000 (**ADAU1787** only)  768000 (**ADAU1787** only and with `--sample--width 16` only) |
+| `--sample-width`    | Defines **sample bit depth** (16\|24\|32)                    |
+| `--controller-type` | Defines the controller used to drive the controls when **SW3** is **UP**. (**SW3** **DOWN** for **software** control), <u>**SEE BELOW**</u> for details on each value |
+| `--ssm-volume`      | Chooses audio codec to use. For now, it only changes the scale factor. **FULL**: Maximum (**WARNING**: for speaker only, do not use with headphones). **HEADPHONE**: Lower volume for headphone use. **DEFAULT**: Default value +1dB because the true 0dB (`0b001111001`) decreases the signal a little bit. |
+| `--ssm-speed`       | Changes **SSM ADC/DAC** sample rate. **DEFAULT**: 48kHz sample rate. **FAST**: 96Khz sample rate |
 
 ## Hardware configuration (Zybo Z7-10/20)
 

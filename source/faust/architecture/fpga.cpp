@@ -116,10 +116,13 @@ const float scaleFactor = SCALE_FACTOR; //Why can't we just call the define dire
 /*************** FAUST IP                                                           *************/
 /************************************************************************************************/
 void syfala(
-	    sy_ap_int   in_chX_V, sy_ap_int* out_chX_V,
-            bool *outGPIO, bool debugBtn, bool mute, bool bypass,
-            int ARM_fControl[32], int ARM_iControl[32], int ARM_passive_controller[32],
-            FAUSTFLOAT *ram, int ramBaseAddr, int ramDepth, bool enable_RAM_access)
+        sy_ap_int in_chX_V,
+        sy_ap_int* out_chX_V,
+        bool *outGPIO, bool debugBtn, bool mute, bool bypass,
+        int ARM_fControl[32],
+        int ARM_iControl[32],
+        int ARM_passive_controller[32],
+        FAUSTFLOAT *ram, int ramBaseAddr, int ramDepth, bool enable_RAM_access)
 {
 #pragma HLS INTERFACE s_axilite port=ARM_fControl
 #pragma HLS INTERFACE s_axilite port=ARM_iControl
@@ -182,7 +185,7 @@ void syfala(
   else
   {
     // Copy produced outputs
-    for(int i=0; i<FAUST_INPUTS; i++){
+    for(int i=0; i<FAUST_OUTPUTS; i++){
     	if (outputs[i]> 1.0) outputs[i]=1.0;
     	else if (outputs[i]< -1.0) outputs[i]=-1.0;
     }

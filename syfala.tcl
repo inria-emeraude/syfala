@@ -39,9 +39,11 @@ proc get_value { a } {
 
 namespace eval runtime {
     variable steps              ""
+    variable post_steps         ""
     variable dsp_target         ""
     variable board_cpp_id       10
     variable app_config         0
+    variable export_id          ""
     variable compiler           [p_runtime "HLS" { HLS VHDL }]
     variable board              [p_runtime "Z10" { Z10 Z20 GENESYS }]
     variable memory             [p_runtime 1 { DDR STATIC }]
@@ -108,7 +110,7 @@ Run steps
                Host application compilation
    --hls --ip: runs Vitis HLS on generated ip cpp file
     --project: generates Vivado project
-      --synth: synthesizes full Vivado project
+--syn --synth: synthesizes full Vivado project
  --host --app: compiles Host Control Application (ARM)
         --gui: compiles Faust GUI controller
       --flash: flashes boot files on device
@@ -137,8 +139,8 @@ proc print_version {} {
     print_info "Running syfala toolchain script (v$::Syfala::VERSION) on $os ($osv)"
 }
 
+# Tries to parse Xilinx Toolchain root installation directory
 proc parse_xroot {} {
-    # try and parse Xilinx Toolchain root installation directory:
     if {![info exists ::Xilinx::ROOT]} {
         # if already defined in environment as 'XILINX_ROOT_DIR'
         if {[info exists ::env(XILINX_ROOT_DIR)]} {
@@ -154,36 +156,51 @@ proc parse_xroot {} {
              Please set XILINX_ROOT_DIR environment variable in your current shell configuration
              file in order to avoid this in future uses..."
     }
-    check_xroot $Xilinx::ROOT $Xilinx::VERSION
-    # adding Vitis/Vivado/HLS environments to exec path
+    # then, check if installation is valid
+    # and add Vitis/Vivado/HLS environments to exec path
     # (we don't require the 'use_vitis' function anymore)
+    check_xroot $Xilinx::ROOT $Xilinx::VERSION
     set_xenv $Xilinx::ROOT $Xilinx::VERSION "Vitis_HLS"
     set_xenv $Xilinx::ROOT $Xilinx::VERSION "Vivado"
     set_xenv $Xilinx::ROOT $Xilinx::VERSION "Vitis"
     print_ok "Xilinx toolchain environment added to script's PATH"
 }
 
+# gets command line argument value at next 'argv' index
+proc get_argument_value { index } {
+    upvar $index idx
+    return [lindex $::argv [incr idx]]
+}
+
+# checks argument value validity
+# by comparing to the 'accepted' values set for the argument
+# (see the runtime variables above)
 proc parse_argument_value { argument value } {
     upvar $argument rparameter
     set accept [dict get $rparameter "accepted"]
     if {[lsearch -exact $accept $value] >= 0 || $accept == {}} {
          dict set rparameter value "$value"
     } else {
-        print_error "Value for argument not accepted"
+        print_error "Value ($value) for argument not accepted"
         print_error "Accepted values: $accept"
         print_error "Default value: [dict get $rparameter value]"
         exit 1
     }
 }
 
-proc is_run_step {ctn} {
-    if { [string first $ctn $::runtime::steps] != -1 } {
-         return 1
-    } else {
-        return 0
-    }
+# checks if ::runtime::steps variable includes 'step'
+proc is_run_step {step} {
+    return [contains $step $::runtime::steps]
 }
 
+# checks if ::runtime::post_steps variable includes 'step'
+proc is_post_run_step {step} {
+    return [contains $step $::runtime::post_steps]
+}
+
+# checks dsp target file validity:
+# if no dsp target file has been set in the command line
+# we look for one saved in the build directory
 proc check_dsp_target {} {
     if {$::runtime::dsp_target eq ""} {
          print_info "No dsp target, looking for previous target in build directory"
@@ -201,11 +218,7 @@ proc check_dsp_target {} {
 # SCRIPT START
 # -----------------------------------------------------------------------------------------
 print_version
-print_info "Running from: [pwd]"
-
-# reset log and build directory
-file mkdir $::Syfala::BUILD_DIR
-file delete -force $::Syfala::BUILD_LOG
+print_info "Running from: $spath"
 
 # -----------------------------------------------------------------------------------------
 # PARSING COMMAND-LINE ARGUMENTS
@@ -253,12 +266,13 @@ for { set index 0 }                         \
                 --arch --hls --project --synth --host
                 --report --export demo"
         }
-        report {
+        report - rpt {
+            cd $::Syfala::BUILD_DIR
             Xilinx::Vitis_HLS::report
             exit 0
         }
         export {
-            set build_id [lindex $::argv [incr index]]
+            set build_id [get_argument_value index]
             set build_id "[generate_build_id]-$build_id"
             print_info "build id: #$build_id"
             Syfala::export_build $build_id
@@ -281,11 +295,11 @@ for { set index 0 }                         \
         # -----------------------------------------------------------------------------------------
         }
         -c - --compiler {
-            parse_argument_value ::runtime::compiler [lindex $::argv [incr index]]
+            parse_argument_value ::runtime::compiler [get_argument_value index]
         }
         -x - --xilinx-root {
             # note: it has to be before any other options or flags
-            set ::Xilinx::ROOT [lindex $::argv [incr index]]
+            set ::Xilinx::ROOT [get_argument_value index]
             print_info "Setting XILINX_ROOT to $::Xilinx::ROOT"
         }
         --reset {
@@ -318,10 +332,15 @@ for { set index 0 }                         \
                 set ::runtime::steps "$::runtime::steps --host"
             }
         }
-        --gui       { set ::runtime::steps "$::runtime::steps --gui"        }
-        --report    { set ::runtime::steps "$::runtime::steps --report"     }
-        --flash     { set ::runtime::steps "$::runtime::steps --flash"      }
-        --export    { set ::runtime::steps "$::runtime::steps --export"     }
+        --gui       { set ::runtime::post_steps "$::runtime::post_steps --gui"        }
+        --report    { set ::runtime::post_steps "$::runtime::post_steps --report"     }
+        --flash     { set ::runtime::post_steps "$::runtime::post_steps --flash"      }
+        --export    {
+            set ::runtime::post_steps "$::runtime::post_steps --export"
+            set build_id [get_argument_value index]
+            set build_id "[generate_build_id]-$build_id"
+            set ::runtime::export_id $::build_id
+        }
 
         COMMENT {
         # -----------------------------------------------------------------------------------------
@@ -329,7 +348,7 @@ for { set index 0 }                         \
         # -----------------------------------------------------------------------------------------
         }
         -b - --board {
-            parse_argument_value ::runtime::board [lindex $::argv [incr index]]
+            parse_argument_value ::runtime::board [get_argument_value index]
             switch [get_value $::runtime::board] {
                 Z10      { set ::runtime::board_cpp_id 10 }
                 Z20      { set ::runtime::board_cpp_id 20 }
@@ -337,32 +356,32 @@ for { set index 0 }                         \
             }
         }
         -m - --memory {
-            parse_argument_value ::runtime::memory [lindex $::argv [incr index]]
+            parse_argument_value ::runtime::memory [get_argument_value index]
             switch [get_value $::runtime::memory] {
                 "DDR"     { dict set ::runtime::memory value 1 }
                 "STATIC"  { dict set ::runtime::memory value 0 }
             }
         }
         -n - --nchannels {
-            parse_argument_value ::runtime::nchannels [lindex $::argv [incr index]]
+            parse_argument_value ::runtime::nchannels [get_argument_value index]
         }
         --sample-rate {
-            parse_argument_value ::runtime::sample_rate [lindex $::argv [incr index]]
+            parse_argument_value ::runtime::sample_rate [get_argument_value index]
         }
         --sample-width {
-            parse_argument_value ::runtime::sample_width [lindex $::argv [incr index]]
+            parse_argument_value ::runtime::sample_width [get_argument_value index]
         }
         --controller-type {
-            parse_argument_value ::runtime::controller_type [lindex $::argv [incr index]]
+            parse_argument_value ::runtime::controller_type [get_argument_value index]
         }
         --ssm-volume {
-            parse_argument_value ::runtime::ssm_volume [lindex $::argv [incr index]]
+            parse_argument_value ::runtime::ssm_volume [get_argument_value index]
         }
         --ssm-speed {
-            parse_argument_value ::runtime::ssm_speed [lindex $::argv [incr index]]
+            parse_argument_value ::runtime::ssm_speed [get_argument_value index]
         }
         --vhdl-type {
-            parse_argument_value ::runtime::vhdl_type [lindex $::argv [incr index]]
+            parse_argument_value ::runtime::vhdl_type [get_argument_value index]
         }
         COMMENT {
         # -----------------------------------------------------------------------------------------
@@ -385,16 +404,22 @@ for { set index 0 }                         \
 }
 
 # -------------------------------------------------------------------------
-# Script running in build mode:
+# From this point, script is running in build mode:
 # -------------------------------------------------------------------------
-
-if {$::runtime::steps eq ""} {
+# if there are no runtime steps, set them all
+if {[is_empty $::runtime::steps] && ![is_empty $::runtime::dsp_target]} {
     set ::runtime::steps "--arch --hls --project --synth --host --gui"
 }
+
 parse_xroot
 # make sure we're into BUILD_DIR, even if we didn't run the --arch step
+if ![file exists $::Syfala::BUILD_DIR] {
+     file mkdir $::Syfala::BUILD_DIR
+}
+
 cd $::Syfala::BUILD_DIR
 print_info "Running build steps: $::runtime::steps"
+print_info "Running post-build steps: $::runtime::post_steps"
 
 check_dsp_target
 
@@ -411,6 +436,13 @@ if {[is_run_step "--arch"]} {
      set_syconfig_define  "SYFALA_MEMORY_USE_DDR"   [get_value $::runtime::memory]
 }
 
+# This is where the toolchain's steps diverge,
+# depending on the chosen IP 'compiler' (HLS | faust2vhdl)
+# this includes the following steps:
+# --arch     (IP file generation)
+# --hls      (not needed for faust2vhdl)
+# --project  (project script files are different)
+
 switch [get_value $::runtime::compiler] {
     HLS {
     # -------------------------------------------------------------------------
@@ -426,11 +458,13 @@ switch [get_value $::runtime::compiler] {
                  >&@stdout
 
             Faust::generate_ip_hls $::runtime::dsp_target
+            # new: hardcode controller arrays' lengths and static i/o buffers
+            Syfala::normalize_ip_controls [get_value $::runtime::nchannels]
             # new: count izone/fzone accesses immediately after
             # ip cpp file is generated.
             Faust::mem_access_count
-            Faust::generate_host   $::runtime::dsp_target               \
-                                   $Faust::ARCH_HOST_SRC_FILE
+            Faust::generate_host $::runtime::dsp_target                 \
+                                 $Faust::ARCH_HOST_SRC_FILE
         }
         # 2. Synthesize IP with Vitis HLS
         if {[is_run_step "--hls"]} {
@@ -479,13 +513,13 @@ if {[is_run_step "--host"]} {
 if {[is_run_step "--gui"]} {
      Faust::generate_gui_app $::runtime::dsp_target
 }
-if {[is_run_step "--export"]} {
-    Syfala::export_build "demo"
+if {[is_post_run_step "--export"]} {
+     Syfala::export_build $::runtime::export_id
 }
-if {[is_run_step "--report"]} {
+if {[is_post_run_step "--report"]} {
      Xilinx::Vitis_HLS::report
 }
-if {[is_run_step "--flash"]} {
+if {[is_post_run_step "--flash"]} {
      Xilinx::flash_jtag [get_value $::runtime::board]
 }
 

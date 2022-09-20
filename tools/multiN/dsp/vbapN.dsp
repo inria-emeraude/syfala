@@ -15,59 +15,9 @@ with{
     car = osc(a,mod1);
 };
 
-speakers = (0, 180);
+N = 192;
+phase = 360/N;
+speakers = par(i, N, i*phase);
 source = hslider("source_pos", 0, 0, 360, 1);
 
-process = fm(1,440,440,440,3,2) : circularScaledVBAP(speakers, source) : _, _;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+process = fm(1,440,440,440,3,2) : circularScaledVBAP(speakers, source);

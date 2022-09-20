@@ -133,13 +133,17 @@ for {set i 1} {($i <= $nchannels/2) && ($i <= $maxPhysicalCodec)} {incr i} {
 
 #------------------------ Create SPI ports --------------------
  # create_port faustIP_debug "O"
-  create_port spi_MISO 		"I"
-  create_port spi_MOSI 		"O"
-  create_port spi_SS 		  "O"
-  create_port spi_clk 		"O"
+create_port spi_MISO 		"I"
+create_port spi_MOSI 		"O"
+create_port spi_SS 		  "O"
+create_port spi_clk 		"O"
 
 #------------------------ Create other ports --------------------
-  create_port debug_btn "I"
+create_port debug_btn "I"
+create_port syfala_out_debug0 "O"
+create_port syfala_out_debug1 "O"
+create_port syfala_out_debug2 "O"
+create_port syfala_out_debug3 "O"
 
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
@@ -170,11 +174,24 @@ if { $BOARD == "Z10" || $BOARD == "Z20" } {
 
 if { $BOARD == "Z10" || $BOARD == "Z20" } {
   set IN_CLK_FREQ 125
-  # SYS_CLK_FREQ Values= 122.885835 (-period 8.137634) |  737.5 (-period 1.355932)
-  set SYS_CLK_FREQ 122.885835
-  set SYSCLK_I2S_RATIO 10
+  # Change sys_clk frequency here.
+  # Don"t forget to change the corresponding period in hls.tcl (not in master_zybo.xdc, this one is the board clk!)
+  # Tested frequency:
+  # |---SYS_CLK_FREQ--|------period-----|-SYSCLK_I2S_RATIO (for 48k)-|----Functional---|
+  # |    122.885835   |     8.137634    |              10            |       YES       |
+  # |    245.748299   |     4.069204    |              20            |       YES       |
+  # |    491.596638   |     2.034188    |              40            |       NO        |
+  # |-----------------|-----------------|----------------------------|-----------------|
+  set SYS_CLK_FREQ 245.748299
+  set SYSCLK_I2S_RATIO 40
 } elseif { $BOARD == "GENESYS" } {
   set IN_CLK_FREQ 25
+  # Change sys_clk frequency here.
+  # Don"t forget to change the corresponding period in hls.tcl (not in master_zybo.xdc, this one is the board clk!)
+  # Tested frequency:
+  # |---SYS_CLK_FREQ--|------period-----|-SYSCLK_I2S_RATIO (for 48k)-|----Functional---|
+  # |      737.5      |     1.355932    |              60            |        NO       |
+  # |-----------------|-----------------|----------------------------|-----------------|
   set SYS_CLK_FREQ 122.875
   set SYSCLK_I2S_RATIO 10
 }
@@ -252,7 +269,12 @@ connect "pins" syfala/ap_done  	"pins" i2s_transceiver_0/ap_done
 connect "pins" syfala/ap_start 	"pins" i2s_transceiver_0/rdy
 connect "pins" syfala/mute	 		"pins" sw0/Dout
 connect "pins" syfala/bypass 		"pins" sw1/Dout
-connect "ports" debug_btn 					"pins" syfala/debugBtn
+connect "ports" debug_btn 			"pins" syfala/debugBtn
+connect "pins" syfala/outGPIO  "ports" syfala_out_debug0
+connect "pins" syfala/out_ch0_V_ap_vld   "ports" syfala_out_debug1
+connect "pins" syfala/out_ch1_V_ap_vld   "ports" syfala_out_debug2
+connect "pins" syfala/ap_start           "ports" syfala_out_debug3
+
 
 #------------------------ Connections CODEC 1 to X--------------------
 for {set i 1} {($i <= $nchannels/2) && ($i <= $maxPhysicalCodec)} {incr i} {

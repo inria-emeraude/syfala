@@ -13,7 +13,7 @@ open_solution -reset "syfala" -flow_target vivado
 
 set_part [Xilinx::get_board_part $BOARD]
 
-create_clock -period 8.137634
+create_clock -period 4.069204
 #create_clock -period 1.355932
 #csim_design
 csynth_design
