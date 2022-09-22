@@ -21,7 +21,7 @@ yay -S ncurses5-compat-libs libxcrypt-compat libpng12 lib32-libpng12 xorg-xlscli
 Unfortunately at the moment, these tools are quite tedious to install, but are required for using the Syfala toolchain. 
 
 - Open an account on https://www.xilinx.com/registration
-- The Xilinx download page (https://www.xilinx.com/support/download.html) contains links for downloading the "Vivado Design Suite - HLx Editions - Full Product". It is available for both Linux and Windows. 
+- The Xilinx download page (https://www.xilinx.com/support/download.html) and browse to the 2020.2 version. The page contains links for downloading the "Vivado Design Suite - HLx Editions - Full Product". It is available for both Linux and Windows. 
   - Download the Linux installer `Xilinx_Unified_2020.2_1118_1232_Lin64.bin`
 
 - execute `chmod a+x Xilinx_Unified_2020.2_1118_1232_Lin64.bin`
