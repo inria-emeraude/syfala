@@ -97,10 +97,10 @@ set_property -dict { PACKAGE_PIN AE13  IOSTANDARD LVCMOS33 } [get_ports { spi_SS
 set_property -dict { PACKAGE_PIN AG14  IOSTANDARD LVCMOS33 } [get_ports { spi_MOSI }];
 set_property -dict { PACKAGE_PIN AH14  IOSTANDARD LVCMOS33 } [get_ports { spi_MISO }];
 set_property -dict { PACKAGE_PIN AG13  IOSTANDARD LVCMOS33 } [get_ports { spi_clk }];
-#set_property -dict { PACKAGE_PIN AE14  IOSTANDARD LVCMOS33 } [get_ports { CODEC3_mclk }];
-#set_property -dict { PACKAGE_PIN AF13  IOSTANDARD LVCMOS33 } [get_ports { CODEC3_mclk_GND }];
-#set_property -dict { PACKAGE_PIN AE15  IOSTANDARD LVCMOS33 } [get_ports { CODEC3_ws }];
-#set_property -dict { PACKAGE_PIN AH13  IOSTANDARD LVCMOS33 } [get_ports { CODEC3_ws_GND }];
+set_property -dict { PACKAGE_PIN AE14  IOSTANDARD LVCMOS33 } [get_ports { syfala_out_debug0 }];
+set_property -dict { PACKAGE_PIN AF13  IOSTANDARD LVCMOS33 } [get_ports { syfala_out_debug1 }];
+set_property -dict { PACKAGE_PIN AE15  IOSTANDARD LVCMOS33 } [get_ports { syfala_out_debug2 }];
+set_property -dict { PACKAGE_PIN AH13  IOSTANDARD LVCMOS33 } [get_ports { syfala_out_debug3 }];
 
 ## PMOD JC
 set_property -dict { PACKAGE_PIN E13  IOSTANDARD LVCMOS33 } [get_ports { CODEC2_sd_rx }];

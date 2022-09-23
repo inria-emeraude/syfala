@@ -182,14 +182,15 @@ if { $BOARD == "Z10" || $BOARD == "Z20" } {
   # |    245.748299   |     4.069204    |              20            |       YES       |
   # |    491.596638   |     2.034188    |              40            |       NO        |
   # |-----------------|-----------------|----------------------------|-----------------|
-  set SYS_CLK_FREQ 245.748299
-  set SYSCLK_I2S_RATIO 40
+  set SYS_CLK_FREQ 122.885835
+  set SYSCLK_I2S_RATIO 10
 } elseif { $BOARD == "GENESYS" } {
   set IN_CLK_FREQ 25
   # Change sys_clk frequency here.
   # Don"t forget to change the corresponding period in hls.tcl (not in master_zybo.xdc, this one is the board clk!)
   # Tested frequency:
   # |---SYS_CLK_FREQ--|------period-----|-SYSCLK_I2S_RATIO (for 48k)-|----Functional---|
+  # |    122.875      |     8.138352    |              10            |       YES       |
   # |      737.5      |     1.355932    |              60            |        NO       |
   # |-----------------|-----------------|----------------------------|-----------------|
   set SYS_CLK_FREQ 122.875

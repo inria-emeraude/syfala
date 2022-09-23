@@ -47,7 +47,7 @@ if [ -d "$project_directory/build" ]; then
 
 	ip_exist=$(grep -q "Generated output file" "$project_directory/build/vitis_hls.log" ; echo $?) #2: donesn't exist, 1: failed; 0: Success!
 	project_exist=$(grep -q "Successfully created Hardware Platform" "$project_directory/build/vivado.log" ; echo $?) #2: donesn't exist, 1: failed; 0: Success!
-	if [ -d "$project_directory/build/syfala_application" ]; then
+	if [ -d "$project_directory/build/syfala_application/platform" ]; then
 		if [ -f "$project_directory/build/sw_export/application.elf" ]; then
 			app_exist=0 #0: Success!
 		else
