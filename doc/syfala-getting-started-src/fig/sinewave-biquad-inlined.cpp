@@ -31,7 +31,7 @@ void computemydsp(mydsp* dsp, FAUSTFLOAT* inputs,
     dsp->IOTA0 = (dsp->IOTA0 + 1);
 }
 [....]
-/* body of faust_v6() function */
+/* body of syfala() function */
 if (enable_RAM_access) {
     if (cpt==0) {
       /* first iteration: constant initialization */
@@ -45,4 +45,5 @@ if (enable_RAM_access) {
        computemydsp(&DSP, inputs, outputs, icontrol, fcontrol, I_ZONE, F_ZONE);
         
       }
-  } else {
+  }
+[...]

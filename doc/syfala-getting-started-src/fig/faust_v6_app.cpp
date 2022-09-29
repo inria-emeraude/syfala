@@ -28,8 +28,8 @@ struct ARMController {
   [...]
 void sendControlToFPGA()
   {
-    XFaust_v6_Write_ARM_fControl_Words(&faust_v6, 0,(u32*)fControl, FAUST_REAL_CONTROLS);
-    XFaust_v6_Write_ARM_iControl_Words(&faust_v6, 0,(u32*)iControl, FAUST_INT_CONTROLS);
+    XSyfala_Write_ARM_fControl_Words(&xsyfala, 0,(u32*)fControl, FAUST_REAL_CONTROLS);
+    XSyfala_Write_ARM_iControl_Words(&xsyfala, 0,(u32*)iControl, FAUST_INT_CONTROLS);
   }
 
   void controlFPGA()

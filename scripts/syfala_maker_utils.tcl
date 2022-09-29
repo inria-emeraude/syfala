@@ -50,52 +50,6 @@ proc replace_right_left {input_file output_file channelNb} {
 
 
 #-------------------------------------------------------------------------------------------------------------------------------------------------------
-#------------------- replace_chx------------------------------------------
-# Function to generate fpga.cpp with automatic In/Out channels number adjustment.
-# Replace all "chX" words with "ch0, ch1, ch2,..."
-# WARNING: Can't handle nested "if" !
-
-
-proc replace_chx {input_file output_file channelNb} {
-	set ifStatement false
-
-	while {[gets $input_file line] >= 0} {
-		if {$ifStatement} {
-			append ifBloc "$line\n"
-			if {[string match "end if*" [string trim $line]]} { ;#if we leave the if statement
-				set ifStatement false
-				for {set i 0} {$i < $channelNb} {incr i 2} {
-					foreach ifLine [split $ifBloc \n] {
-						set newline [string map "chX ch$i" $ifLine]
-						set newline [string map "\[X\] \[$i\]" $newline] ;
-						puts $output_file $newline
-					}
-				}
-			}
-
-
-		} else {
-			if {[string first "chX" $line] != -1} {
-				if {[string match "if*" [string trim $line]]} { ;#if we're in a if statement, wait for the end of statement and copy all the bloc.
-					set ifStatement true
-					set ifBloc "$line\n"
-				} else {
-					for {set i 0} {$i < $channelNb} {incr i} {
-						set newline [string map "chX ch$i" $line] ;
-						set newline [string map "\[X\] \[$i\]" $newline] ;
-						puts $output_file $newline
-					}
-				}
-			} else {
-				puts $output_file $line
-			}
-		}
-	}
-}
-
-
-
-#-------------------------------------------------------------------------------------------------------------------------------------------------------
 # Function to generate the bloc design of project.tcl
 
 proc declare_user_module {name path} {

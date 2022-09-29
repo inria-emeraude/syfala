@@ -16,3 +16,6 @@
 *.includes
 *.config
 *.cf
+*.out
+*.aux
+syfala_log.txt

@@ -46,16 +46,18 @@ $ syfala examples/fm.dsp --board Z20 --arch --hls --export z20-fm-hls-build
 
 ### Additional 'one-shot' commands
 
-| name          | description                                                  | arguments         |
-| ------------- | ------------------------------------------------------------ | ----------------- |
-| `install`     | installs this script as a symlink in /usr/bin/               | none              |
-| `clean`       | deletes current build directory                              | none              |
-| `export`      | exports current build in a .zip file located in the 'export' directory | name of the build |
-| `report`      | prints HLS report of the current build                       | none              |
-| `demo`        | fully builds demo based on default example (virtualAnalog.dsp) | none              |
-| `flash`       | flashes current build onto target device                     | none              |
-| `gui`         | executes the Faust-generated gui application                 | none              |
-| `rebuild-app` | rebuilds the host control application, without re-synthesizing the whole project | none              |
+| name           | description                                                  | arguments              |
+| -------------- | ------------------------------------------------------------ | ---------------------- |
+| `install`      | installs this script as a symlink in /usr/bin/               | none                   |
+| `clean`        | deletes current build directory                              | none                   |
+| `import`       | sets previously exported .zip build as the current build     | name of the .zip build |
+| `export`       | exports current build in a .zip file located in the 'export' directory | name of the build      |
+| `report`       | prints HLS report of the current build                       | none                   |
+| `demo`         | fully builds demo based on default example (virtualAnalog.dsp) | none                   |
+| `flash`        | flashes current build onto target device                     | none                   |
+| `gui`          | executes the Faust-generated gui application                 | none                   |
+| `rebuild-app`  | rebuilds the host control application, without re-synthesizing the whole project | none                   |
+| `open-project` | opens the generated .xpr project with Vivado                 | none                   |
 
 #### command examples
 

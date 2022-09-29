@@ -104,10 +104,9 @@ void copyARMControl(int* ARM_fControl, int* ARM_iControl, float* RESTRICT fContr
 
 
 /* cpt use to distinguish first iteration */
-int cpt=0;
-/* variable used for debugging purpose */
-bool state=0;
-int debugBuff=0;
+int cpt = 0;
+int debugBuff = 0;
+bool state = 0;
 
 /* scale factor is used to transfer float to ap_int<DATA_WIDTH> */
 const float scaleFactor = SCALE_FACTOR; //Why can't we just call the define directly in the loop?
@@ -130,7 +129,7 @@ void syfala(
 #pragma HLS INTERFACE s_axilite port=ramBaseAddr
 #pragma HLS INTERFACE s_axilite port=ramDepth
 #pragma HLS INTERFACE s_axilite port=enable_RAM_access
-#pragma HLS INTERFACE m_axi port=ram latency=50
+#pragma HLS INTERFACE m_axi port=ram latency=30
 
   /* used to address ram as an 32-bit objects (int or float)  array */
   int base_index = ramBaseAddr/4;
@@ -141,14 +140,11 @@ void syfala(
   /* Allocate 'inputs' and 'outputs' for 'compute' method */
   FAUSTFLOAT inputs[FAUST_INPUTS], outputs[FAUST_OUTPUTS];
 
-
-  // Prepare inputs for 'compute' method
-    inputs[X] = in_chX_V.to_float() / scaleFactor;
   /* RAM must be enabled by ARM before any computation */
   if (enable_RAM_access) {
     if (cpt==0) {
       /* first iteration: constant initialization */
-      cpt++:
+        cpt++;
 
 #if (SYFALA_MEMORY_USE_DDR == 1)
       /* from values initialised in DDR */
@@ -158,38 +154,32 @@ void syfala(
       staticInitmydsp(&DSP, SYFALA_SAMPLE_RATE,I_ZONE,F_ZONE);
       instanceConstantsmydsp(&DSP,SYFALA_SAMPLE_RATE,I_ZONE,F_ZONE);
 #endif
-    }
-    else
-      {
+    } else {
 	/* all other iterations: compute one sample */
         computemydsp(&DSP, inputs, outputs, icontrol, fcontrol, I_ZONE, F_ZONE);
 		sendToARM(ARM_passive_controller);
-      }
+    }
   } else {
-    /* if RAM access is not enable, simple bypass */
+    /* if RAM access is not enable, simple mute/bypass */
     outputs[0] = inputs[0];
   }
-
-
   /* debug: change state of GPIO each cycle to see cycle time */
-  state=!state;
-  *outGPIO=state;
-  if(bypass)
-  {
-    *out_chX_V=in_chX_V;
-  }
-  else if(mute)
-  {
-    *out_chX_V=0;
-  }
-  else
-  {
+  state    =! state;
+  *outGPIO  = state;
+
+  if (bypass) {
+    *out_chX_V = in_chX_V;
+  } else if (mute) {
+    *out_chX_V = 0;
+  } else {
     // Copy produced outputs
-    for(int i=0; i<FAUST_OUTPUTS; i++){
-    	if (outputs[i]> 1.0) outputs[i]=1.0;
-    	else if (outputs[i]< -1.0) outputs[i]=-1.0;
+    for(int i = 0; i < FAUST_OUTPUTS; i++) {
+        if (outputs[i] > 1.0) {
+            outputs[i] = 1.0;
+        } else if (outputs[i] < -1.0) {
+            outputs[i] = -1.0;
+        }
     }
     *out_chX_V = sy_ap_int(outputs[X] * scaleFactor);
-
   }
 }

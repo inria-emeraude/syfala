@@ -183,8 +183,8 @@ set_property -dict { PACKAGE_PIN AB15  IOSTANDARD LVCMOS33 } [get_ports { switch
 #set_property -dict { PACKAGE_PIN W8    IOSTANDARD LVDS } [get_ports { syzygy_out_clk_p }]; #IO_L1P_T0L_N0_DBC_65 Sch=syzygy_out_clk_p
 
 ## FMC connector
-#set_property -dict { PACKAGE_PIN M6   IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 } [get_ports { fmc_clk0_m2c_p }]; #IO_L14P_T2L_N2_GC_65 Sch=fmc_clk0_m2c_p
-#set_property -dict { PACKAGE_PIN L3   IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 } [get_ports { fmc_clk1_m2c_p }]; #IO_L12P_T1U_N10_GC_65 Sch=fmc_clk1_m2c_p
+#set_property -dict { PACKAGE_PIN M6   IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 } [get_ports { fmc_clk0_m2c_p }]; #IO_L14P_T2L_N2_GC_65 Sch=fmc_clk0_m2c_p #Possible de gagner 1 gpio ici en ajoutant clk_n (L5)
+#set_property -dict { PACKAGE_PIN L3   IOSTANDARD LVDS DIFF_TERM_ADV TERM_100 } [get_ports { fmc_clk1_m2c_p }]; #IO_L12P_T1U_N10_GC_65 Sch=fmc_clk1_m2c_p #Possible de gagner 1 gpio ici en ajoutant clk_n (L2)
 #set_property -dict { PACKAGE_PIN L6   IOSTANDARD LVDS } [get_ports { fmc_la00_cc_n }]; #IO_L13N_T2L_N1_GC_QBC_65 Sch=fmc_la00_cc_n
 #set_property -dict { PACKAGE_PIN L7   IOSTANDARD LVDS } [get_ports { fmc_la00_cc_p }]; #IO_L13P_T2L_N0_GC_QBC_65 Sch=fmc_la00_cc_p
 #set_property -dict { PACKAGE_PIN H3   IOSTANDARD LVDS } [get_ports { fmc_la01_cc_n }]; #IO_L7N_T1L_N1_QBC_AD13N_65 Sch=fmc_la01_cc_n

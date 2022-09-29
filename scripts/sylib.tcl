@@ -48,11 +48,14 @@ set CLK_DYNAMIC_RECONFIG        0
 namespace export                \
 color                           \
 emph                            \
+indent                          \
 print_ok                        \
 print_info                      \
 print_error                     \
+syexec                          \
 contains                        \
 is_empty                        \
+not_empty                       \
 ffindl                          \
 ffindlN                         \
 freplacel                       \
@@ -80,6 +83,14 @@ proc emph { t } {
     return [exec tput bold]$t[exec tput sgr0]
 }
 
+proc indent { t {N 1} } {
+    set str ""
+    for {set i 0} {$i < $N} {incr i} {
+         append str "\t"
+    }
+    return "$str$t"
+}
+
 proc basic_print { txt } {
     set foutput [open $::Syfala::BUILD_LOG a+   ]
     puts  $txt
@@ -99,6 +110,11 @@ proc print_error { txt } {
     basic_print "\[ [color 1 ERR!] \] $txt"
 }
 
+proc syexec { cmd args } {
+    print_info "Executing command: $cmd $args"
+    exec $cmd {*}$args
+}
+
 # returns 1 if 'str' contains 'pattern'
 # returns 0 if 'pattern' couldn't be found.
 proc contains { pattern str } {
@@ -116,6 +132,10 @@ proc is_empty { str } {
     } else {
         return 0
     }
+}
+
+proc not_empty { str } {
+    return ![is_empty $str]
 }
 
 # find a pattern within a file
@@ -164,9 +184,10 @@ proc freplacel { f A B } {
     set found  0
     foreach line [split $data "\n"] {
         if {!$found && [contains $A $line]} {
-            set line $B
             set found 1
-            puts $fw $line
+            if {![is_empty $B]} {
+                puts $fw $B
+            }
         } else {
             puts $fw $line
         }
@@ -197,7 +218,6 @@ proc freplacelN { f A B } {
     }
     close $fw
 }
-
 ## Resets build directory from syfala root directory
 proc rstbuild {} {
     # we've got to print it first, because otherwise the log
@@ -238,11 +258,19 @@ proc set_xenv { x v t } {
     set ::env(PATH) "$::env(PATH):$x/$t/$v:$x/$t/$v/bin"
 }
 
+# Parses a cpp definition value in file 'f'
+# retrieved from 'pattern'
+proc get_syconfig_define { pattern } {
+    set line [ffindl $::Syfala::BUILD_CONFIG_FILE $pattern]
+    return [lindex [split $line] end]
+}
+
 ## Overwrites line in syconfig.hpp containing $t definition
 ## sets it to $v value
-proc set_syconfig_define { t v } {
+proc set_syconfig_define { t v {v2 ""}} {
+    if [is_empty $v2] { set v2 $v }
     freplacel $::Syfala::BUILD_CONFIG_FILE $t "#define $t $v"
-    print_ok "Overwritten #define $t with value $v in syconfig.hpp"
+    print_ok "Overwritten #define $t with value $v2 in syconfig.hpp"
 }
 
 proc get_time {} {
@@ -291,55 +319,17 @@ proc initialize_build {} {
 }
 
 proc export_build { id } {
-    file mkdir $::Syfala::BUILD_DIR/scripts
-    file copy -force $::Syfala::JTAG_SCRIPT $::Syfala::BUILD_DIR/scripts
-    file copy -force $::Syfala::SCRIPTS_DIR/Makefile $::Syfala::BUILD_DIR
     file mkdir $::Syfala::EXPORT_DIR
     set output $::Syfala::EXPORT_DIR/$id.zip
     print_info "Now exporting $output"
     exec zip -r $output .
     print_ok "$output succesfully exported"
 }
-
-# this has to be renamed, and maybe put elsewhere
-proc normalize_ip_controls { nchannels } {
-    print_info "Normalizing IP control arrays & I/O buffers"
-    set f $::Syfala::BUILD_IP_DIR/syfala_ip.cpp
-    set A "FAUSTFLOAT inputs"
-    set B "\tstatic FAUSTFLOAT inputs\[$nchannels\], outputs\[$nchannels\];"
-    freplacel $f $A $B
-    # now we have to get number of int controls & float controls
-    # get line with pattern #define FAUST_INT_CONTROLS
-    # get line with pattern #define FAUST_REAL_CONTROLS
-    set icontrols_l [ffindl $f "#define FAUST_INT_CONTROLS"]
-    set fcontrols_l [ffindl $f "#define FAUST_REAL_CONTROLS"]
-    set pcontrols_l [ffindl $f "#define FAUST_PASSIVES"]
-    # now, get the last number of these lines
-    set icontrols [lindex [split $icontrols_l] end]
-    set fcontrols [lindex [split $fcontrols_l] end]
-    set pcontrols [lindex [split $pcontrols_l] end]
-    # if no controls, set to 2 (minimum), otherwise [0] arrays won't compile
-    # and [1] array change the function's name in xsyfala.c from 'write_%%_words' to 'set'
-    # we should script this as well in a near future...
-    set icontrols [expr max($icontrols, 2)]
-    set fcontrols [expr max($fcontrols, 2)]
-    set pcontrols [expr max($pcontrols, 2)]
-
-    # finally, replace control arrays with the correct length values
-    freplacel $f "int ARM_fControl" "\t\tint ARM_fControl\[$fcontrols\],"
-    freplacel $f "int ARM_iControl" "\t\tint ARM_iControl\[$icontrols\],"
-    freplacel $f "int ARM_passive_controller" "\t\tint ARM_passive_controller\[$pcontrols\],"
-    freplacel $f "static int icontrol\[FAUST_INT_CONTROLS\]" "static int icontrol\[$icontrols\];"
-    freplacel $f "static float fcontrol\[FAUST_REAL_CONTROLS\]" "static float fcontrol\[$fcontrols\];"
-}
-
 }
 
 # -------------------------------------------------------------------------------------------------
-# Faust compiler calls
-# -------------------------------------------------------------------------------------------------
-
 namespace eval Faust {
+# -------------------------------------------------------------------------------------------------
 
 set SOURCE_DIR $::Syfala::SOURCE_DIR/faust
 
@@ -370,8 +360,8 @@ proc mem_access_count {} {
             continue
         }
         if $compute_fn {
-           set rw  [regexp -all {[if]Zone\[} $line]
-           set w   [regexp {[i f]Zone\[.*\] =} $line]
+           set rw [regexp -all {[if]Zone\[} $line]
+           set w  [regexp {[i f]Zone\[.*\] =} $line]
            incr count_w $w
            incr count_r [expr {$rw-$w}]
         }
@@ -386,18 +376,22 @@ proc mem_access_count {} {
 ## generated output will be located in $ARCH_FPGA_DST_FILE
 proc generate_ip_hls { dsp } {
     print_info "Generating Faust IP from Faust compiler & architecture file"
-    file mkdir $Faust::ARCH_FPGA_DST_DIR
-    exec faust $dsp -lang c -light -os2 -uim -mcd 0  \
-     -a $Faust::ARCH_FPGA_SRC_FILE                   \
-     -o $Faust::ARCH_FPGA_DST_FILE                   \
-     -t 0
+    file mkdir $::Syfala::BUILD_DIR/sources
+    file copy -force $::Faust::ARCH_FPGA_TEMPLATE_FILE $::Syfala::BUILD_DIR/sources
+    file mkdir $Faust::ARCH_FPGA_DST_DIR    
+    syexec faust $dsp -lang c -light -os2 -uim -mcd 0   \
+                      -a $Faust::ARCH_FPGA_SRC_FILE     \
+                      -o $Faust::ARCH_FPGA_DST_FILE     \
+                      -t 0
     print_ok "Generated $Faust::ARCH_FPGA_DST_FILE"
 }
 
+## Runs Faust compiler to generate FPGA VHDL IP
+## generated output will be located in syfala_ip/faust.vhd
 proc generate_ip_vhdl { dsp t } {
     file mkdir $Faust::ARCH_FPGA_DST_DIR
     cd $Faust::ARCH_FPGA_DST_DIR
-    exec faust -vhdl -vhdl-type $t $dsp
+    syexec faust -vhdl -vhdl-type $t $dsp
     print_ok "Generated DSP-VHDL translation in $Faust::ARCH_FPGA_DST_DIR"
     cd $Syfala::BUILD_DIR
 }
@@ -408,57 +402,53 @@ proc generate_ip_vhdl { dsp t } {
 proc generate_host { dsp src } {
     print_info "Generating HOST Control Application from Faust compiler & architecture file"
     file mkdir $Faust::ARCH_HOST_DST_DIR
-    exec faust $dsp -i -lang cpp -os2 -uim -mcd 0   \
-         -a $src                                    \
-         -o $Faust::ARCH_HOST_DST_FILE              \
-         -t 0
+    syexec faust $dsp -i -lang cpp -os2 -uim -mcd 0     \
+                      -a $src                           \
+                      -o $Faust::ARCH_HOST_DST_FILE     \
+                      -t 0
     print_ok "Generated $Faust::ARCH_HOST_DST_FILE"
 }
 
 proc generate_gui_app { dsp } {
     file mkdir $::Syfala::BUILD_GUI_DIR
-    print_info "Generating GUI control application"
-    exec faust $dsp -a $Faust::GUI_SRC_FILE -o $Faust::GUI_DST_FILE
-    print_info "Compiling GUI control application"
+    print_info "Generating & compiling GUI control application"
+    syexec faust $dsp -a $Faust::GUI_SRC_FILE -o $Faust::GUI_DST_FILE
     # I guess that's one of the limits of tcl...
     set pkgc [exec pkg-config --libs --cflags gtk+-2.0]
     lappend pkgc -I$::Syfala::INCLUDE_DIR
-    set cmd "c++ -v -std=c++11 $Faust::GUI_DST_FILE $pkgc -o $::Syfala::BUILD_GUI_DIR/faust-gui"
+    set cmd "c++ -v -std=c++14 $Faust::GUI_DST_FILE $pkgc -o $::Syfala::BUILD_GUI_DIR/faust-gui"
+    print_info "Executing command: $cmd"
     exec {*}$cmd >&@stdout | tee -a $Syfala::BUILD_LOG
 }
 }
-
 # -------------------------------------------------------------------------------------------------
-# Xilinx toolchain calls
-# -------------------------------------------------------------------------------------------------
-
 namespace eval Xilinx {
+# -------------------------------------------------------------------------------------------------
 
 set VERSION 2020.2
 
-namespace eval Boards {
-    namespace eval Zybo {
-        namespace eval z710 {
-            set ID          "zybo-z7-10"
-            set PART        "xc7z010clg400-1"
-            set PART_FULL   "digilentinc.com:zybo-z7-10:part0:1.0"
-            set CONSTRAINT  "master_zybo.xdc"
-        }
-        namespace eval z720 {
-            set ID          "zybo-z7-20"
-            set PART        "xc7z020clg400-1"
-            set PART_FULL   "digilentinc.com:zybo-z7-20:part0:1.0"
-            set CONSTRAINT  "master_zybo.xdc"
-        }
-    }
-    namespace eval Genesys {
-        set ID          "gzu_3eg"
-        set PART        "xczu3eg-sfvc784-1-e"
-        set PART_FULL   "digilentinc.com:gzu_3eg:part0:1.0"
-        set CONSTRAINT	"master_Genesys-ZU-3EG.xdc"
-    }
+namespace eval Boards   {
+namespace eval Zybo     {
+namespace eval z710     {
+    set ID          "zybo-z7-10"
+    set PART        "xc7z010clg400-1"
+    set PART_FULL   "digilentinc.com:zybo-z7-10:part0:1.0"
+    set CONSTRAINT  "master_zybo.xdc"
 }
-
+namespace eval z720 {
+    set ID          "zybo-z7-20"
+    set PART        "xc7z020clg400-1"
+    set PART_FULL   "digilentinc.com:zybo-z7-20:part0:1.0"
+    set CONSTRAINT  "master_zybo.xdc"
+}
+}
+namespace eval Genesys {
+    set ID          "gzu_3eg"
+    set PART        "xczu3eg-sfvc784-1-e"
+    set PART_FULL   "digilentinc.com:gzu_3eg:part0:1.0"
+    set CONSTRAINT	"master_Genesys-ZU-3EG.xdc"
+}
+}
 proc get_board_id { board } {
     switch $board {
         "Z10" { return $Xilinx::Boards::Zybo::z710::ID }
@@ -493,8 +483,8 @@ proc get_board_constraint { board } {
 
 proc compile_host { config board } {
     print_info "Compiling Host control application"
-    exec xsct $::Syfala::APPLICATION_SCRIPT $config $board >&@stdout | tee -a $::Syfala::BUILD_LOG
-    print_ok "Finished building host application"
+    syexec xsct $::Syfala::APPLICATION_SCRIPT $config $board >&@stdout | tee -a $::Syfala::BUILD_LOG
+    print_ok   "Finished building Host application"
     file mkdir sw_export
     file copy -force syfala_application/application/src sw_export
     file copy -force syfala_application/application/Debug/application.elf sw_export
@@ -512,45 +502,49 @@ proc generate_boot {} {
 
 proc flash_jtag {board} {
     print_info "Flashing image (JTAG)"
-    exec xsct $::Syfala::JTAG_SCRIPT $board >&@stdout
+    syexec xsct $::Syfala::JTAG_SCRIPT $board >&@stdout
 }
 
+# -----------------------------------------------------------------------------
 namespace eval Vitis_HLS {
-    proc run { script args } {
-        print_info "Running Vitis HLS on file $script"
-        exec vitis_hls -f $script $args >&@stdout | tee -a $::Syfala::BUILD_LOG
-        # copy report to BUILD_DIR
-        file copy -force syfala_ip/syfala/syn/report/syfala_csynth.rpt $::Syfala::BUILD_DIR
-    }
-    proc report { } {
-        exec less syfala_csynth.rpt >&@stdout
-    }
+# -----------------------------------------------------------------------------
+proc run { script args } {
+    print_info "Running Vitis HLS on file $script"
+    syexec vitis_hls -f $script $args >&@stdout | tee -a $::Syfala::BUILD_LOG
+    # copy report to BUILD_DIR
+    file copy -force syfala_ip/syfala/syn/report/syfala_csynth.rpt $::Syfala::BUILD_DIR
 }
+proc report { } {
+    exec less syfala_csynth.rpt >&@stdout
+}
+}
+# -----------------------------------------------------------------------------
 namespace eval Vivado {
-    proc run { script args } {
-	print_info "Running Vivado on file $script"
-    exec vivado -mode batch     \
-		    -notrace			\
-		    -source $script		\
-            -tclargs $args      \
-            >&@stdout | tee -a $::Syfala::BUILD_LOG
-    }
-
-    proc get_cable_drivers_installer_path {x} {
-        return "$x/Vivado/$TOOLCHAIN_VERSION/data/xicom/cable_drivers/lin64/install_script/install_drivers"
-    }
+# -----------------------------------------------------------------------------
+proc run { script args } {
+    print_info "Running Vivado on file $script"
+    syexec vivado -mode batch       \
+                  -notrace			\
+                  -source $script   \
+                  -tclargs $args    \
+                  >&@stdout | tee -a $::Syfala::BUILD_LOG
+}
 }
 }
 # -------------------------------------------------------------------------------------------------
 # post-install script (not fully functional yet...)
 # -------------------------------------------------------------------------------------------------
 
+proc get_cable_drivers_installer_path {x} {
+    return "$x/Vivado/$TOOLCHAIN_VERSION/data/xicom/cable_drivers/lin64/install_script/install_drivers"
+}
+
 proc install_cable_drivers { x v } {
     if {[file exists "/etc/udev/rules.d/52-xilinx-digilent-usb.rules"]} {
         print_info "Cable drivers already installed, skipping"
         return
     } else {
-        cd [Xilinx::Vivado::get_cable_drivers_installer_path]
+        cd [get_cable_drivers_installer_path $x]
         print_info "Installing cable drivers (requires sudo)"
         exec sudo ./install_drivers
         print_info "Copying 52-xilinx-digilent-usb.rules to /etc/udev/rules.d (JTAG)"

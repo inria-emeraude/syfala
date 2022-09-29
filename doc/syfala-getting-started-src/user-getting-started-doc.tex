@@ -7,7 +7,12 @@
 \usepackage{lmodern}
 \usepackage{boxedminipage}
 \usepackage{microtype}
-
+\usepackage{listings}
+\lstset{
+basicstyle=\small\ttfamily,
+columns=flexible,
+breaklines=true
+}
 
 \usepackage[colorlinks,linkcolor=blue,citecolor=blue,pagebackref]{hyperref}
 \usepackage{amsmath,amssymb,amsfonts,mathrsfs}
@@ -55,19 +60,19 @@ centering,
 \newcommand{\tcg}{\textcolor{OliveGreen}}
 \newcommand{\red}{\textcolor{red}}
 
-\newcommand{\knownbug}[1]{\red{WARNING KNOWN BUG: #1}}
+\newcommand{\knownbug}[1]{{ #1}}
 
 \newcommand{\adtname}{SytaRiot}
 
 %-----------------------------------------------------------------------
 \title{\Large\bf Syfala project: how to install and run Syfala toolchain on Linux}
-\author{Tanguy Risset and the Syfala Team}
+\author{The Syfala Team}
 \date{\today}
 \begin{document}
 \maketitle
 
 \input{body-install-toolchain.tex}
 \bibliographystyle{alpha}
-\bibliography{syfala-getting-started}
+\bibliography{syfala}
 
 \end{document}

@@ -3,13 +3,19 @@ source ../scripts/syfala_maker_utils.tcl
 source ../scripts/sylib.tcl
 namespace import Syfala::*
 
-set nchannels [lindex $argv 0]
-set BOARD     [lindex $argv 1]
+set FAUST_INPUTS    [lindex $argv 0]
+set FAUST_OUTPUTS   [lindex $argv 1]
+set NCHANNELS_MAX   [lindex $argv 2]
+set BOARD           [lindex $argv 3]
+
+print_info "syfala_maker.tcl running with arguments:
+        - inputs  = $FAUST_INPUTS,
+        - outputs = $FAUST_OUTPUTS,
+        - nchannels_max = $NCHANNELS_MAX,
+        - board   = $BOARD"
 
 set clk_dynamic_reconfig false
 set maxPhysicalCodec 2 ; #3 Codec max on Zybo20, 2 on Z10 and Genesys
-
-print_info "Running with nchannels: $nchannels"
 
 #guidelines (a marquer quelquepart):
 # Inliner les conditions des if: pas de mise à la ligne dans le "if(ICI)"
@@ -27,8 +33,6 @@ print_info "Running with nchannels: $nchannels"
 set I2S_SRC_PATH   $Syfala::SOURCE_DIR/vhdl/i2s_transceiver.vhd
 set I2S_DST_PATH   $Syfala::BUILD_SOURCES_DIR/i2s_transceiver.vhd
 set MUX_2TO1_PATH  $Syfala::SOURCE_DIR/vhdl/mux_2to1.vhd
-set FPGA_SRC_PATH  $Faust::ARCH_FPGA_TEMPLATE_FILE
-set FPGA_DST_PATH  $Faust::ARCH_FPGA_SRC_FILE
 
 file mkdir $Syfala::BUILD_SOURCES_DIR
 
@@ -38,7 +42,7 @@ set i2s_src_file [open "$I2S_SRC_PATH" r]
 set i2s_dst_file [open "$I2S_DST_PATH" w]
 
 print_info "Generating i2s_transceiver source file in $Syfala::BUILD_SOURCES_DIR"
-replace_right_left $i2s_src_file $i2s_dst_file $nchannels
+replace_right_left $i2s_src_file $i2s_dst_file $NCHANNELS_MAX
 
 close $i2s_src_file
 close $i2s_dst_file
@@ -47,19 +51,6 @@ print_ok "i2s_transceiver source file succesfully generated"
 
 #----------------------------------------------------------------
 
-#-----------------------------------------------FPGA.cpp ---------------------
-
-print_info "Generating fpga IP source file in $Syfala::BUILD_SOURCES_DIR"
-
-set fpga_src_file [open "$FPGA_SRC_PATH" r]
-set fpga_dst_file [open "$FPGA_DST_PATH" w]
-
-replace_chx $fpga_src_file $fpga_dst_file  $nchannels
-
-close $fpga_src_file
-close $fpga_dst_file
-
-print_ok "FPGA IP source file succesfully generated"
 
 #----------------------------------------------------------------
 
@@ -108,11 +99,15 @@ append ports "  set switches \[ create_bd_port -dir I -from 3 -to 0 switches \]\
 
 
 #------------------------ Create CODECs Ports --------------------
-for {set i 1} {($i <= $nchannels/2) && ($i <= $maxPhysicalCodec)} {incr i} {
+for {set i 1} {($i <= $FAUST_INPUTS/2) && ($i <= $maxPhysicalCodec)} {incr i} {
+  create_port CODEC$i\_sd_rx 		"I"
+}
+for {set i 1} {($i <= $FAUST_OUTPUTS/2) && ($i <= $maxPhysicalCodec)} {incr i} {
+  create_port CODEC$i\_sd_tx 		"O"
+}
+for {set i 1} {($i <= $NCHANNELS_MAX/2) && ($i <= $maxPhysicalCodec)} {incr i} {
     create_port CODEC$i\_bclk 		"O"
     create_port CODEC$i\_mclk 		"O"
-    create_port CODEC$i\_sd_rx 		"I"
-    create_port CODEC$i\_sd_tx 		"O"
     create_port CODEC$i\_ws 			"O"
 
     create_port CODEC$i\_bclk_GND 	"O"
@@ -260,9 +255,11 @@ connect "pins" rst_global/slowest_sync_clk 	"pins" $i2s_clk_instance_name/clk_24
 
 
 #------------------------ Connections FAUST IP--------------------
-for {set i 0} {$i < $nchannels} {incr i} {
+for {set i 0} {$i < $FAUST_OUTPUTS} {incr i} {
     connect "pins" syfala/out_ch$i\_V					"pins" i2s_transceiver_0/ch$i\_data_tx
     connect "pins" syfala/out_ch$i\_V_ap_vld	"pins" i2s_transceiver_0/out_ch$i\_V_ap_vld
+}
+for {set i 0} {$i < $FAUST_INPUTS} {incr i} {
     connect "pins" syfala/in_ch$i\_V					"pins" i2s_transceiver_0/ch$i\_data_rx
 }
 
@@ -278,7 +275,7 @@ connect "pins" syfala/ap_start           "ports" syfala_out_debug3
 
 
 #------------------------ Connections CODEC 1 to X--------------------
-for {set i 1} {($i <= $nchannels/2) && ($i <= $maxPhysicalCodec)} {incr i} {
+for {set i 1} {($i <= $NCHANNELS_MAX/2) && ($i <= $maxPhysicalCodec)} {incr i} {
     connect "ports" CODEC$i\_mclk					"pins" $i2s_clk_instance_name/clk_24Mhz
     connect "ports" CODEC$i\_bclk					"pins" i2s_transceiver_0/sclk
     connect "ports" CODEC$i\_ws						"pins" i2s_transceiver_0/ws
@@ -289,17 +286,23 @@ for {set i 1} {($i <= $nchannels/2) && ($i <= $maxPhysicalCodec)} {incr i} {
 }
 
 #------------------------ Connections CODEC 2 to X--------------------
-for {set i 2} {($i <= $nchannels/2) && ($i <= $maxPhysicalCodec)} {incr i} {
+for {set i 2} {($i <= $FAUST_INPUTS/2) && ($i <= $maxPhysicalCodec)} {incr i} {
     connect "ports" CODEC$i\_sd_rx					"pins" i2s_transceiver_0/sd_ch[expr {($i*2)-2}]\_ch[expr {($i*2)-1}]\_rx
+}
+for {set i 2} {($i <= $FAUST_OUTPUTS/2) && ($i <= $maxPhysicalCodec)} {incr i} {
     connect "ports" CODEC$i\_sd_tx					"pins" i2s_transceiver_0/sd_ch[expr {($i*2)-2}]\_ch[expr {($i*2)-1}]\_tx
 }
-
 #------------------------ Connections CODEC 1 and internal_codec (SSM for Zybo, ADAU for Genesys)--------------------
-connect "ports" CODEC1_sd_rx										"pins" mux_2to1_0/inA
-connect "ports" CODEC1_sd_tx										"pins" i2s_transceiver_0/sd_ch0_ch1_tx
-connect "ports" internal_codec_sd_tx												"pins" i2s_transceiver_0/sd_ch0_ch1_tx
-connect "pins" i2s_transceiver_0/sd_ch0_ch1_rx	"pins" mux_2to1_0/outMux
-connect "ports" internal_codec_sd_rx 											"pins" mux_2to1_0/inB
+if { $FAUST_INPUTS != 0 } {
+  connect "ports" CODEC1_sd_rx										"pins" mux_2to1_0/inA
+  connect "ports" internal_codec_sd_rx 						"pins" mux_2to1_0/inB
+  connect "pins" i2s_transceiver_0/sd_ch0_ch1_rx	"pins" mux_2to1_0/outMux
+}
+if { $FAUST_OUTPUTS != 0 } {
+  connect "ports" CODEC1_sd_tx										"pins" i2s_transceiver_0/sd_ch0_ch1_tx
+  connect "ports" internal_codec_sd_tx												"pins" i2s_transceiver_0/sd_ch0_ch1_tx
+}
+
 connect "ports" internal_codec_ws_tx												"pins" i2s_transceiver_0/ws
 connect "ports" internal_codec_bclk												"pins" i2s_transceiver_0/sclk
 connect "ports" internal_codec_mclk 												"pins" $i2s_clk_instance_name/clk_24Mhz

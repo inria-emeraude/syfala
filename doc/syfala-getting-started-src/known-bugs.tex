@@ -1,0 +1,100 @@
+\section{Known bugs: Important ``tricks'' to be known!!}
+\label{bug}
+
+This section regroups all the tricks that can result in unlimited waste of time if not known. These {\em known bugs} have been kept as they have been initially written, even if some of them do not occur anymore in more recent tool version.
+
+\subsection{Locale setting on linux}
+\label{localSetting}
+\knownbug{it is a known bug that {\tt vivado} is sensible to the ``locale'' environment variable on linux, hence you have to set these variables in your {\tt .bashrc} file:\\
+\tt export LC\_ALL=en\_US.UTF-8\\
+export LC\_NUMERIC=en\_US.UTF-8
+}
+
+If you do not, you might end up with unpredictible behaviour of Vivado.
+
+\subsection{Patch 2022 date bug}
+\label{2k22patch}
+\knownbug{Vivado and Vitis tools that use HLS in the background are also affected by this issue. HLS tools set the ip\_version in the format YYMMDDHHMM and this value is accessed as a signed integer (32-bit) that causes an overflow and generates the errors below (or something similar).}
+
+Follow this link: \url{https://support.xilinx.com/s/article/76960?language=en_US}
+
+Download the file at the bottom of the page and unzip it in your Xilinx base install directory (Xilinx file where you have your Vitis,Vitis\_HLS and Vivado files). 
+
+DONT FOLLOW THE README... Just check the "Known Issues:" section on the Xilinx page which takes over the readme.
+
+From the Xilinx directory, run:
+\begin{itemize}
+\item export LD\_LIBRARY\_PATH=\$PWD/Vivado/2020.2/tps/lnx64/python-3.8.3/lib/
+\item Vivado/2020.2/tps/lnx64/python-3.8.3/bin/python3 y2k22\_patch/patch.py
+\end{itemize}
+
+\subsection{Save the Vivado Install file in case of installation failure}
+\label{installSave}
+
+Vivado installation tends to fail. To avoid having to redownload the installation file each time you try , we suggest to use the “ Download Image (Install Separately)” option. It creates a directory with a xsetup file to execute for installing. But don't forget to duplicate the installation file, because Vivado will delete the xsetup installation file you use if you choose to let him delete all files after the installation failed.
+%Oui alors c'est pas clair....
+\subsection{Vivado Installation stuck at "final processing: Generating installed device list"}
+If the install of Vivado is stuck at "final processing: Generating installed device list", cancel it and install the libncurses5 lib:
+\begin{verbatim}
+sudo apt install libncurses5
+\end{verbatim}
+
+\subsection{Installing Vivado Board Files for Digilent Boards}
+\label{boardfiles}
+It is necessary, once Vivado install, to add support for new digilent board.
+the content of directory {\tt board\_files } has to be copied in \verb#$vivado/2019.2/data/boards/board_files#
+(see \begin{verbatim}https://reference.digilentinc.com/learn/programmable-logic/tutorials/\ 
+    zybo-getting-started-with-zynq/start?redirect=1#
+\end{verbatim}
+
+Or directly here: \url{https://github.com/Digilent/vivado-boards}
+
+\subsection{Cable drivers (Linux only)}
+For the Board to be recognized by the Linux system, it is necessary to install additional drivers. See \url{https://digilent.com/reference/programmable-logic/guides/install-cable-drivers}
+
+
+\subsection{Digilent driver for linux}
+On some linux install, programming the Zybo board will need to install an additionnal ``driver'': Adept2 \url{https://reference.digilentinc.com/reference/software/adept/start?redirect=1#software_downloads}
+
+\subsection{Vitis installation}
+{\bf Warning} Apparently the installation process does not end correctly if the {\tt libtinfo-dev} package is not correctly installed (\url{https://forums.xilinx.com/t5/Installation-and-Licensing/Installation-of-Vivado-2020-2-on-Ubuntu-20-04/td-p/1185285}. In case of doubt, execute these commands (april 2020):
+\begin{verbatim}
+sudo apt update
+sudo apt install libtinfo-dev
+sudo ln -s /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
+\end{verbatim}
+
+\subsection{"'sys/cdefs.h' file not found" during vitis\_HLS compilation}
+If Vitis HLS synthesis fails with the following error:
+\begin{verbatim}
+'sys/cdefs.h' file not found: /usr/include/features.h 
+\end{verbatim}
+You have to install the g++-multilib lib
+\begin{verbatim}
+sudo apt-get install g++-multilib
+\end{verbatim}
+
+\subsection{Board files: version 1.0 or 1.1?}
+Digilent updated his board file repository (mentioned above in section~\ref{boardfiles}) and unfortunately changes the version of the board from 1.0 to 1.1. This change must be reverted because it is not taken into account in past version of vivado.
+
+It you have a message like:
+\begin{verbatim}
+source /home/romain/reps/syfala/build/sources/project.tcl -notrace
+ERROR: [Board 49-71] The board_part definition was not found for
+  digilentinc.com:zybo-z7-10:part0:1.0. The project's board_part property was 
+ not set, but the project's part property was set to xc7z010clg400-1. 
+ Valid board_part values can be retrieved with the 'get_board_parts'
+ Tcl command. Check if board.repoPaths parameter is set and the board_part 
+ is installed from the tcl app store.
+\end{verbatim}
+
+You should do the following:
+\begin{itemize}
+  \item 
+    go into directory:\\
+    {\tt Vivado/2020.2/data/boards/board\_files/zybo-z7-10/A.0}
+\item Edit the file {\tt 'board.xml'}
+  and change\\
+  {\tt <file\_version>1.1</file\_version>}\\ into\\ {\tt  <file\_version>1.0</file\_version>}
+\item (Same thing for Z20 if you use Z20).
+\end{itemize}
