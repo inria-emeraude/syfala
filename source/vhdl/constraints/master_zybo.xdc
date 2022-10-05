@@ -69,11 +69,22 @@ set_property -dict { PACKAGE_PIN T12   IOSTANDARD LVCMOS33     } [get_ports { CO
 set_property -dict { PACKAGE_PIN U12   IOSTANDARD LVCMOS33     } [get_ports { CODEC2_ws_GND }];
 
 ##Pmod Header JB (Zybo Z7-20 only)
-set_property -dict { PACKAGE_PIN V8    IOSTANDARD LVCMOS33     } [get_ports { CODEC3_sd_rx }];
-set_property -dict { PACKAGE_PIN W8    IOSTANDARD LVCMOS33     } [get_ports { CODEC3_sd_tx }];
-set_property -dict { PACKAGE_PIN U7    IOSTANDARD LVCMOS33     } [get_ports { CODEC3_bclk }];
-set_property -dict { PACKAGE_PIN V7    IOSTANDARD LVCMOS33     } [get_ports { CODEC3_bclk_GND }];
-set_property -dict { PACKAGE_PIN Y7    IOSTANDARD LVCMOS33     } [get_ports { CODEC3_mclk }];
-set_property -dict { PACKAGE_PIN Y6    IOSTANDARD LVCMOS33     } [get_ports { CODEC3_mclk_GND }];
-set_property -dict { PACKAGE_PIN V6    IOSTANDARD LVCMOS33     } [get_ports { CODEC3_ws }];
-set_property -dict { PACKAGE_PIN W6    IOSTANDARD LVCMOS33     } [get_ports { CODEC3_ws_GND }];
+set_property -dict { PACKAGE_PIN V8    IOSTANDARD LVCMOS33     } [get_ports { CODEC4_sd_rx }];
+set_property -dict { PACKAGE_PIN W8    IOSTANDARD LVCMOS33     } [get_ports { CODEC4_sd_tx }];
+set_property -dict { PACKAGE_PIN U7    IOSTANDARD LVCMOS33     } [get_ports { CODEC4_bclk }];
+set_property -dict { PACKAGE_PIN V7    IOSTANDARD LVCMOS33     } [get_ports { CODEC4_bclk_GND }];
+set_property -dict { PACKAGE_PIN Y7    IOSTANDARD LVCMOS33     } [get_ports { CODEC4_mclk }];
+set_property -dict { PACKAGE_PIN Y6    IOSTANDARD LVCMOS33     } [get_ports { CODEC4_mclk_GND }];
+set_property -dict { PACKAGE_PIN V6    IOSTANDARD LVCMOS33     } [get_ports { CODEC4_ws }];
+set_property -dict { PACKAGE_PIN W6    IOSTANDARD LVCMOS33     } [get_ports { CODEC4_ws_GND }];
+
+
+##Pmod Header JA (XADC)
+set_property -dict { PACKAGE_PIN N15   IOSTANDARD LVCMOS33 } [get_ports { CODEC3_sd_rx }];
+set_property -dict { PACKAGE_PIN L14   IOSTANDARD LVCMOS33 } [get_ports { CODEC3_sd_tx }];
+set_property -dict { PACKAGE_PIN K16   IOSTANDARD LVCMOS33 } [get_ports { CODEC3_bclk }];
+set_property -dict { PACKAGE_PIN K14   IOSTANDARD LVCMOS33 } [get_ports { CODEC3_bclk_GND }];
+set_property -dict { PACKAGE_PIN N16   IOSTANDARD LVCMOS33 } [get_ports { CODEC3_mclk }];
+set_property -dict { PACKAGE_PIN L15   IOSTANDARD LVCMOS33 } [get_ports { CODEC3_mclk_GND }];
+set_property -dict { PACKAGE_PIN J16   IOSTANDARD LVCMOS33 } [get_ports { CODEC3_ws }];
+set_property -dict { PACKAGE_PIN J14   IOSTANDARD LVCMOS33 } [get_ports { CODEC3_ws_GND }];

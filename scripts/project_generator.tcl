@@ -201,4 +201,5 @@ exec $::Syfala::SCRIPTS_DIR/syfala_maker.tcl $::runtime::nchannels_i        \
                                              $::runtime::nchannels_o        \
                                              $channels_max                  \
                                              $::arguments::board            \
+                                             >&@stdout
 

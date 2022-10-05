@@ -200,12 +200,6 @@ proc cr_bd_main { parentCell } {
   # Create ports
   <<GENERATED_PORTS>>
 
-  # Create instance: GND, and set properties
-  set GND [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 GND ]
-  set_property -dict [ list \
-   CONFIG.CONST_VAL {0} \
- ] $GND
-
 
   # Create instance: axi_gpio_SW, and set properties
   set axi_gpio_SW [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio:2.0 axi_gpio_SW ]
@@ -217,9 +211,6 @@ proc cr_bd_main { parentCell } {
  ] $axi_gpio_SW
 
 	<<GENERATED_CLOCKWIZ>>
-
-  # Create instance: cst1, and set properties
-  set cst1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 cst1 ]
 
   # Create instance: syfala, and set properties
   set syfala [create_bd_cell -type ip -vlnv xilinx.com:hls:syfala:1.0 syfala]

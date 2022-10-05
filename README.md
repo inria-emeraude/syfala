@@ -98,7 +98,6 @@ $ syfala flash
 
 | parameter           | accepted values                            | default value |
 | :------------------ | ------------------------------------------ | ------------- |
-| `--nchannels, -n`   | an even number (`2`, `4`, `6`, etc.)       | `2`           |
 | `--memory, -m`      | `DDR - STATIC`                             | `DDR`         |
 | `--board, -b`       | `Z10 - Z20 - GENESYS`                      | `Z10`         |
 | `--sample-rate`     | `48000 - 96000 - 192000 - 384000 - 768000` | `48000`       |
@@ -111,7 +110,6 @@ $ syfala flash
 
 | parameter           | description                                                  |
 | ------------------- | ------------------------------------------------------------ |
-| `--nchannels, -n`   | sets the project's number of channels, it is equal to the **maximum number of input/output channels** rounded to the superior even number (e.g: if 3 channels: `nchannels` would be 4) |
 | `--memory, -m`      | selects if **external** **DDR3** is used. Enable if you use some delay, disable if you do want any  memory access (should not be disabled) |
 | `--board`           | Defines target board. **Z10** ,**Z20** and **GENESYS** only. If you have a VGA port (rather than 2 HDMI ports), you have an old Zybo version, which is not supported. |
 | `--sample-rate`     | Changes **sample rate** value (Hz). Only 48kHz and 96kHz is available for **SSM** embeded codec. 192000 (**ADAU1777** and **ADAU1787** only)  384000 (**ADAU1787** only)  768000 (**ADAU1787** only and with `--sample--width 16` only) |

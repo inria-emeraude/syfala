@@ -56,21 +56,10 @@ set_property -dict { PACKAGE_PIN C11 IOSTANDARD LVCMOS18 } [get_ports { internal
 set_property -dict { PACKAGE_PIN B11 IOSTANDARD LVCMOS18 } [get_ports { internal_codec_sd_rx }]; #IO_L10P_AD10P_45/25 Sch=aud_adc_sdata
 set_property -dict { PACKAGE_PIN D11 IOSTANDARD LVCMOS18 } [get_ports { internal_codec_sd_tx }]; #IO_L8N_HDGC_45/25 Sch=aud_dac_sdata
 
-## PMOD XADC
-## Commented because pins are contrained by System Management Wizard. Only >2018.2 lets us select bank 43.
-#set_property -dict { PACKAGE_PIN Y10   IOSTANDARD LVCMOS18 } [get_ports { ja1_r_n }]; #IO_L10N_AD2N_43/44 Sch=ja1_r_n
-#set_property -dict { PACKAGE_PIN W10   IOSTANDARD LVCMOS18 } [get_ports { ja1_r_p }]; #IO_L10P_AD2P_43/44 Sch=ja1_r_p
-#set_property -dict { PACKAGE_PIN AA10  IOSTANDARD LVCMOS18 } [get_ports { ja2_r_n }]; #IO_L9N_AD3N_43/44 Sch=ja2_r_n
-#set_property -dict { PACKAGE_PIN AA11  IOSTANDARD LVCMOS18 } [get_ports { ja2_r_p }]; #IO_L9P_AD3P_43/44 Sch=ja2_r_p
-#set_property -dict { PACKAGE_PIN AB9   IOSTANDARD LVCMOS18 } [get_ports { ja3_r_n }]; #IO_L12N_AD0N_43/44 Sch=ja3_r_n
-#set_property -dict { PACKAGE_PIN AB10  IOSTANDARD LVCMOS18 } [get_ports { ja3_r_p }]; #IO_L12P_AD0P_43/44 Sch=ja3_r_p
-#set_property -dict { PACKAGE_PIN AA8   IOSTANDARD LVCMOS18 } [get_ports { ja4_r_n }]; #IO_L11N_AD1N_43/44 Sch=ja4_r_n
-#set_property -dict { PACKAGE_PIN Y9    IOSTANDARD LVCMOS18 } [get_ports { ja4_r_p }]; #IO_L11P_AD1P_43/44 Sch=ja4_r_p
-
 ## Platform MCU signals
-#set_property -dict { PACKAGE_PIN AC14 IOSTANDARD LVCMOS33 } [get_ports { vadj_level[0] }]; #IO_L6P_HDGC_44/24 Sch=vadj_level[0]
-#set_property -dict { PACKAGE_PIN AC13 IOSTANDARD LVCMOS33 } [get_ports { vadj_level[1] }]; #IO_L6N_HDGC_44/24 Sch=vadj_level[1]
-#set_property -dict { PACKAGE_PIN G10  IOSTANDARD LVCMOS18 } [get_ports { vadj_auton }]; #IO_L3N_AD13N_45/25 Sch=vadj_auton
+set_property -dict { PACKAGE_PIN AC14 IOSTANDARD LVCMOS33 } [get_ports { vadj_level0 }]; #IO_L6P_HDGC_44/24 Sch=vadj_level[0]
+set_property -dict { PACKAGE_PIN AC13 IOSTANDARD LVCMOS33 } [get_ports { vadj_level1 }]; #IO_L6N_HDGC_44/24 Sch=vadj_level[1]
+set_property -dict { PACKAGE_PIN G10  IOSTANDARD LVCMOS18 } [get_ports { vadj_auton }]; #IO_L3N_AD13N_45/25 Sch=vadj_auton
 #set_property -dict { PACKAGE_PIN H11  IOSTANDARD LVCMOS18 } [get_ports { syzygy_detectedn }]; #IO_L3P_AD13P_45/25 Sch=syzygy_detectedn
 
 ##DisplayPort AUX channel over EMIO
@@ -92,6 +81,16 @@ set_property -dict { PACKAGE_PIN D11 IOSTANDARD LVCMOS18 } [get_ports { internal
 #set_property -dict { PACKAGE_PIN E8  LVCMOS12  } [get_ports { eth_tck_ls }]; #IO_L17N_T2U_N9_AD10N_66 Sch=eth_tck_ls
 #set_property -dict { PACKAGE_PIN E9  LVCMOS12  } [get_ports { eth_tdo_ls }]; #IO_L18P_T2U_N10_AD2P_66 Sch=eth_tdo_ls
 
+## PMOD XADC JA
+set_property -dict { PACKAGE_PIN W10   IOSTANDARD LVCMOS18 } [get_ports  { CODEC2_sd_rx }];
+set_property -dict { PACKAGE_PIN AA11  IOSTANDARD LVCMOS18 } [get_ports  { CODEC2_sd_tx }];
+set_property -dict { PACKAGE_PIN AB10  IOSTANDARD LVCMOS18 } [get_ports  { CODEC2_bclk }];
+set_property -dict { PACKAGE_PIN Y9    IOSTANDARD LVCMOS18 } [get_ports  { CODEC2_bclk_GND }];
+set_property -dict { PACKAGE_PIN Y10   IOSTANDARD LVCMOS18 } [get_ports  { CODEC2_mclk }];
+set_property -dict { PACKAGE_PIN AA10  IOSTANDARD LVCMOS18 } [get_ports  { CODEC2_mclk_GND }];
+set_property -dict { PACKAGE_PIN AB9   IOSTANDARD LVCMOS18 } [get_ports  { CODEC2_ws }];
+set_property -dict { PACKAGE_PIN AA8   IOSTANDARD LVCMOS18 } [get_ports  { CODEC2_ws_GND }];
+
 ## PMOD JB
 set_property -dict { PACKAGE_PIN AE13  IOSTANDARD LVCMOS33 } [get_ports { spi_SS }];
 set_property -dict { PACKAGE_PIN AG14  IOSTANDARD LVCMOS33 } [get_ports { spi_MOSI }];
@@ -103,16 +102,16 @@ set_property -dict { PACKAGE_PIN AE15  IOSTANDARD LVCMOS33 } [get_ports { syfala
 set_property -dict { PACKAGE_PIN AH13  IOSTANDARD LVCMOS33 } [get_ports { syfala_out_debug3 }];
 
 ## PMOD JC
-set_property -dict { PACKAGE_PIN E13  IOSTANDARD LVCMOS33 } [get_ports { CODEC2_sd_rx }];
-set_property -dict { PACKAGE_PIN G13  IOSTANDARD LVCMOS33 } [get_ports { CODEC2_sd_tx }];
-set_property -dict { PACKAGE_PIN B13  IOSTANDARD LVCMOS33 } [get_ports { CODEC2_bclk }];
-set_property -dict { PACKAGE_PIN D14  IOSTANDARD LVCMOS33 } [get_ports { CODEC2_bclk_GND }];
-set_property -dict { PACKAGE_PIN F13  IOSTANDARD LVCMOS33 } [get_ports { CODEC2_mclk }];
-set_property -dict { PACKAGE_PIN C13  IOSTANDARD LVCMOS33 } [get_ports { CODEC2_mclk_GND }];
-set_property -dict { PACKAGE_PIN C14  IOSTANDARD LVCMOS33 } [get_ports { CODEC2_ws }];
-set_property -dict { PACKAGE_PIN A13  IOSTANDARD LVCMOS33 } [get_ports { CODEC2_ws_GND }];
+#set_property -dict { PACKAGE_PIN E13  IOSTANDARD LVCMOS33 } [get_ports { CODEC2_sd_rx }];
+#set_property -dict { PACKAGE_PIN G13  IOSTANDARD LVCMOS33 } [get_ports { CODEC2_sd_tx }];
+#set_property -dict { PACKAGE_PIN B13  IOSTANDARD LVCMOS33 } [get_ports { CODEC2_bclk }];
+#set_property -dict { PACKAGE_PIN D14  IOSTANDARD LVCMOS33 } [get_ports { CODEC2_bclk_GND }];
+#set_property -dict { PACKAGE_PIN F13  IOSTANDARD LVCMOS33 } [get_ports { CODEC2_mclk }];
+#set_property -dict { PACKAGE_PIN C13  IOSTANDARD LVCMOS33 } [get_ports { CODEC2_mclk_GND }];
+#set_property -dict { PACKAGE_PIN C14  IOSTANDARD LVCMOS33 } [get_ports { CODEC2_ws }];
+#set_property -dict { PACKAGE_PIN A13  IOSTANDARD LVCMOS33 } [get_ports { CODEC2_ws_GND }];
 
-## PMOD JD
+### PMOD JD
 set_property -dict {PACKAGE_PIN E15  IOSTANDARD LVCMOS33 } [get_ports { CODEC1_sd_rx }];
 set_property -dict {PACKAGE_PIN A14  IOSTANDARD LVCMOS33 } [get_ports { CODEC1_sd_tx }];
 set_property -dict {PACKAGE_PIN B15  IOSTANDARD LVCMOS33 } [get_ports { CODEC1_bclk }];
@@ -169,14 +168,14 @@ set_property -dict { PACKAGE_PIN AB15  IOSTANDARD LVCMOS33 } [get_ports { switch
 #set_property -dict { PACKAGE_PIN AC12  IOSTANDARD LVCMOS18 } [get_ports { syzygy_s[17] }]; #IO_L6P_HDGC_AD6P_43/44 Sch=syzygy_s[17]
 #set_property -dict { PACKAGE_PIN AF10  IOSTANDARD LVCMOS18 } [get_ports { syzygy_s[18] }]; #IO_L4N_AD8N_43/44 Sch=syzygy_s[18]
 #set_property -dict { PACKAGE_PIN AD12  IOSTANDARD LVCMOS18 } [get_ports { syzygy_s[19] }]; #IO_L6N_HDGC_AD6N_43/44 Sch=syzygy_s[19]
-#set_property -dict { PACKAGE_PIN AF11  IOSTANDARD LVCMOS18 } [get_ports { syzygy_s[20] }]; #IO_L2P_AD10P_43/44 Sch=syzygy_s[20]
-#set_property -dict { PACKAGE_PIN AE12  IOSTANDARD LVCMOS18 } [get_ports { syzygy_s[21] }]; #IO_L5P_HDGC_AD7P_43/44 Sch=syzygy_s[21]
-#set_property -dict { PACKAGE_PIN AF12  IOSTANDARD LVCMOS18 } [get_ports { syzygy_s[22] }]; #IO_L5N_HDGC_AD7N_43/44 Sch=syzygy_s[22]
-#set_property -dict { PACKAGE_PIN AH12  IOSTANDARD LVCMOS18 } [get_ports { syzygy_s[23] }]; #IO_L3P_AD9P_43/44 Sch=syzygy_s[23]
-#set_property -dict { PACKAGE_PIN AG11  IOSTANDARD LVCMOS18 } [get_ports { syzygy_s[24] }]; #IO_L2N_AD10N_43/44 Sch=syzygy_s[24]
-#set_property -dict { PACKAGE_PIN AG10  IOSTANDARD LVCMOS18 } [get_ports { syzygy_s[25] }]; #IO_L1P_AD11P_43/44 Sch=syzygy_s[25]
-#set_property -dict { PACKAGE_PIN AH11  IOSTANDARD LVCMOS18 } [get_ports { syzygy_s[26] }]; #IO_L3N_AD9N_43/44 Sch=syzygy_s[26]
-#set_property -dict { PACKAGE_PIN AH10  IOSTANDARD LVCMOS18 } [get_ports { syzygy_s[27] }]; #IO_L1N_AD11N_43/44 Sch=syzygy_s[27]
+#set_property -dict { PACKAGE_PIN AF11  IOSTANDARD LVCMOS18 }  [get_ports { CODEC2_sd_tx }];
+#set_property -dict { PACKAGE_PIN AE12  IOSTANDARD LVCMOS18 }  [get_ports { CODEC2_sd_rx }];
+#set_property -dict { PACKAGE_PIN AF12  IOSTANDARD LVCMOS18 }  [get_ports { CODEC2_bclk }];
+#set_property -dict { PACKAGE_PIN AH12  IOSTANDARD LVCMOS18 }  [get_ports { CODEC2_bclk_GND }];
+#set_property -dict { PACKAGE_PIN AG11  IOSTANDARD LVCMOS18 }  [get_ports { CODEC2_mclk }];
+#set_property -dict { PACKAGE_PIN AG10  IOSTANDARD LVCMOS18 }  [get_ports { CODEC2_mclk_GND }];
+#set_property -dict { PACKAGE_PIN AH11  IOSTANDARD LVCMOS18 }  [get_ports { CODEC2_ws }];
+#set_property -dict { PACKAGE_PIN AH10  IOSTANDARD LVCMOS18 }  [get_ports { CODEC2_ws_GND }];
 #set_property -dict { PACKAGE_PIN AD4   IOSTANDARD LVDS   DIFF_TERM_ADV TERM_100 } [get_ports { syzygy_in_clk_n }]; #IO_L13N_T2L_N1_GC_QBC_64 Sch=syzygy_in_clk_n
 #set_property -dict { PACKAGE_PIN AD5   IOSTANDARD LVDS   DIFF_TERM_ADV TERM_100 } [get_ports { syzygy_in_clk_p }]; #IO_L13P_T2L_N0_GC_QBC_64 Sch=syzygy_in_clk_p
 #set_property -dict { PACKAGE_PIN Y8    IOSTANDARD LVDS } [get_ports { syzygy_out_clk_n }]; #IO_L1N_T0L_N1_DBC_65 Sch=syzygy_out_clk_n
@@ -191,7 +190,7 @@ set_property -dict { PACKAGE_PIN AB15  IOSTANDARD LVCMOS33 } [get_ports { switch
 #set_property -dict { PACKAGE_PIN H4   IOSTANDARD LVDS } [get_ports { fmc_la01_cc_p }]; #IO_L7P_T1L_N0_QBC_AD13P_65 Sch=fmc_la01_cc_p
 #set_property -dict { PACKAGE_PIN H6   IOSTANDARD LVDS } [get_ports { fmc_la_n[02] }]; #IO_L20N_T3L_N3_AD1N_65 Sch=fmc_la_n[02]
 #set_property -dict { PACKAGE_PIN J6   IOSTANDARD LVDS } [get_ports { fmc_la_p[02] }]; #IO_L20P_T3L_N2_AD1P_65 Sch=fmc_la_p[02]
-#set_property -dict { PACKAGE_PIN K3   IOSTANDARD LVDS } [get_ports { fmc_la_n[03] }]; #IO_L11N_T1U_N9_GC_65 Sch=fmc_la_n[03]
+#set_property -dict { PACKAGE_PIN K3   IOSTANDARD LVCMOS18 } [get_ports { CODEC1_sd_rx }]; #IO_L11N_T1U_N9_GC_65 Sch=fmc_la_n[03]
 #set_property -dict { PACKAGE_PIN K4   IOSTANDARD LVDS } [get_ports { fmc_la_p[03] }]; #IO_L11P_T1U_N8_GC_65 Sch=fmc_la_p[03]
 #set_property -dict { PACKAGE_PIN J2   IOSTANDARD LVDS } [get_ports { fmc_la_n[04] }]; #IO_L9N_T1L_N5_AD12N_65 Sch=fmc_la_n[04]
 #set_property -dict { PACKAGE_PIN K2   IOSTANDARD LVDS } [get_ports { fmc_la_p[04] }]; #IO_L9P_T1L_N4_AD12P_65 Sch=fmc_la_p[04]
@@ -201,16 +200,16 @@ set_property -dict { PACKAGE_PIN AB15  IOSTANDARD LVCMOS33 } [get_ports { switch
 #set_property -dict { PACKAGE_PIN L1   IOSTANDARD LVDS } [get_ports { fmc_la_p[06] }]; #IO_L17P_T2U_N8_AD10P_65 Sch=fmc_la_p[06]
 #set_property -dict { PACKAGE_PIN J9   IOSTANDARD LVDS } [get_ports { fmc_la_n[07] }]; #IO_L23N_T3U_N9_65 Sch=fmc_la_n[07]
 #set_property -dict { PACKAGE_PIN K9   IOSTANDARD LVDS } [get_ports { fmc_la_p[07] }]; #IO_L23P_T3U_N8_I2C_SCLK_65 Sch=fmc_la_p[07]
-#set_property -dict { PACKAGE_PIN T7   IOSTANDARD LVDS } [get_ports { fmc_la_n[08] }]; #IO_L5N_T0U_N9_AD14N_65 Sch=fmc_la_n[08]
-#set_property -dict { PACKAGE_PIN R7   IOSTANDARD LVDS } [get_ports { fmc_la_p[08] }]; #IO_L5P_T0U_N8_AD14P_65 Sch=fmc_la_p[08]
+#set_property -dict { PACKAGE_PIN T7   IOSTANDARD LVCMOS18 } [get_ports { CODEC2_bclk }]; #IO_L5N_T0U_N9_AD14N_65 Sch=fmc_la_n[08]
+#set_property -dict { PACKAGE_PIN R7   IOSTANDARD LVCMOS18 } [get_ports { CODEC2_sd_tx }]; #IO_L5P_T0U_N8_AD14P_65 Sch=fmc_la_p[08]
 #set_property -dict { PACKAGE_PIN L8   IOSTANDARD LVDS } [get_ports { fmc_la_n[09] }]; #IO_L18N_T2U_N11_AD2N_65 Sch=fmc_la_n[09]
 #set_property -dict { PACKAGE_PIN M8   IOSTANDARD LVDS } [get_ports { fmc_la_p[09] }]; #IO_L18P_T2U_N10_AD2P_65 Sch=fmc_la_p[09]
 #set_property -dict { PACKAGE_PIN H1   IOSTANDARD LVDS } [get_ports { fmc_la_n[10] }]; #IO_L8N_T1L_N3_AD5N_65 Sch=fmc_la_n[10]
 #set_property -dict { PACKAGE_PIN J1   IOSTANDARD LVDS } [get_ports { fmc_la_p[10] }]; #IO_L8P_T1L_N2_AD5P_65 Sch=fmc_la_p[10]
 #set_property -dict { PACKAGE_PIN J4   IOSTANDARD LVDS } [get_ports { fmc_la_n[11] }]; #IO_L19N_T3L_N1_DBC_AD9N_65 Sch=fmc_la_n[11]
 #set_property -dict { PACKAGE_PIN J5   IOSTANDARD LVDS } [get_ports { fmc_la_p[11] }]; #IO_L19P_T3L_N0_DBC_AD9P_65 Sch=fmc_la_p[11]
-#set_property -dict { PACKAGE_PIN H7   IOSTANDARD LVDS } [get_ports { fmc_la_n[12] }]; #IO_L21N_T3L_N5_AD8N_65 Sch=fmc_la_n[12]
-#set_property -dict { PACKAGE_PIN J7   IOSTANDARD LVDS } [get_ports { fmc_la_p[12] }]; #IO_L21P_T3L_N4_AD8P_65 Sch=fmc_la_p[12]
+#set_property -dict { PACKAGE_PIN H7   IOSTANDARD LVCMOS18 } [get_ports { CODEC2_ws }]; #IO_L21N_T3L_N5_AD8N_65 Sch=fmc_la_n[12]
+#set_property -dict { PACKAGE_PIN J7   IOSTANDARD LVCMOS18 } [get_ports { CODEC2_mclk }]; #IO_L21P_T3L_N4_AD8P_65 Sch=fmc_la_p[12]
 #set_property -dict { PACKAGE_PIN N6   IOSTANDARD LVDS } [get_ports { fmc_la_n[13] }]; #IO_L15N_T2L_N5_AD11N_65 Sch=fmc_la_n[13]
 #set_property -dict { PACKAGE_PIN N7   IOSTANDARD LVDS } [get_ports { fmc_la_p[13] }]; #IO_L15P_T2L_N4_AD11P_65 Sch=fmc_la_p[13]
 #set_property -dict { PACKAGE_PIN P6   IOSTANDARD LVDS } [get_ports { fmc_la_n[14] }]; #IO_L16N_T2U_N7_QBC_AD3N_65 Sch=fmc_la_n[14]

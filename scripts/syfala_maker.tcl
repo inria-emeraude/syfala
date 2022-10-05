@@ -15,8 +15,14 @@ print_info "syfala_maker.tcl running with arguments:
         - board   = $BOARD"
 
 set clk_dynamic_reconfig false
-set maxPhysicalCodec 2 ; #3 Codec max on Zybo20, 2 on Z10 and Genesys
 
+if { $BOARD == "Z10" } {
+  set maxPhysicalCodec 3 ;
+} elseif { $BOARD == "Z20" } {
+  set maxPhysicalCodec 4 ;
+} elseif { $BOARD == "GENESYS" } {
+  set maxPhysicalCodec 4 ;
+}
 #guidelines (a marquer quelquepart):
 # Inliner les conditions des if: pas de mise à la ligne dans le "if(ICI)"
 # Ca risque d'être compliqué si la condition d'un "if" contient à la fois un right_ et un left_...
@@ -69,8 +75,6 @@ set address ""
 set ip_check ""
 set clock_instances ""
 
-
-
 if { $BOARD == "Z10" || $BOARD == "Z20" } {
 append ip_check "  xilinx.com:ip:processing_system7:5.5\\"
 } elseif { $BOARD == "GENESYS" } {
@@ -78,11 +82,9 @@ append ip_check "  xilinx.com:ip:smartconnect:1.0\\\n"
 append ip_check "  xilinx.com:ip:zynq_ultra_ps_e:3.3\\"
 }
 
-
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
 #----------------------------------------------------------------------- PORTS ---------------------------------------------------------------------#
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
-
 
 #------------------------ Create Interface Ports --------------------
 if { $BOARD == "Z10" || $BOARD == "Z20" } {
@@ -97,22 +99,29 @@ append ports "  set leds_4bits \[ create_bd_intf_port -mode Master -vlnv xilinx.
 append ports "  set rgb_led \[ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:gpio_rtl:1.0 rgb_led \]\n"
 append ports "  set switches \[ create_bd_port -dir I -from 3 -to 0 switches \]\n"
 
+# we have to round to the superior before the following 'for' loops
+# otherwise we don't have the matching number of codec ports
+proc round_sup_div2 { x } {
+    return [expr $x % 2 ? ($x+1)/2 : $x/2]
+}
+set n_inputs  [round_sup_div2 $FAUST_INPUTS]
+set n_outputs [round_sup_div2 $FAUST_OUTPUTS]
+set nchn_max  [round_sup_div2 $NCHANNELS_MAX]
 
 #------------------------ Create CODECs Ports --------------------
-for {set i 1} {($i <= $FAUST_INPUTS/2) && ($i <= $maxPhysicalCodec)} {incr i} {
+for {set i 1} {($i <= $n_inputs) && ($i <= $maxPhysicalCodec)} {incr i} {
   create_port CODEC$i\_sd_rx 		"I"
 }
-for {set i 1} {($i <= $FAUST_OUTPUTS/2) && ($i <= $maxPhysicalCodec)} {incr i} {
+for {set i 1} {($i <= $n_outputs) && ($i <= $maxPhysicalCodec)} {incr i} {
   create_port CODEC$i\_sd_tx 		"O"
 }
-for {set i 1} {($i <= $NCHANNELS_MAX/2) && ($i <= $maxPhysicalCodec)} {incr i} {
+for {set i 1} {($i <= $nchn_max) && ($i <= $maxPhysicalCodec)} {incr i} {
     create_port CODEC$i\_bclk 		"O"
     create_port CODEC$i\_mclk 		"O"
-    create_port CODEC$i\_ws 			"O"
-
+    create_port CODEC$i\_ws         "O"
     create_port CODEC$i\_bclk_GND 	"O"
     create_port CODEC$i\_mclk_GND 	"O"
-    create_port CODEC$i\_ws_GND 		"O"
+    create_port CODEC$i\_ws_GND     "O"
 }
 
 #------------------------ Create onboard codec Ports (SSM for Zybo, ADAU for Genesys)--------------------
@@ -140,6 +149,13 @@ create_port syfala_out_debug1 "O"
 create_port syfala_out_debug2 "O"
 create_port syfala_out_debug3 "O"
 
+#------------------------ Create MCU ports --------------------
+#https://digilent.com/reference/programmable-logic/genesys-zu/reference-manual#application_section
+if { $BOARD == "GENESYS" } {
+  create_port vadj_level0 "O"
+  create_port vadj_level1 "O"
+  create_port vadj_auton "O"
+}
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
 #----------------------------------------------------------------------- INSTANCES -----------------------------------------------------------------#
@@ -162,8 +178,10 @@ if { $BOARD == "Z10" || $BOARD == "Z20" } {
     create_axi_gpio "axi_gpio_LED" genesys
 }
 
-
-
+#------------------------  Create constants instance -------------------------
+append system_instances "  # Create constants instance, and set properties \n"
+append system_instances "  set vdd33 \[ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 vdd33 \] \n"
+append system_instances "  set GND \[ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 GND \] \n set_property -dict \[ list CONFIG.CONST_VAL {0} \] \$GND \n"
 
 #------------------------  Create clock instance -------------------------
 
@@ -218,7 +236,6 @@ if { $BOARD == "Z10" || $BOARD == "Z20" } {
   CONFIG.USE_LOCKED {true} \\\n\
   CONFIG.USE_RESET {false} \\\n\
 \] \$$i2s_clk_instance_name "
-
 
 
 #------------------------  Create user instance -------------------------
@@ -308,7 +325,7 @@ connect "ports" internal_codec_bclk												"pins" i2s_transceiver_0/sclk
 connect "ports" internal_codec_mclk 												"pins" $i2s_clk_instance_name/clk_24Mhz
 if { $BOARD == "Z10" || $BOARD == "Z20" } {
     connect "ports" internal_codec_ws_rx												"pins" i2s_transceiver_0/ws
-    connect "ports" internal_codec_out_mute 										"pins" cst1/dout
+    connect "ports" internal_codec_out_mute 										"pins" vdd33/dout
 }
 
 #------------------------ Connections Transceiver/FAUST Other--------------------
@@ -317,7 +334,7 @@ connect "pins" i2s_transceiver_0/mclk			"pins" $i2s_clk_instance_name/clk_I2S
 connect "pins" i2s_transceiver_0/sys_clk 	"pins" $SYSTEM_CLOCK
 connect "pins" syfala/ap_rst_n				"pins" rst_global/peripheral_aresetn
 connect "pins" i2s_transceiver_0/reset_n 	"pins" rst_global/peripheral_aresetn
-connect "pins" i2s_transceiver_0/start 		"pins" cst1/dout
+connect "pins" i2s_transceiver_0/start 		"pins" vdd33/dout
 
 
 #------------------------ Connections PS --------------------
@@ -338,7 +355,7 @@ connect "pins" processing_system7_0/SPI0_MOSI_O		"ports" spi_MOSI
 connect	"pins" processing_system7_0/SPI0_SCLK_O		"ports" spi_clk
 connect	"pins" processing_system7_0/SPI0_SS_O			"ports" spi_SS
 connect	"pins" processing_system7_0/SPI0_MISO_I		"ports" spi_MISO
-connect "pins" processing_system7_0/SPI0_SS_I 		"pins" cst1/dout
+connect "pins" processing_system7_0/SPI0_SS_I 		"pins" vdd33/dout
 
 
 } elseif { $BOARD == "GENESYS" } {
@@ -354,7 +371,7 @@ connect "pins" zynq_ultra_ps_e_0/emio_spi0_m_o				"ports" spi_MOSI
 connect	"pins" zynq_ultra_ps_e_0/emio_spi0_sclk_o			"ports" spi_clk
 connect	"pins" zynq_ultra_ps_e_0/emio_spi0_ss_o_n			"ports" spi_SS
 connect	"pins" zynq_ultra_ps_e_0/emio_spi0_s_i				"ports" spi_MISO
-#connect "pins" zynq_ultra_ps_e_0/emio_spi0_ss_i_n 		"pins" cst1/dout
+#connect "pins" zynq_ultra_ps_e_0/emio_spi0_ss_i_n 		"pins" vdd33/dout
 }
 
 
@@ -408,9 +425,13 @@ connect "ports" switches		"pins" sw0/Din
 connect "ports" switches		"pins" sw1/Din
 connect "ports" switches		"pins" sw2/Din
 
-
-
-
+#------------------------ Connections MCU --------------------
+#https://digilent.com/reference/programmable-logic/genesys-zu/reference-manual#application_section
+if { $BOARD == "GENESYS" } {
+  connect "ports" vadj_level0		"pins" vdd33/dout
+  connect "ports" vadj_level1		"pins" vdd33/dout
+  connect "ports" vadj_auton		"pins" vdd33/dout
+}
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------#
 #----------------------------------------------------------------------- ADDRESS -------------------------------------------------------------------#
