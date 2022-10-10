@@ -67,7 +67,7 @@ proc overwrite { F A N lambda } {
 # create a 'sources' directory in build directory
 # copy fpga.cpp template file to be modified accordingly
 file mkdir $::Syfala::BUILD_DIR/sources
-file copy -force $::Faust::ARCH_FPGA_TEMPLATE_FILE $::Syfala::BUILD_DIR/sources
+file copy -force $::Syfala::ARCH_FPGA_TEMPLATE $::Syfala::BUILD_DIR/sources
 
 # retrieve number of I/O channels from Faust macro definitions
 # in the generated syfala_ip.cpp file

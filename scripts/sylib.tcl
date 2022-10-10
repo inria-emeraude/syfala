@@ -5,6 +5,10 @@ proc get_root {} {
     return   [file dirname $path]
 }
 
+# -----------------------------------------------------------------------------
+# general
+# -----------------------------------------------------------------------------
+
 set VERSION                     7
 set ROOT                        [get_root]
 set SOURCE_DIR                  $ROOT/source
@@ -12,18 +16,36 @@ set INCLUDE_DIR                 $ROOT/include
 set SCRIPTS_DIR                 $ROOT/scripts
 set BUILD_DIR                   $ROOT/build
 set EXPORT_DIR                  $ROOT/export
+set TESTS_DIR                   $ROOT/tests
 set CONFIG_FILE                 $INCLUDE_DIR/syconfig.hpp
-
 set DEFAULT_EXAMPLE             $ROOT/examples/virtualAnalog.dsp
+set CLK_DYNAMIC_RECONFIG        0
+
+# -----------------------------------------------------------------------------
+# build
+# -----------------------------------------------------------------------------
 
 set BUILD_APPLICATION_DIR       $BUILD_DIR/syfala_application
+set BUILD_APPLICATION_FILE      $BUILD_APPLICATION_DIR/syfala_application.cpp
+set BUILD_APPLICATION_TARGET    $BUILD_DIR/sw_export/application.elf
 set BUILD_PROJECT_DIR           $BUILD_DIR/syfala_project
+set BUILD_XPR_FILE              $BUILD_PROJECT_DIR/syfala_project.xpr
 set BUILD_IP_DIR                $BUILD_DIR/syfala_ip
+set BUILD_IP_FILE               $BUILD_IP_DIR/syfala_ip.cpp
+set BUILD_IP_TARGET             $BUILD_IP_DIR/syfala
+set BUILD_BITSTREAM_FILE        $BUILD_DIR/hw_export/main_wrapper.xsa
+set BUILD_HLS_REPORT_SOURCE     $BUILD_IP_DIR/syfala/syn/report/syfala_csynth.rpt
+set BUILD_HLS_REPORT_COPY       $BUILD_DIR/syfala_csynth.rpt
 set BUILD_INCLUDE_DIR           $BUILD_DIR/include
 set BUILD_SOURCES_DIR           $BUILD_DIR/sources
 set BUILD_GUI_DIR               $BUILD_DIR/gui
+set BUILD_GUI_TARGET            $BUILD_DIR/gui/faust-gui
 set BUILD_CONFIG_FILE           $BUILD_INCLUDE_DIR/syconfig.hpp
 set BUILD_LOG                   $ROOT/syfala_log.txt
+
+# -----------------------------------------------------------------------------
+# scripts
+# -----------------------------------------------------------------------------
 
 set HLS_SCRIPT                  $Syfala::SCRIPTS_DIR/hls.tcl
 set FAUST2VHDL_SCRIPT           $Syfala::SCRIPTS_DIR/faust2vhdl.tcl
@@ -34,6 +56,10 @@ set SYNTHESIS_SCRIPT            $Syfala::SCRIPTS_DIR/synthesis.tcl
 set JTAG_SCRIPT                 $Syfala::SCRIPTS_DIR/jtag.tcl
 set BIN_GENERATOR               $Syfala::SCRIPTS_DIR/bin_generator.bif
 
+# -----------------------------------------------------------------------------
+# sources
+# -----------------------------------------------------------------------------
+
 set VHDL_DIR                    $Syfala::SOURCE_DIR/vhdl
 set XDC_DIR                     $Syfala::VHDL_DIR/constraints
 set FIXED_FLOAT_TYPES_C         $Syfala::VHDL_DIR/fixed_float_types_c.vhd
@@ -42,8 +68,21 @@ set FLOAT_PKG_C                 $Syfala::VHDL_DIR/float_pkg_c.vhd
 set SINCOS_24                   $Syfala::VHDL_DIR/SinCos24.vhd
 set FAUST_VHD_EXAMPLE           $Syfala::VHDL_DIR/faust.vhd
 
-# used in project.tcl
-set CLK_DYNAMIC_RECONFIG        0
+# -----------------------------------------------------------------------------
+# architecture files
+# -----------------------------------------------------------------------------
+
+set ARCH_FPGA_TEMPLATE          $Syfala::SOURCE_DIR/faust/architecture/fpga.cpp
+set ARCH_FPGA_SRC_FILE_VHDL     $Syfala::BUILD_IP_DIR/faust.vhd
+set ARCH_FPGA_SRC_FILE_HLS      $Syfala::BUILD_SOURCES_DIR/fpga.cpp
+set ARCH_ARM_FILE_HLS           $Syfala::SOURCE_DIR/faust/architecture/arm.cpp
+set ARCH_ARM_FILE_VHDL          $Syfala::SOURCE_DIR/faust/architecture/arm_vhdl.cpp
+set GUI_SRC_FILE                $Syfala::SOURCE_DIR/faust/control/gui-controls.cpp
+set GUI_DST_FILE                $Syfala::BUILD_GUI_DIR/faust-gui.cpp
+
+# -----------------------------------------------------------------------------
+# exported procedures
+# -----------------------------------------------------------------------------
 
 namespace export                \
 color                           \
@@ -62,6 +101,7 @@ freplacel                       \
 rstbuild                        \
 check_xroot                     \
 set_xenv                        \
+get_syconfig_define             \
 set_syconfig_define             \
 generate_build_id               \
 get_elapsed_time                \
@@ -71,9 +111,9 @@ print_elapsed_time              \
 initialize_build                \
 export_build
 
-# -------------------------------------------------------------------------------------------------
-# utilities
-# -------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# general-purpose utilities
+# -----------------------------------------------------------------------------
 
 proc color { c t } {
     return [exec tput setaf $c]$t[exec tput sgr0]
@@ -109,6 +149,34 @@ proc print_info { txt } {
 proc print_error { txt } {
     basic_print "\[ [color 1 ERR!] \] $txt"
 }
+
+proc get_time {} {
+    set stime [clock seconds]
+    set htime [clock format $stime -format %H:%M:%S]
+    return $htime
+}
+
+proc get_elapsed_time_msec { start } {
+    set end [clock milliseconds]
+    return [expr $end - $start]
+}
+
+proc get_elapsed_time_sec { start } {
+    set end [clock seconds]
+    return [expr $end - $start]
+}
+
+proc get_elapsed_time { start } {
+    set end [clock seconds]
+    set len [expr $end - $start]
+    set fmt [clock format $len -format {%M minutes and %S seconds}]
+    return $fmt
+}
+
+proc print_elapsed_time { start } {
+    print_info "Script has been running for [get_elapsed_time $start]"
+}
+
 
 proc syexec { cmd args } {
     print_info "Executing command: $cmd $args"
@@ -218,6 +286,11 @@ proc freplacelN { f A B } {
     }
     close $fw
 }
+
+# -----------------------------------------------------------------------------
+# build-related
+# -----------------------------------------------------------------------------
+
 ## Resets build directory from syfala root directory
 proc rstbuild {} {
     # we've got to print it first, because otherwise the log
@@ -273,38 +346,11 @@ proc set_syconfig_define { t v {v2 ""}} {
     print_ok "Overwritten #define $t with value $v2 in syconfig.hpp"
 }
 
-proc get_time {} {
-    set stime [clock seconds]
-    set htime [clock format $stime -format %H:%M:%S]
-    return $htime
-}
-
 proc generate_build_id {} {
     set stime [clock seconds]
     set dtime [clock format $stime -format {%Y-%m-%d}]
     set htime [clock format $stime -format %H%M%S]
     return "build-$dtime-$htime"
-}
-
-proc get_elapsed_time_msec { start } {
-    set end [clock milliseconds]
-    return [expr $end - $start]
-}
-
-proc get_elapsed_time_sec { start } {
-    set end [clock seconds]
-    return [expr $end - $start]
-}
-
-proc get_elapsed_time { start } {
-    set end [clock seconds]
-    set len [expr $end - $start]
-    set fmt [clock format $len -format {%M minutes and %S seconds}]
-    return $fmt
-}
-
-proc print_elapsed_time { start } {
-    print_info "Script has been running for [get_elapsed_time $start]"
 }
 
 proc initialize_build {} {
@@ -331,25 +377,9 @@ proc export_build { id } {
 namespace eval Faust {
 # -------------------------------------------------------------------------------------------------
 
-set SOURCE_DIR $::Syfala::SOURCE_DIR/faust
-
-set ARCH_FPGA_TEMPLATE_FILE   $SOURCE_DIR/architecture/fpga.cpp
-set ARCH_FPGA_SRC_FILE        $::Syfala::BUILD_SOURCES_DIR/fpga.cpp
-set ARCH_FPGA_DST_DIR         $::Syfala::BUILD_IP_DIR
-set ARCH_FPGA_DST_FILE        $ARCH_FPGA_DST_DIR/syfala_ip.cpp
-set ARCH_FPGA_DST_FILE_VHDL   $::Syfala::VHDL_DIR/faust.vhd
-
-set ARCH_HOST_DST_DIR        $::Syfala::BUILD_APPLICATION_DIR
-set ARCH_HOST_SRC_FILE       $SOURCE_DIR/architecture/arm.cpp
-set ARCH_HOST_SRC_FILE_VHDL  $SOURCE_DIR/architecture/arm_vhdl.cpp
-set ARCH_HOST_DST_FILE       $ARCH_HOST_DST_DIR/syfala_application.cpp
-
-set GUI_SRC_FILE            $SOURCE_DIR/control/gui-controls.cpp
-set GUI_DST_FILE            $::Syfala::BUILD_GUI_DIR/faust-gui.cpp
-
 proc mem_access_count {} {
-    set f [open $Faust::ARCH_FPGA_DST_FILE r]
-    set data [read $f]
+    set f       [open $::Syfala::ARCH_FPGA_SRC_FILE_HLS r]
+    set data    [read $f]
     set compute_fn  0
     set count_r     0
     set count_w     0
@@ -376,23 +406,23 @@ proc mem_access_count {} {
 ## generated output will be located in $ARCH_FPGA_DST_FILE
 proc generate_ip_hls { dsp } {
     print_info "Generating Faust IP from Faust compiler & architecture file"
-    file mkdir $::Syfala::BUILD_DIR/sources
-    file copy -force $::Faust::ARCH_FPGA_TEMPLATE_FILE $::Syfala::BUILD_DIR/sources
-    file mkdir $Faust::ARCH_FPGA_DST_DIR    
-    syexec faust $dsp -lang c -light -os2 -uim -mcd 0   \
-                      -a $Faust::ARCH_FPGA_SRC_FILE     \
-                      -o $Faust::ARCH_FPGA_DST_FILE     \
+    file mkdir $::Syfala::BUILD_SOURCES_DIR
+    file mkdir $::Syfala::BUILD_IP_DIR
+    file copy -force $::Syfala::ARCH_FPGA_TEMPLATE $::Syfala::BUILD_SOURCES_DIR
+    syexec faust $dsp -lang c -light -os2 -uim -mcd 0       \
+                      -a $Syfala::ARCH_FPGA_SRC_FILE_HLS    \
+                      -o $Syfala::BUILD_IP_FILE             \
                       -t 0
-    print_ok "Generated $Faust::ARCH_FPGA_DST_FILE"
+    print_ok "Generated $::Syfala::BUILD_IP_FILE"
 }
 
 ## Runs Faust compiler to generate FPGA VHDL IP
 ## generated output will be located in syfala_ip/faust.vhd
 proc generate_ip_vhdl { dsp t } {
-    file mkdir $Faust::ARCH_FPGA_DST_DIR
-    cd $Faust::ARCH_FPGA_DST_DIR
+    file mkdir $::Syfala::BUILD_IP_DIR
+    cd $::Syfala::BUILD_IP_DIR
     syexec faust -vhdl -vhdl-type $t $dsp
-    print_ok "Generated DSP-VHDL translation in $Faust::ARCH_FPGA_DST_DIR"
+    print_ok "Generated DSP-VHDL translation in $Syfala::BUILD_IP_DIR"
     cd $Syfala::BUILD_DIR
 }
 
@@ -401,22 +431,22 @@ proc generate_ip_vhdl { dsp t } {
 ## generated output will be located in $ARCH_ARM_DST_FILE
 proc generate_host { dsp src } {
     print_info "Generating HOST Control Application from Faust compiler & architecture file"
-    file mkdir $Faust::ARCH_HOST_DST_DIR
-    syexec faust $dsp -i -lang cpp -os2 -uim -mcd 0     \
-                      -a $src                           \
-                      -o $Faust::ARCH_HOST_DST_FILE     \
+    file mkdir $Syfala::BUILD_APPLICATION_DIR
+    syexec faust $dsp -i -lang cpp -os2 -uim -mcd 0         \
+                      -a $src                               \
+                      -o $Syfala::BUILD_APPLICATION_FILE    \
                       -t 0
-    print_ok "Generated $Faust::ARCH_HOST_DST_FILE"
+    print_ok "Generated $Syfala::BUILD_APPLICATION_FILE"
 }
 
 proc generate_gui_app { dsp } {
     file mkdir $::Syfala::BUILD_GUI_DIR
     print_info "Generating & compiling GUI control application"
-    syexec faust $dsp -a $Faust::GUI_SRC_FILE -o $Faust::GUI_DST_FILE
+    syexec faust $dsp -a $Syfala::GUI_SRC_FILE -o $Syfala::GUI_DST_FILE
     # I guess that's one of the limits of tcl...
     set pkgc [exec pkg-config --libs --cflags gtk+-2.0]
     lappend pkgc -I$::Syfala::INCLUDE_DIR
-    set cmd "c++ -v -std=c++14 $Faust::GUI_DST_FILE $pkgc -o $::Syfala::BUILD_GUI_DIR/faust-gui"
+    set cmd "c++ -v -std=c++14 $::Syfala::GUI_DST_FILE $pkgc -o $::Syfala::BUILD_GUI_DIR/faust-gui"
     print_info "Executing command: $cmd"
     exec {*}$cmd >&@stdout | tee -a $Syfala::BUILD_LOG
 }
@@ -486,8 +516,8 @@ proc compile_host { config board } {
     syexec xsct $::Syfala::APPLICATION_SCRIPT $config $board >&@stdout | tee -a $::Syfala::BUILD_LOG
     print_ok   "Finished building Host application"
     file mkdir sw_export
-    file copy -force syfala_application/application/src sw_export
-    file copy -force syfala_application/application/Debug/application.elf sw_export
+    file copy -force $Syfala::BUILD_APPLICATION_DIR/application/src sw_export
+    file copy -force $Syfala::BUILD_APPLICATION_DIR/application/Debug/application.elf sw_export
     print_ok "Copied application sources and .elf output to sw_export directory"
 }
 
@@ -512,10 +542,10 @@ proc run { script args } {
     print_info "Running Vitis HLS on file $script"
     syexec vitis_hls -f $script $args >&@stdout | tee -a $::Syfala::BUILD_LOG
     # copy report to BUILD_DIR
-    file copy -force syfala_ip/syfala/syn/report/syfala_csynth.rpt $::Syfala::BUILD_DIR
+    file copy -force $::Syfala::BUILD_HLS_REPORT_SOURCE $::Syfala::BUILD_DIR
 }
 proc report { } {
-    exec less syfala_csynth.rpt >&@stdout
+    exec less $::Syfala::BUILD_HLS_REPORT_COPY >&@stdout
 }
 }
 # -----------------------------------------------------------------------------
@@ -523,10 +553,10 @@ namespace eval Vivado {
 # -----------------------------------------------------------------------------
 proc run { script args } {
     print_info "Running Vivado on file $script"
-    syexec vivado -mode batch       \
-                  -notrace			\
-                  -source $script   \
-                  -tclargs $args    \
+    syexec vivado -mode batch        \
+                  -notrace			 \
+                  -source $script    \
+                  -tclargs $args     \
                   >&@stdout | tee -a $::Syfala::BUILD_LOG
 }
 }

@@ -25,9 +25,62 @@ namespace eval Xilinx {
     variable ROOT
 }
 
-# -------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# runtime steps
+# -----------------------------------------------------------------------------
+
+namespace eval runsteps {
+
+variable data [list]
+
+proc add_runstep { name targets } {
+    lappend runsteps::data [list $name $targets]
+}
+
+proc get_next { } {
+    set next [lindex [lindex $::runsteps::data 0] 0]
+    set index 0
+    foreach runstep $::runsteps::data {
+        set name    [lindex $runstep 0]
+        set targets [lindex $runstep 1]
+        foreach target $targets {
+            if {![file exists $target]} {
+                return $next
+            }
+        }
+        incr index
+        if {$index > [llength $::runsteps::data]} {
+            return "--flash"
+        }
+        set next [lindex [lindex $::runsteps::data $index] 0]
+    }
+    return $next
+}
+
+add_runstep "--arch" [list                      \
+    $::Syfala::BUILD_APPLICATION_FILE           \
+    $::Syfala::BUILD_IP_FILE                    \
+]
+add_runstep "--hls" [list                       \
+    $::Syfala::BUILD_HLS_REPORT_COPY            \
+]
+add_runstep "--project" [list                   \
+    $::Syfala::BUILD_XPR_FILE                   \
+]
+add_runstep "--synth" [list                     \
+    $::Syfala::BUILD_BITSTREAM_FILE             \
+]
+add_runstep "--host" [list                      \
+    $::Syfala::BUILD_APPLICATION_TARGET         \
+]
+add_runstep "--gui" [list                       \
+    $::Syfala::BUILD_GUI_TARGET                 \
+]
+}
+
+# -----------------------------------------------------------------------------
 # runtime variable declarations
-# -------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 proc p_runtime { v a } {
     return [dict create value $v accepted $a]
@@ -35,6 +88,10 @@ proc p_runtime { v a } {
 
 proc get_value { a } {
     return [dict get $a value]
+}
+
+proc set_value { p v } {
+    dict set $p value $v
 }
 
 namespace eval runtime {
@@ -55,9 +112,9 @@ namespace eval runtime {
     variable vhdl_type          [p_runtime 0 { 0 1 }]
 }
 
-# -------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # utility procedures
-# -------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 proc print_usage {} {
     print_info "See
@@ -224,9 +281,7 @@ print_info "Running from: $spath"
 # PARSING COMMAND-LINE ARGUMENTS
 # -----------------------------------------------------------------------------------------
 
-for { set index 0 }                         \
-    { $index < [llength $::argv] }          \
-    { incr index } {
+for {set index 0} {$index < [llength $::argv]} {incr index} {
     set argument [lindex $::argv $index]
     switch $argument {
         COMMENT {
@@ -260,11 +315,18 @@ for { set index 0 }                         \
             rstbuild
             exit 0
         }
+        next {
+            set ::runtime::steps [runsteps::get_next]
+        }
         demo {
             set ::runtime::dsp_target [file normalize examples/virtualAnalog.dsp]
             set ::runtime::steps "$::runtime::steps
                 --arch --hls --project --synth --host
                 --report --export demo"
+        }
+        test {
+            cd $::Syfala::TESTS_DIR
+            syexec ./tests.tcl >&@stdout
         }
         open-project {
             parse_xroot
@@ -331,10 +393,10 @@ for { set index 0 }                         \
             # runs all toolchain build steps (from --arch to --gui) (DEFAULT)
             set ::runtime::steps "$::runtime::steps --arch --hls --project --synth --host --gui"
         }
-        --arch           { set ::runtime::steps "$::runtime::steps --arch"      }
-        --hls - --ip     { set ::runtime::steps "$::runtime::steps --hls"       }
-        --project        { set ::runtime::steps "$::runtime::steps --project"   }
-        --syn - --synth  { set ::runtime::steps "$::runtime::steps --synth"     }
+        --arch           { append ::runtime::steps "--arch"    }
+        --hls - --ip     { append ::runtime::steps "--hls"     }
+        --project        { append ::runtime::steps "--project" }
+        --syn - --synth  { append ::runtime::steps "--synth"   }
         --app - --host - --app-rebuild - --rebuild-app - rebuild-app - app-rebuild  {
             if {[file exists build/syfala_application/application] ||
                 [file exists build/syfala_application/platform]} {
@@ -342,16 +404,16 @@ for { set index 0 }                         \
                 file delete -force -- build/include
                 file delete -force -- build/syfala_application
                 file delete -force -- build/sw_export
-                set ::runtime::steps "$::runtime::steps --arch --host"
+                append ::runtime::steps "--arch --host"
             } else {
-                set ::runtime::steps "$::runtime::steps --host"
+                append ::runtime::steps "--host"
             }
         }
-        --gui             { set ::runtime::steps "$::runtime::steps --gui" }
-        --report - --rpt  { set ::runtime::post_steps "$::runtime::post_steps --report" }
-        --flash           { set ::runtime::post_steps "$::runtime::post_steps --flash" }
+        --gui             { append ::runtime::steps "--gui" }
+        --report - --rpt  { append ::runtime::post_steps "--report" }
+        --flash           { append ::runtime::post_steps "--flash"  }
         --export          {
-            set ::runtime::post_steps "$::runtime::post_steps --export"
+            append ::runtime::post_steps "--export"
             set build_id [get_argument_value index]
             set build_id "[generate_build_id]-$build_id"
             set ::runtime::export_id $::build_id
@@ -422,14 +484,30 @@ for { set index 0 }                         \
 if {[is_empty $::runtime::steps] && ![is_empty $::runtime::dsp_target]} {
     set ::runtime::steps "--arch --hls --project --synth --host --gui"
 }
-
+# Check that XILINX_ROOT_DIR and correct .dsp target are set
 parse_xroot
-# make sure we're into BUILD_DIR, even if we didn't run the --arch step
-if ![file exists $::Syfala::BUILD_DIR] {
+
+# Make sure we're into BUILD_DIR, even if we didn't run the --arch step
+if ![file exist $::Syfala::BUILD_DIR] {
      file mkdir $::Syfala::BUILD_DIR
 }
-
 cd $::Syfala::BUILD_DIR
+
+if [file exists $::Syfala::BUILD_INCLUDE_DIR] {
+    # If build already exists, retrieve board value
+    set ::runtime::board_cpp_id [get_syconfig_define "SYFALA_BOARD"]
+    switch $::runtime::board_cpp_id {
+        10 { set_value ::runtime::board "Z10" }
+        20 { set_value ::runtime::board "Z20" }
+        30 { set_value ::runtime::board "GENESYS" }
+        default {
+            print_error "Incorrect board model, aborting..."
+            exit 1
+        }
+    }
+    print_info "Retrieved previously used board model: [get_value $::runtime::board]"
+}
+
 print_info "Running build steps: $::runtime::steps"
 print_info "Running post-build steps: $::runtime::post_steps"
 
@@ -465,14 +543,14 @@ switch [get_value $::runtime::compiler] {
         if [is_run_step "--arch"] {
             Faust::generate_ip_hls $::runtime::dsp_target
             # Generate sources with set number of channels
-            exec $::Syfala::SCRIPTS_DIR/project_generator.tcl           \
-                 [get_value $::runtime::board]                          \
-                 >&@stdout
+            exec $::Syfala::SCRIPTS_DIR/prebuild.tcl                    \
+                    [get_value $::runtime::board]                       \
+                    >&@stdout
             # new: count izone/fzone accesses immediately after
             # ip cpp file is generated.
             Faust::mem_access_count
             Faust::generate_host $::runtime::dsp_target                 \
-                                 $Faust::ARCH_HOST_SRC_FILE
+                                 $::Syfala::ARCH_ARM_FILE_HLS
         }
         # 2. Synthesize IP with Vitis HLS
         if [is_run_step "--hls"] {
@@ -482,7 +560,7 @@ switch [get_value $::runtime::compiler] {
 
         # 3. Run Vivado to generate the full project
         if [is_run_step "--project"] {
-            Xilinx::Vivado::run $Syfala::PROJECT_SCRIPT                 \
+            Xilinx::Vivado::run $::Syfala::PROJECT_SCRIPT               \
                                 [get_value $::runtime::board]           \
                                 [get_value $::runtime::sample_rate]     \
                                 [get_value $::runtime::sample_width]
@@ -497,7 +575,7 @@ switch [get_value $::runtime::compiler] {
             Faust::generate_ip_vhdl $::runtime::dsp_target             \
                                     [get_value $::runtime::vhdl_type]
             Faust::generate_host    $::runtime::dsp_target             \
-                                    $::Faust::ARCH_HOST_SRC_FILE_VHDL
+                                    $::Syfala::ARCH_ARM_FILE_VHDL
         }
         if [is_run_step "--project"] {
             Xilinx::Vivado::run $Syfala::FAUST2VHDL_SCRIPT             \
@@ -512,7 +590,7 @@ switch [get_value $::runtime::compiler] {
 
 # 4. Synthesize the whole design
 if [is_run_step "--synth"] {
-     Xilinx::Vivado::run $Syfala::SYNTHESIS_SCRIPT
+     Xilinx::Vivado::run $::Syfala::SYNTHESIS_SCRIPT
 }
 # 5. Compile Host Control Application
 if [is_run_step "--host"] {

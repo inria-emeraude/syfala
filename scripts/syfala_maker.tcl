@@ -268,28 +268,29 @@ if {$clk_dynamic_reconfig } {
 }
 connect "pins" rst_global/slowest_sync_clk 	"pins" $i2s_clk_instance_name/clk_24Mhz
 
-
-
-
 #------------------------ Connections FAUST IP--------------------
-for {set i 0} {$i < $FAUST_OUTPUTS} {incr i} {
-    connect "pins" syfala/out_ch$i\_V					"pins" i2s_transceiver_0/ch$i\_data_tx
-    connect "pins" syfala/out_ch$i\_V_ap_vld	"pins" i2s_transceiver_0/out_ch$i\_V_ap_vld
-}
+
 for {set i 0} {$i < $FAUST_INPUTS} {incr i} {
-    connect "pins" syfala/in_ch$i\_V					"pins" i2s_transceiver_0/ch$i\_data_rx
+    connect "pins" syfala/in_ch$i\_V "pins" i2s_transceiver_0/ch$i\_data_rx
+}
+for {set i 0} {$i < $FAUST_OUTPUTS} {incr i} {
+    connect "pins" syfala/out_ch$i\_V         "pins" i2s_transceiver_0/ch$i\_data_tx
+    connect "pins" syfala/out_ch$i\_V_ap_vld  "pins" i2s_transceiver_0/out_ch$i\_V_ap_vld
 }
 
 connect "pins" syfala/ap_done  	"pins" i2s_transceiver_0/ap_done
 connect "pins" syfala/ap_start 	"pins" i2s_transceiver_0/rdy
-connect "pins" syfala/mute	 		"pins" sw0/Dout
-connect "pins" syfala/bypass 		"pins" sw1/Dout
-connect "ports" debug_btn 			"pins" syfala/debugBtn
-connect "pins" syfala/outGPIO  "ports" syfala_out_debug0
-connect "pins" syfala/out_ch0_V_ap_vld   "ports" syfala_out_debug1
-connect "pins" syfala/out_ch1_V_ap_vld   "ports" syfala_out_debug2
-connect "pins" syfala/ap_start           "ports" syfala_out_debug3
+connect "pins" syfala/mute      "pins" sw0/Dout
+connect "pins" syfala/bypass    "pins" sw1/Dout
+connect "ports" debug_btn       "pins" syfala/debugBtn
+connect "pins" syfala/outGPIO   "ports" syfala_out_debug0
+connect "pins" syfala/out_ch0_V_ap_vld  "ports" syfala_out_debug1
 
+if {$FAUST_OUTPUTS >= 2} {
+    connect "pins" syfala/out_ch1_V_ap_vld "ports" syfala_out_debug2
+}
+
+connect "pins" syfala/ap_start "ports" syfala_out_debug3
 
 #------------------------ Connections CODEC 1 to X--------------------
 for {set i 1} {($i <= $NCHANNELS_MAX/2) && ($i <= $maxPhysicalCodec)} {incr i} {
