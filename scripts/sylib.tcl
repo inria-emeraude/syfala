@@ -462,13 +462,13 @@ namespace eval Zybo     {
 namespace eval z710     {
     set ID          "zybo-z7-10"
     set PART        "xc7z010clg400-1"
-    set PART_FULL   "digilentinc.com:zybo-z7-10:part0:1.0"
+    set PART_FULL   "digilentinc.com:zybo-z7-10:part0:1.1"
     set CONSTRAINT  "master_zybo.xdc"
 }
 namespace eval z720 {
     set ID          "zybo-z7-20"
     set PART        "xc7z020clg400-1"
-    set PART_FULL   "digilentinc.com:zybo-z7-20:part0:1.0"
+    set PART_FULL   "digilentinc.com:zybo-z7-20:part0:1.1"
     set CONSTRAINT  "master_zybo.xdc"
 }
 }
