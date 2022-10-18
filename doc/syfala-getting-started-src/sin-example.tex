@@ -23,7 +23,7 @@ The first step of the compilation flow is to generate a C++ program from the Fau
 \verb#syfala examples/sinewave-biquad-inlined.dsp --arch --reset# \\
 this command will generate {\tt syfala\_ip.cpp} and {\tt syfala\_application.cpp} files. All the generated files  are generated in the directory {\tt build/}. The \verb#--reset# options is mandatory if another project has already been compiled in the {\tt build} directory. Warning, the \verb#--reset# option will erase your previous compiled Syfala project.
 
-The \verb# --arch# option generates the {\tt syfala\_ip.cpp} file in directory {\tt build/syfala\_ip/} and the {\tt syfala\_application.cpp} file in {\tt build/syfala\_application/}. Note that a file {\tt build/include/syconfig.hpp} is also created in which the parameters of the current design flow are saved (sample rate, board used, hard or software controller, etc.)\footnote{TODO: explain {\tt syfala\_maker} here ?}. From now on the {\tt build/sinewave-biquad-inlined.dsp} will be the default DSP program syfala is working on, hence the name of the {\tt .dsp} file do not have to be recalled at each syfala command.\\
+The \verb#--arch# option generates the {\tt syfala\_ip.cpp} file in directory {\tt build/syfala\_ip/} and the {\tt syfala\_application.cpp} file in {\tt build/syfala\_application/}. Note that a file {\tt build/include/syconfig.hpp} is also created in which the parameters of the current design flow are saved (sample rate, board used, hard or software controller, etc.). From now on the {\tt build/sinewave-biquad-inlined.dsp} will be the default DSP program syfala is working on, hence the name of the {\tt .dsp} file do not have to be recalled at each syfala command.\\
 ~\\
 \begin{boxedminipage}{1.03\textwidth}
   \small
@@ -77,7 +77,9 @@ syfala-github>
 \end{boxedminipage}
 ~\\
 
-The next step is to synthesize the whole design that includes the Faust IP. This is done by executing \verb#syfala --project# and then \verb#syfala --syn#. The first command builds the {\tt syfala\_project.xpr} vivado project from the TCL files. The second command loads and then executes the {\tt syfala\_project.xpr} project in vivado to produce the bitstream. As a result, a  file {\tt main\_wrapper.xsa} is generated in {\tt build/hw\_export} directory, it corresponds to an archive containing both the FPGA bitstream and configuration of the {\em processing system} (i.e. the ARM subsystem). One important point here is that the {\tt syfala\_project.xpr} can be opened directly with vivado 2020.2 GUI and modified and re-synthesized. This can be useful for exploring other block designs (other parameters for the Faust IP for instance). The \verb#syfala --export# command allows you to save all generated files in an {\tt export} directory in order not to loose them when executing a command with \verb#--reset# option.\\
+The next step is to synthesize the whole design that includes the Faust IP. For that, we need to build the bloc design. Usually, it's done a first time with the Vivado GUI and can be exported in .tcl or .vhd "Bloc Design" file to script the synthesis of the project. But we choose to write a script called {\tt syfala\_maker.tcl} that will directly generate this "Bloc Design" file. The advantage is that the bloc design can be dynamically changed. For example, it allow us to change the number of I2S channels on the transceiver and adapt the number of used GPIO and the internal routing just with a macro. We couldn't do such a thing with a fixed block design file.
+
+Then, the synthesize of the project is done by executing \verb#syfala --project# and then \verb#syfala --syn#. The first command builds the {\tt syfala\_project.xpr} vivado project from the TCL files. The second command loads and then executes the {\tt syfala\_project.xpr} project in vivado to produce the bitstream. As a result, a  file {\tt main\_wrapper.xsa} is generated in {\tt build/hw\_export} directory, it corresponds to an archive containing both the FPGA bitstream and configuration of the {\em processing system} (i.e. the ARM subsystem). One important point here is that the {\tt syfala\_project.xpr} can be opened directly with Vivado 2020.2 GUI (by executing \verb#syfala --open-project#) and modified and re-synthesized. This can be useful for exploring other block designs (other parameters for the Faust IP for instance). The \verb#syfala --export# command allows you to save all generated files in an {\tt export} directory in order not to loose them when executing a command with \verb#--reset# option.\\
 
 \begin{boxedminipage}{\textwidth}
   \small
@@ -160,6 +162,7 @@ The function {\tt sendControlToFPGA()} is using Xilinx driver functions for acce
 \end{figure}
 
 Finally, the generated program can be transferred to the FPGA board with the  \verb#syfala --flash# command (the Zybo board has to be plugged on a USB port of course, and a headphone should be used to hear the sounds). The control GUI is compiled with the \verb#syfala --gui# command, and then executed with \verb#syfala gui#. Once flashed, the {\tt syfala\_application} is launched automatically on the ARM and the bitstream is executing. The ARM has to boot first, so the {\tt enable\_RAM\_access} port (see figure~\ref{fig:body}) is used to indicate that the Syfala IP can start its computations.
+
 
 
 

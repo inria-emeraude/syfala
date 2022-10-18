@@ -1,15 +1,15 @@
 \section{Installation instruction of  syfala v7 toolchain}
 \label{annex}
 \label{install}
-The Syfala toolchain is a compilation toolchain of Faust program on FPGA. This document explains how to install and run the toolchain v7  (version without petalinux), on a linux\footnote{tested on Ubuntu 18.04 and Ubuntu 20.04 and arch linux} machine. In practice, installing the Syfala tool-chain  means:
+The Syfala toolchain is a compilation toolchain of Faust programs on FPGA. This document explains how to install and run the toolchain v7  (version without petalinux), on a linux\footnote{tested on Ubuntu 18.04 and Ubuntu 20.04 and arch linux} machine. In practice, installing the Syfala tool-chain  means:
 \begin{itemize}
 \item Installing the Faust compiler, see section~\ref{faust-install} below.
-\item Creating a Xilinx account and downloading/installing a  version 2020.2 of Xilinx {\tt vivado} toolchain: {\tt vitis\_hls}, {\tt vivado} and {\tt vitis}. See section~\ref{vitis-install} below.
-\item Installing Vivado Board Files for Digilent Boards, see section~\ref{board-file-install}
+\item Creating a Xilinx account and downloading/installing the 2020.2 version of the Xilinx {\tt Vivado} toolchain: {\tt vitis\_hls}, {\tt vivado} and {\tt vitis}. See section~\ref{vitis-install} below.
+\item Installing Vivado board files for Digilent boards, see section~\ref{board-file-install}
 \item Installing udev rules to use JTAG connection, see section~\ref{board-file-install}  
 \item Cloning the Syfala directory and running a simple example as explained in Section~\ref{sec-syfala}.
 \end{itemize}
-Section~\ref{hard} explains the hardware configuration of the Zybo board for Syfala and Section~\ref{bug} list all the important bug encountered during Syfala building, If you encounter a bug during the installation, please see Section~\ref{bug}.
+Section~\ref{hard} explains the hardware configuration of the Zybo board for Syfala and Section~\ref{bug} list all the important bugs encountered when building Syfala. If you encounter a bug during the installation, please see Section~\ref{bug}.
 
 
 {\bf Ubuntu dependencies:} Syfala dependencies on Linux Ubuntu are the following:\\
@@ -41,7 +41,7 @@ It is recommanded to clone Faust from the github repository: \url{https://github
   make
   sudo make install
 \end{verbatim}
-If you are using older version of Syfala, you might need to use older version of Faust (see {\tt version} files in Syfala directory). the procedure is to get the commit number of the version you need here: \url{https://github.com/grame-cncm/faust/releases}. For instance, if you use Syfala v5.4, it requires Faust version 2.31.1 (at least), it commit number is:  32a2e92c955c4e057d424ab69a84801740d37920, then execute:
+If you are using an older version of Syfala, you might need to use older version of Faust (see {\tt version} files in Syfala directory). The procedure is to get the commit number of the version you need here: \url{https://github.com/grame-cncm/faust/releases}. For instance, if you use Syfala v5.4, it requires Faust version 2.31.1 (at least), it commit number is:  32a2e92c955c4e057d424ab69a84801740d37920, then execute:
 \begin{verbatim}
 cd faust 
 git checkout  32a2e92c955c4e057d424ab69a84801740d37920
@@ -88,8 +88,7 @@ sudo make install
     Choose to install \textbf{Vitis} (it will still install
     \textbf{Vivado}, \textbf{Vitis}, and \textbf{Vitis HLS}).
   \item
-    It will need 110GB of disk space: if you uncheck \emph{Ultrascale},
-    \emph{Ultrascale+}, \emph{Versal ACAP} and \emph{Alveo acceleration
+    It will need 110GB of disk space: if you uncheck \emph{Versal ACAP} and \emph{Alveo acceleration
     platform}, it will use less space and still work.
   \item
     Agree with everything and choose a directory to install
@@ -273,8 +272,10 @@ $ syfala examples/fm.dsp --board Z20 --arch --hls --export z20-fm-hls-build
 \texttt{install} & installs this script as a symlink in /usr/bin/ &
 none \\
 \texttt{clean} & deletes current build directory & none \\
+\texttt{import} & sets previously exported build as the
+current build & .zip target\\
 \texttt{export} & exports current build in a .zip file located in the
-`export' directory & name of the build \\
+`export' directory & build name\\
 \texttt{report} & prints HLS report of the current build & none \\
 \texttt{demo} & fully builds demo based on default example
 (virtualAnalog.dsp) & none \\
@@ -282,6 +283,9 @@ none \\
 \texttt{gui} & executes the Faust-generated gui application & none \\
 \texttt{rebuild-app} & rebuilds the host control application, without
 re-synthesizing the whole project & none \\
+\texttt{open-project} & opens the generated .xpr project
+with Vivado & none \\
+
 \bottomrule
 \end{tabular}
 
@@ -342,8 +346,6 @@ to export/ directory at the end of the run \\
   \toprule
 parameter & accepted values & default value \\
 \midrule
-\texttt{-\/-nchannels,\ -n} & an even number (\texttt{2}, \texttt{4},
-\texttt{6}, etc.) & \texttt{2} \\
 \texttt{-\/-memory,\ -m} & \texttt{DDR\ -\ STATIC} & \texttt{DDR} \\
 \texttt{-\/-board,\ -b} & \texttt{Z10\ -\ Z20\ -\ GENESYS} &
 \texttt{Z10} \\
@@ -365,10 +367,6 @@ Here is the description of these parameters:\\
   \toprule
 parameter & description \\
 \midrule
-\texttt{-\/-nchannels,\ -n} & sets the project's number of channels, it
-is equal to the \textbf{maximum number of input/output channels} rounded
-to the superior even number (e.g: if 3 channels: \texttt{nchannels}
-would be 4) \\
 \texttt{-\/-memory,\ -m} & selects if \textbf{external} \textbf{DDR3} is
 used. Enable if you use some delay, disable if you do want any memory
 access (should not be disabled) \\
@@ -416,7 +414,7 @@ bit. \\
 \subsection{Control of the Syfala IP}
 \label{control}
 
-To control your DSP, you can either use a Hardware Controller Board or a
+To control your DSP, you can either use a Syfala Hardware Controller Board or a
 GUI on your computer. Beguinner should use GUI control.
 
 \hypertarget{gui-sw3-down}{%

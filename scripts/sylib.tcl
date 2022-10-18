@@ -355,13 +355,10 @@ proc generate_build_id {} {
 
 proc initialize_build {} {
     print_info "Initializing build directory"
-    if {[catch {file copy -force $::Syfala::INCLUDE_DIR $::Syfala::BUILD_DIR}]} {
-        print_error "Current build would be deleted, aborting"
-        print_info "Please run 'syfala clean' before starting a new build"
-        print_info "You can also add the '--reset' run step to your command"
-        print_info "If you wish to save previous build first, run 'syfala --export mybuild'"
-        exit 1
+    if [file exists $::Syfala::BUILD_INCLUDE_DIR] {
+        file delete -force -- $::Syfala::BUILD_INCLUDE_DIR
     }
+    file copy $::Syfala::INCLUDE_DIR $::Syfala::BUILD_DIR
 }
 
 proc export_build { id } {
@@ -457,28 +454,70 @@ namespace eval Xilinx {
 
 set VERSION 2020.2
 
+namespace export vivado vitis vitis_hls xsct
+
+proc vivado {} {
+    return $::Xilinx::ROOT/Vivado/$::Xilinx::VERSION/bin/vivado
+}
+
+proc vitis {} {
+    return $::Xilinx::ROOT/Vitis/$::Xilinx::VERSION/bin/vitis
+}
+
+proc xsct {} {
+    return $::Xilinx::ROOT/Vitis/$::Xilinx::VERSION/bin/xsct
+}
+
+proc vitis_hls {} {
+    return $::Xilinx::ROOT/Vitis_HLS/$::Xilinx::VERSION/bin/vitis_hls
+}
+
 namespace eval Boards   {
 namespace eval Zybo     {
 namespace eval z710     {
     set ID          "zybo-z7-10"
     set PART        "xc7z010clg400-1"
-    set PART_FULL   "digilentinc.com:zybo-z7-10:part0:1.0"
+    # Note: the board file version is now automatically retrieved in the
+    # appropriate board.xml file, and appended to the following id (PART_FULL)
+    # please use the 'get_board_part_full' proc in order to retrieve the correct id
+    set PART_FULL   "digilentinc.com:zybo-z7-10:part0"
     set CONSTRAINT  "master_zybo.xdc"
 }
 namespace eval z720 {
     set ID          "zybo-z7-20"
     set PART        "xc7z020clg400-1"
-    set PART_FULL   "digilentinc.com:zybo-z7-20:part0:1.0"
+    set PART_FULL   "digilentinc.com:zybo-z7-20:part0"
     set CONSTRAINT  "master_zybo.xdc"
 }
 }
 namespace eval Genesys {
     set ID          "gzu_3eg"
     set PART        "xczu3eg-sfvc784-1-e"
-    set PART_FULL   "digilentinc.com:gzu_3eg:part0:1.0"
+    set PART_FULL   "digilentinc.com:gzu_3eg:part0"
     set CONSTRAINT	"master_Genesys-ZU-3EG.xdc"
 }
 }
+
+proc get_board_version {board} {
+    set path "$::Xilinx::ROOT/Vivado/$::Xilinx::VERSION/data/boards/board_files/"
+    switch $board {
+    Z10 - Z20 {
+        append path [get_board_id $board]
+        append path "/A.0/"
+    }
+    GENESYS {
+        append path "genesys-zu-3eg"
+        append path "/B.0/"
+    }
+    }
+    append path "board.xml"
+    print_info "Retrieving board file version in $path"
+    set version [ffindl $path "\<file_version\>"]
+    regexp {<file_version\>([0-9]+\.[0-9]+)\</file_version>} $version -> version
+    print_ok "Board file version: $version"
+    return $version
+}
+
 proc get_board_id { board } {
     switch $board {
         "Z10" { return $Xilinx::Boards::Zybo::z710::ID }
@@ -495,11 +534,11 @@ proc get_board_part { board } {
     }
 }
 
-proc get_board_part_full { board } {
+proc get_board_part_full {board} {
     switch $board {
-        "Z10" { return $Xilinx::Boards::Zybo::z710::PART_FULL }
-        "Z20" { return $Xilinx::Boards::Zybo::z720::PART_FULL }
-        "GENESYS" { return $Xilinx::Boards::Genesys::PART_FULL }
+        Z10 {return "$::Xilinx::Boards::Zybo::z710::PART_FULL:[get_board_version $board]"}
+        Z20 {return "$::Xilinx::Boards::Zybo::z720::PART_FULL:[get_board_version $board]"}
+        GENESYS {return "$::Xilinx::Boards::Genesys::PART_FULL:[get_board_version $board]"}
     }
 }
 
@@ -513,7 +552,7 @@ proc get_board_constraint { board } {
 
 proc compile_host { config board } {
     print_info "Compiling Host control application"
-    syexec xsct $::Syfala::APPLICATION_SCRIPT $config $board >&@stdout | tee -a $::Syfala::BUILD_LOG
+    syexec [Xilinx::xsct] $::Syfala::APPLICATION_SCRIPT $config $board >&@stdout | tee -a $::Syfala::BUILD_LOG
     print_ok   "Finished building Host application"
     file mkdir sw_export
     file copy -force $Syfala::BUILD_APPLICATION_DIR/application/src sw_export
@@ -532,7 +571,7 @@ proc generate_boot {} {
 
 proc flash_jtag {board} {
     print_info "Flashing image (JTAG)"
-    syexec xsct $::Syfala::JTAG_SCRIPT $board >&@stdout
+    syexec [Xilinx::xsct] $::Syfala::JTAG_SCRIPT $board >&@stdout
 }
 
 # -----------------------------------------------------------------------------
@@ -540,7 +579,7 @@ namespace eval Vitis_HLS {
 # -----------------------------------------------------------------------------
 proc run { script args } {
     print_info "Running Vitis HLS on file $script"
-    syexec vitis_hls -f $script $args >&@stdout | tee -a $::Syfala::BUILD_LOG
+    syexec [Xilinx::vitis_hls] -f $script $args >&@stdout | tee -a $::Syfala::BUILD_LOG
     # copy report to BUILD_DIR
     file copy -force $::Syfala::BUILD_HLS_REPORT_SOURCE $::Syfala::BUILD_DIR
 }
@@ -551,13 +590,13 @@ proc report { } {
 # -----------------------------------------------------------------------------
 namespace eval Vivado {
 # -----------------------------------------------------------------------------
-proc run { script args } {
+proc run {script args} {
     print_info "Running Vivado on file $script"
-    syexec vivado -mode batch        \
-                  -notrace			 \
-                  -source $script    \
-                  -tclargs $args     \
-                  >&@stdout | tee -a $::Syfala::BUILD_LOG
+    syexec [Xilinx::vivado] -mode batch         \
+                            -notrace            \
+                            -source $script     \
+                            -tclargs $args      \
+                            >&@stdout | tee -a $::Syfala::BUILD_LOG
 }
 }
 }

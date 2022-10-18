@@ -17,6 +17,14 @@ namespace eval Syfala {
     set HLS_IP_NAME  "syfala"
 }
 
+namespace eval Xilinx {
+    # Note (Pierre): since this script is called from a Vivado environment
+    # we have to pass Xilinx::ROOT as an argument and set it from here
+    # it will also propagate to the sylib.tcl source
+    # (we need Xilinx::ROOT to retrieve the proper board_files version)
+    set ROOT [lindex $ARGUMENTS 1]
+}
+
 set BOARD_PART          [Xilinx::get_board_part $BOARD]
 set BOARD_PROPERTY      [Xilinx::get_board_part_full $BOARD]
 set BOARD_ID            [Xilinx::get_board_id $BOARD]

@@ -104,12 +104,22 @@ namespace eval runtime {
     variable compiler           [p_runtime "HLS" { HLS VHDL }]
     variable board              [p_runtime "Z10" { Z10 Z20 GENESYS }]
     variable memory             [p_runtime 1 { DDR STATIC }]
-    variable sample_rate        [p_runtime 48000 { 48000 96000 192000 }]
+    variable sample_rate        [p_runtime 48000 { 48000 96000 192000 384000 768000 }]
     variable sample_width       [p_runtime 24 { 16 24 32 }]
     variable controller_type    [p_runtime "PCB1" { DEMO PCB1 PCB2 PCB3 PCB4 }]
     variable ssm_volume         [p_runtime "HEADPHONE" { FULL HEADPHONE DEFAULT }]
     variable ssm_speed          [p_runtime "DEFAULT" { FAST DEFAULT }]
-    variable vhdl_type          [p_runtime 0 { 0 1 }]
+    variable vhdl_type          [p_runtime 0 {0 1}]
+}
+
+proc check_runtime_parameters {} {
+    set sr [get_value $::runtime::sample_rate]
+    set sw [get_value $::runtime::sample_width]
+    if {$sr == 768000 && $sw > 16} {
+         set_value ::runtime::sample_width 16
+         print_info "Note: a sample-rate of 768kHz requires a 16-bit sample-width"
+         print_info "SYFALA_SAMPLE_WIDTH changed to value: 16"
+    }
 }
 
 # -----------------------------------------------------------------------------
@@ -324,10 +334,6 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
                 --arch --hls --project --synth --host
                 --report --export demo"
         }
-        test {
-            cd $::Syfala::TESTS_DIR
-            syexec ./tests.tcl >&@stdout
-        }
         open-project {
             parse_xroot
             exec vivado $::Syfala::BUILD_PROJECT_DIR/syfala_project.xpr
@@ -338,14 +344,6 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
             Xilinx::Vitis_HLS::report
             exit 0
         }
-        export {
-            set build_id [get_argument_value index]
-            set build_id "[generate_build_id]-$build_id"
-            print_info "build id: #$build_id"
-            cd $::Syfala::BUILD_DIR
-            Syfala::export_build $build_id
-            exit 0
-        }        
         import {
             set target [get_argument_value index]
             if [file exists $target] {
@@ -356,6 +354,14 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
             }
             exit 0
         }
+        export {
+            set build_id [get_argument_value index]
+            set build_id "[generate_build_id]-$build_id"
+            print_info "build id: #$build_id"
+            cd $::Syfala::BUILD_DIR
+            Syfala::export_build $build_id
+            exit 0
+        }        
         flash {
             # note: fixes the '--board' argument not being parsed
             # whenever this command is called
@@ -364,6 +370,16 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
         gui {
             print_info "Now executing Faust-generated GUI application"
             exec $::Syfala::BUILD_GUI_DIR/faust-gui
+            exit 0
+        }        
+        get-board-version {
+            parse_xroot
+            ::Xilinx::get_board_part_full [get_value $::runtime::board]
+            exit 0
+        }
+        test {
+            cd $::Syfala::TESTS_DIR
+            syexec ./tests.tcl {*}[lreplace $::argv 0 0] >&@stdout
             exit 0
         }
         COMMENT {
@@ -517,6 +533,7 @@ if [is_run_step "--arch"] {
      # Overwrite #define values in syconfig.hpp from command-line arguments
      # Note: this is common to both configurations (HLS/FAUST2VHDL)
     initialize_build
+    check_runtime_parameters
     set_syconfig_define  "SYFALA_BOARD" $::runtime::board_cpp_id [get_value $::runtime::board]
     set_syconfig_define  "SYFALA_SAMPLE_RATE"      [get_value $::runtime::sample_rate]
     set_syconfig_define  "SYFALA_SAMPLE_WIDTH"     [get_value $::runtime::sample_width]
@@ -562,8 +579,7 @@ switch [get_value $::runtime::compiler] {
         if [is_run_step "--project"] {
             Xilinx::Vivado::run $::Syfala::PROJECT_SCRIPT               \
                                 [get_value $::runtime::board]           \
-                                [get_value $::runtime::sample_rate]     \
-                                [get_value $::runtime::sample_width]
+                                $::Xilinx::ROOT
         }
     }
     VHDL {

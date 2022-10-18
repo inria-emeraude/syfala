@@ -115,23 +115,23 @@ syfala GUI
 
 ~\\
 
-Syfala has been started in 2020~\cite{Risset20,SMC22}.  There has been a number of {\em version} of Syfala, each {\em version} implying great changes in the sources file, and tools used hence requiring a new source code. Initial development were performed on internal Inria gitlab site (\url{https://gitlab.inria.fr/risset/syfala}). Since feb. 2022 a public github syfala site has been opened (\url{https://github.com/inria-emeraude/syfala}). The current version released is v7, named simply {\tt syfala} in public github) makes the following choices:
+Syfala has been started in 2020~\cite{Risset20,SMC22}.  There has been a number of {\em version} of Syfala, each {\em version} implying great changes in the source files, and tools used hence requiring a new source code. Initial development were performed on internal Inria gitlab site (\url{https://gitlab.inria.fr/risset/syfala}). Since feb. 2022 a public github syfala site has been opened (\url{https://github.com/inria-emeraude/syfala}). The current version released is v7, named simply {\tt syfala} in public github) makes the following choices:
 \begin{itemize}
 \item One-sample strategy: the FPGA DSP kernel is launched at each new sample and the result is available before the arrival of the next sample
-\item No use of pentalinux. The software running on the ARM of the Zynq SoC is used {\em bare-metal}: no operating system is present.
-\item The DDR3 memory is accessed by the FPGA DSP kernel, allowing to have long delay lines in DSP programs implemented. The DDR3 is also accessed in a {\em bare metal} manner: no MMU is used.
-\item The whole design has been optimistic for low latency, efficient memory accesses, and software initialization  (see~\cite{SMC22}).
-\item The FPGA DSP kernel can be controlled with a hardware interface or a software interface. The software interface is using the serial port UART between the host processor and the ARM on the Zynq. The hardware interface use SPI interface to knobs and slider, an open hardware board design is available on github/emeraude organisation).
+\item No use of petalinux. The software running on the ARM of the Zynq SoC is used {\em bare-metal}: no operating system is present.
+\item The external DDR memory is accessed by the FPGA DSP kernel, allowing to have long delay lines in DSP programs implemented. The DDR is also accessed in a {\em bare metal} manner: no MMU is used.
+\item The whole design has been optimized for low latency, efficient memory accesses, and software initialization  (see~\cite{SMC22}).
+\item The FPGA DSP kernel can be controlled with a hardware interface or a software interface. The software interface is using the UART serial port between the host processor and the ARM on the Zynq. The hardware interface uses SPI interface for knobs and sliders. An open hardware board design is available on github/emeraude organisation).
 \end{itemize}
 \newpage
 
 \section{Syfala v7 compilation flow}
 \label{syfala1}
-The required tools installations ({\tt vivado, vitis, vitis\_hls, Faust}) are explained in Syfala install documentation\footnote{\href{https://github.com/inria-emeraude/syfala/blob/main/doc/dependencies.md}{https://github.com/inria-emeraude/syfala/blob/main/doc/dependencies.md}}.
+The installation of the required tools ({\tt vivado, vitis, vitis\_hls, Faust}) is explained in the Syfala install documentation\footnote{\href{https://github.com/inria-emeraude/syfala/blob/main/doc/dependencies.md}{https://github.com/inria-emeraude/syfala/blob/main/doc/dependencies.md}}.
 
-The  \syfala v7 compilation flows  follows the schematics of Figure~\ref{fig1}. When cloning syfala github, Faust programs are located in the {\tt examples} directory, the compilation flow is configured by default to use a {\em software} control interface (i.e. not a hardware control interface) and to use the integrated Zybo Z7 SSM codec. 
+The  \syfala v7 compilation flows  follows the schematics of Figure~\ref{fig1}. When cloning syfala github, Faust programs are located in the {\tt examples} directory, the compilation flow is configured by default to use a {\em software} control interface (i.e. not a hardware control interface) and to use the onboard audio codec (SSM2603 on Zybo Z7, ADAU1761 on Genesys). 
 
-Since Syfala v7 a {\tt syfala.tcl} script is used to launch the different Syfala commands. The command \texttt{./syfala.tcl install} will install in {\tt /sur/local/bin}  (as root) a {\tt syfala} command that basically run the {\tt ./syfala.tcl} script. If you are to clone another instance of Syfala, make sure to perform the {\tt `syfala.tcl install'} command again before using it.
+Since version 7 of Syfala, the {\tt syfala.tcl} script is used to launch the different Syfala commands. The command \texttt{./syfala.tcl install} will install in {\tt /sur/local/bin}  (as root) a {\tt syfala} command that basically run the {\tt ./syfala.tcl} script. If you are to clone another instance of Syfala, make sure to run the {\tt `syfala.tcl install'} command again before using it.
 
 All Syfala generated files are produced in the {\tt build} directory 
 The sub-directories of the {\tt syfala} repository are the following
@@ -150,7 +150,7 @@ The sub-directories of the {\tt syfala} repository are the following
 `-- tools     // higher level tools using Syfala (for dev. only)
 \end{verbatim}
 
-The parameters of the compilation launched by the {\tt syfala} will select both the way the audio DSP will be compiled (e.g sample rate, sample bit width) and the hardware interface (e.g. codec used). The successive commands called by the command: \\
+The compile-time parameters added with the {\tt syfala} command will select both the way the audio DSP will be compiled (e.g sample rate, sample bit width) and the hardware interface (e.g. codec used). The successive commands called by the command: \\
 {\tt syfala examples/virtualAnalog.dsp} command  are the following:\\
 
   \begin{boxedminipage}{\textwidth}
@@ -202,9 +202,9 @@ The choices that have been made Syfala v7 are the following:
   
 \subsection{The Syfala IP and the {\tt fpga.cpp} architecture file}
 \label{sec:fpga}
-The {\tt fpga.cpp} file is the Faust {\em architecture file} for Xilinx  FPGA target  (currently only Xilinx FPGA architectures are supported by syfala). The {\tt fpga.cpp} determines the interface of the Syfala IP. It is important to understand this interface because it highly influences many performances issues. Changing this interface is possible but it implies to change all vivado scripts present in the compilation flow, hence it requires many manual tuning before getting to new automatic compilation flow with a new interface of the Syfala IP. 
+The {\tt fpga.cpp} file is the Faust {\em architecture file} for Xilinx  FPGA target  (currently only Xilinx FPGA architectures are supported by syfala). The {\tt fpga.cpp} determines the interface of the Syfala IP. It is important to understand this interface because it highly influences many performance issues. Changing this interface is possible but it implies to change all vivado scripts present in the compilation flow, hence it requires many manual tuning before getting to new automatic compilation flow with a new interface of the Syfala IP.
 
-The interface of the Syfala IP is determined by the parameter of the {\tt syfala()} function which is the function synthesized by {\tt vitis\_HLS}. The prototype of the {\tt syfala()} function,  extracted from the {\tt Syfala\_ip.cpp} file is shown in Fig.~\ref{fig:interface}, HLS pragmas indicate how each parameter of the IP are interfaced with the rest of the system. The  following conventions are used (see {\tt Syfala\_ip.cpp} file generated in the {\tt build/syfala\_ip} directory):
+The interface of the Syfala IP is determined by the parameters of the {\tt syfala()} function which is the function synthesized by {\tt vitis\_HLS}. The prototype of the {\tt syfala()} function,  extracted from the {\tt Syfala\_ip.cpp} file is shown in Fig.~\ref{fig:interface}, HLS pragmas indicate how each parameter of the IP is interfaced with the rest of the system. The  following conventions are used (see {\tt Syfala\_ip.cpp} file generated in the {\tt build/syfala\_ip} directory):
 
 \begin{figure}
 \begin{boxedminipage}{\textwidth}
@@ -237,12 +237,12 @@ void syfala(
   
 
 \begin{itemize}
-\item Stereo input and output  (i.e. \verb#in_ch0_V#, \verb#in_ch1_V#, \verb#out_ch0_V#, \verb#out_ch1_V#) are 24 bit wide signed integer interpreted as a value between -1 and 1, which are to be send and receive from the I2S transceiver which himself will interface with the audio codec. The sample bit depth and the number if Input/Output channel can be changed via syfala parameters.
-  \item All other parameters of the IP are transmitted from the ARM processor via the {\tt axilite} protocol\footnote{Throughout the document, we will refer to {\tt axilite} for the {\tt axilite 4} protocol used for IP parameter (sometimes called s-axilite) and {\tt AXI} for {\tt axi 4} protocol used to access the DDR memory (sometimes called m-axi)}, except the {\tt ram} parameter which is the access to the DDR3 memory. 
-\item The DDR3 memory is accessed via the AXI protocol in a {\em bare metal} manner: a memory zone is reserved by the ARM program (explicitely reserved in the linker script) and the address and size of this zone are transmitted to the IP via the {\tt ramBaseAddress} and {\tt ramDepth} parameters. Note the {\tt latency=50} pragmas which indicate that we {\em estimate} that a memory access will take 50 FPGA clock cycle (tuned at 120Mhz), this estimate is used by {\tt vitis\_hls} to produce estimation of the timing performance of the IP (file {\tt syfala.rpt} in directory {\tt ./build/syfala\_ip/syfala/syn/report/}), but it is only an estimation of course.
+\item Stereo input and output  (i.e. \verb#in_ch0_V#, \verb#in_ch1_V#, \verb#out_ch0_V#, \verb#out_ch1_V#) are 24 bit wide signed integer interpreted as a value between -1 and 1, which are to be sent and received from the I2S transceiver which himself will interface with the audio codec. The sample bit depth and the number of Input/Output channels can be changed via syfala parameters.
+  \item All other parameters of the IP are transmitted from the ARM processor via the {\tt axilite} protocol\footnote{Throughout the document, we will refer to {\tt axilite} for the {\tt axilite 4} protocol used for IP parameter (sometimes called s-axilite) and {\tt AXI} for {\tt axi 4} protocol used to access the DDR memory (sometimes called m-axi)}, except the {\tt ram} parameter which is the access to the DDR memory. 
+\item The DDR memory is accessed via the AXI protocol in a {\em bare metal} manner: a memory zone is reserved by the ARM program (explicitely reserved in the linker script) and the address and size of this zone are transmitted to the IP via the {\tt ramBaseAddress} and {\tt ramDepth} parameters. Note the {\tt latency=50} pragmas which indicate that we {\em estimate} that a memory access will take 50 FPGA clock cycle (tuned at approx. 120Mhz), this estimate is used by {\tt vitis\_hls} to produce estimation of the timing performance of the IP (file {\tt syfala.rpt} in directory {\tt ./build/syfala\_ip/syfala/syn/report/}), but it is only an estimation of course.
 \item {\tt ARM\_icontrol[9]} and {\tt ARM\_fControl[2]} arrays are used to transmit controllers values (integer values or floating point controllers) from ARM to IP. Again the `9' and `2' values are generated from the DSP audio file.
 \item  {\tt ARM\_passive\_controller[2]}, {\tt outGPIO}, {\tt mute}, {\tt bypass}  can be used for debugging purpose.
-\item {\tt enable\_RAM\_access} is a boolean that indicates to the IP that the DDR3 initialization performed by the ARM are finished and the the IP can start to access the DDR3.
+\item {\tt enable\_RAM\_access} is a boolean that indicates to the IP that the DDR initialization performed by the ARM is finished and that the IP can start to access the DDR.
 \end{itemize}
 
 the body of the {\tt syfala()} function is shown in Fig.~\ref{fig:body}. The {\tt computemydsp()} function is the function computing the effective signal processing on input/output, it is generated by the Faust compiler in the {\tt syfala.cpp} file.
@@ -257,7 +257,7 @@ void syfala([...])
 if (enable_RAM_access) {
     if (cpt==0) {
       cpt++:
-      /* Download initialization of constants from DDR3 content */
+      /* Download initialization of constants from DDR content */
       instanceConstantsFromMemmydsp(&DSP,SYFALA_SAMPLE_RATE,I_ZONE,F_ZONE);
     }
     else {
@@ -301,16 +301,21 @@ $-0.12345678123456$ & $-0.1234567$ & $c=a*2^{23}=-1035630$ & [111100000011001010
 \subsection{Interfacing Faust IP and audio codec: I2S}
 \begin{figure}[ht]
   \centerline{\includegraphics[width=16cm]{design_v7.png}}
-  \caption{The bloc design obtained by connecting Syfala IP,(\syfala v7), with I2S IPs and AXI interface to DDR3}
+  \caption{The bloc design obtained by connecting Syfala IP,(\syfala v7), with I2S IPs and AXI interface to DDR}
   \label{fig:design_6_3}
 \end{figure}
 
-Figure~\ref{fig:design_6_3} shows how the Faust IP, is interconnected with the rest of the system. All these IPs have a hardwired system clock at approximately 125Mhz (i.e. 8 ns system clock). It is very easy and very useful to open the {\tt vivado} project that generates the design. This can be done with the following commands:\\
+Figure~\ref{fig:design_6_3} shows how the Faust IP, is interconnected with the rest of the system. All these IPs have a hardwired system clock at 122.88Mhz (i.e. approx. 8 ns system clock). It is very easy and very useful to open the {\tt vivado} project that generates the design. This can be done with the following command (after the build is done):
 \begin{verbatim}
-syfala --project
-vivado build/syfala_project/syfala_project.xpr 
-\end{verbatim}
-Then the  block design shown on Fig.~\ref{fig:design_6_3} can be opened using {\tt open Block Design}. One can see that the audio input/output streams of the Syfala IP are directly connected to the I2S IP ({\tt i2s\_transceiver} block), one can also see the {\tt AXI} IP interface which is used to access DDR3 and the {\tt axilite} IP interface used for interface with ARM processor.  The I2S IP is in turn directly connected to I/O of the Zynq board corresponding to the codec interface. The codec (by default the Zybo Board  integrated codec: Analog Device SSM2603) is configured from the ARM processor as described in section~\ref{sec:arm}
+syfala open-project
+\end{verbatim}\\
+Then the  block design shown on Fig.~\ref{fig:design_6_3} can be opened using {\tt open Block Design}. One can see that the audio input/output streams of the Syfala IP are directly connected to the I2S IP ({\tt i2s\_transceiver} block), one can also see the {\tt AXI} IP interface which is used to access DDR and the {\tt axilite} IP interface used for interface with ARM processor.  The I2S IP is in turn directly connected to I/O of the Zynq with the following convention:
+\begin{itemize}
+\item The first two channels (Ch0 and Ch1) are connected to the pad of the onboard codec (SSM2603 for ZYBO, ADAU1761 for Genesys).
+\item The first two channels (Ch0 and Ch1) are duplicated on GPIO pads for the use of an external codec.
+\item All additional channels (if existing) are connected to the GPIO pads for the use of an external codec.
+\end{itemize}
+The onboard codec is configured from the ARM processor as described in section~\ref{sec:arm}\\
 
 
 
@@ -325,7 +330,7 @@ Then the  block design shown on Fig.~\ref{fig:design_6_3} can be opened using {\
 
 \begin{figure}[ht]
   \input{fig/clock_i2s.tex}
-  \caption{I2S  protocol implemented {\tt i2s\_transceiver.vhd}, between the Syfala IP and  the audio codec SSM2603 with 16-bit samples. The {\tt ws} signal select from left or right channel. The {\tt  sd\_tx} bit stream corresponds to the 16 bits of the sample. it is shifted of 1 clock cycle from {\tt ws} changes. {\tt bclk} stands for {\em bit clock} and {\tt ws} stands for {\em word select}.}
+  \caption{I2S  protocol implemented {\tt i2s\_transceiver.vhd}, between the Syfala IP and  the audio codec with 16-bit samples. The {\tt ws} signal select from left or right channel. The {\tt  sd\_tx} bit stream corresponds to the 16 bits of the sample. it is shifted of 1 clock cycle from {\tt ws} changes. {\tt bclk} stands for {\em bit clock} and {\tt ws} stands for {\em word select}.}
   \label{figi2s}
 \end{figure}
 
@@ -335,9 +340,9 @@ Then the  block design shown on Fig.~\ref{fig:design_6_3} can be opened using {\
   \label{figi2szoom1}
 \end{figure}
 
-The {\tt i2s\_transceiver} is the one that really transmit the bits between the FPGA and the audio codec. The data is serialized and transmitted/received on the {\tt sd\_tx}/{\tt sd\_rx} port to {\tt recdat/pbdat} ports of the SSM2603 audio codec. The protocol used in our design is the one illustrated on Fig.~\ref{figi2s}, it can be configured to send 16, 24 or 32 bit-wide sample. For 16 bit configuration the sample cycle time is exactly divided in 32 cycles to transmit the $2\times16$ bits (left and right samples), as shown on Fig.~\ref{figi2s}. But for 24 bit-wide sample, the sample cycle is not divided in 48 (=$2\times24$), but in 64 cycles as it is for 32  bit-wide samples.  The sample bits are serially transmitted along the {\tt bclk} clock as shown in Fig.~\ref{figi2s} (see also~\cite{ssm2603}). The {\tt ws} signal indicates whether current bits belong to  left or right channel. However, as indicated in Fig.~\ref{figi2s}, there is a shift of 1 cycle: the first bit send after {\tt ws} clock fall-down is not the first bit of current left sample, it is the last bit of the previous right sample.\footnote{See for instance \url{https://www.sparkfun.com/datasheets/BreakoutBoards/I2SBUS.pdf}}
+The {\tt i2s\_transceiver} is the one that really transmits the bits between the FPGA and the audio codec. The data is serialized and transmitted/received on the {\tt sd\_tx}/{\tt sd\_rx} port to the ports of the audio codec. The protocol used in our design is the one illustrated on Fig.~\ref{figi2s}, it can be configured to send 16, 24 or 32 bit-wide sample. For 16 bit configuration the sample cycle time is exactly divided in 32 cycles to transmit the $2\times16$ bits (left and right samples), as shown on Fig.~\ref{figi2s}. But for 24 bit-wide sample, the sample cycle is not divided in 48 (=$2\times24$), but in 64 cycles as it is for 32  bit-wide samples.  The sample bits are serially transmitted along the {\tt bclk} clock as shown in Fig.~\ref{figi2s} (see also~\cite{ssm2603}). The {\tt ws} signal indicates whether current bits belong to  left or right channel. However, as indicated in Fig.~\ref{figi2s}, there is a shift of 1 cycle: the first bit send after {\tt ws} clock fall-down is not the first bit of current left sample, it is the last bit of the previous right sample.\footnote{See for instance \url{https://www.sparkfun.com/datasheets/BreakoutBoards/I2SBUS.pdf}}
 
-\paragraph{Syfala I2S patch} In a normal transmission, the {\tt sd\_tx} bit is positioned on the falling edge of {\tt bclk} clock, it is transmitted from our (master) I2S to the (slave) I2S of the codec. Simultaneously, the slave I2S is positioning the {\tt sd\_rx} bit -- which is {\em his} {\tt st\_tx} -- to be transmitted from the codec to our I2S. The {\tt sd\_rx} bit is effectively read by our I2S on the rising edge of {\tt bclk}, this allows time for the signal to arrive through the connection between the codec and the FPGA, this time is called {\tt Tsod} in analog device ADAUs codecs for instance (see Fig.~\ref{figi2szoom2}-(a) for illustration).  
+\paragraph{Syfala I2S patch} In a normal transmission, the {\tt sd\_tx} bit is positioned on the falling edge of {\tt bclk} clock, it is transmitted from our (master) I2S to the (slave) I2S of the codec. Simultaneously, the slave I2S is positioning the {\tt sd\_rx} bit -- which is {\em his} {\tt sd\_tx} -- to be transmitted from the codec to our I2S. The {\tt sd\_rx} bit is effectively read by our I2S on the rising edge of {\tt bclk}, this allows time for the signal to arrive through the connection between the codec and the FPGA, this time is called {\tt Tsod} in analog device ADAUs codecs for instance (see Fig.~\ref{figi2szoom2}-(a) for illustration).  
 
 In our design, we have used external codecs that allows internal clock as fast as 768kHz. We have noticed that, as we needed a level shifter to adapt power supplies between the codec and the Zybo, this  half a bclk cycle time may be less than the time needed for {\tt sd\_rx} to stabilize. Hence we proposed a {\em patch} that delays of one  {\tt mclk} cycle in addition to the half {\tt bclk} cycle shown on Fig.~\ref{figi2szoom2}-(b).
 
@@ -357,32 +362,36 @@ In our design, we have used external codecs that allows internal clock as fast a
 
 We have implemented the I2S protocol in VHDL (file {\tt src/i2s\_transceiver.vhd}). It can be parameterized by the  sample bit depth as well as by the sample rate.  
 
-The {\tt i2s\_transceiver} is connected to the {\tt Syfala} IP . It performs a hand shake ({\tt ap\_hs} protocol from Xilinx {\tt vitis\_hls}) with the Syfala IP in order to transmit and receive samples from the Syfala IP. The {\tt ap\_start} signal is initiated by the {\tt i2s\_transceiver} and when the two Syfala IP outputs are ready ({\tt out\_ch0\_V} and {\tt out\_ch1\_V}), the signals {\tt out\_ch0\_V\_ap\_vld} and {\tt out\_ch1\_V\_ap\_vld} are raised {\em for one system clock cycle}. A hand shake is proposed in the I2S transceiver to grab the output values when they are available (they are not necessarily available simultaneously). 
+The {\tt i2s\_transceiver} is connected to the {\tt Syfala} IP. It performs a hand shake ({\tt ap\_hs} protocol from Xilinx {\tt vitis\_hls}) with the Syfala IP in order to transmit and receive samples from the Syfala IP. The {\tt ap\_start} signal is initiated by the {\tt i2s\_transceiver} and when the two Syfala IP outputs are ready ({\tt out\_ch0\_V} and {\tt out\_ch1\_V}), the signals {\tt out\_ch0\_V\_ap\_vld} and {\tt out\_ch1\_V\_ap\_vld} are raised {\em for one system clock cycle}. A hand shake is proposed in the I2S transceiver to grab the output values when they are available (they are not necessarily available simultaneously). 
 
 
 \subsection{Time, Clocks and the ordering of ticks in the Syfala system}
 
-It is important to understand the origin and value of the different clocks in the system. The generation of the different clocks is highly simplified by the use of two {\tt Clocking Wizard} IP. The first clocking wizard  inputs the  external clock ({\tt sys\_clk}) and outputs the FPGA system clock {\tt sys\_clk} and the second one outputs {\tt mclk} and another clock at 24MHz needed by the codecs. The reason for using {\em two} clocking wizard instead of one is that exact synchronization between {\tt mclk} and {\tt sys\_clk} signal cannot be obtained with only one clocking wizard.   
+It is important to understand the origin and value of the different clocks in the system. The generation of the different clocks is highly simplified by the use of two {\tt Clocking Wizard} IP. The first clocking wizard  inputs the  external clock ({\tt sys\_clk}) and outputs the FPGA system clock {\tt board\_clk} and the second one outputs {\tt mclk} and another clock at 24MHz needed by the codecs. The reason for using {\em two} clocking wizard instead of one is that exact frequencies for the three clocks cannot be obtained with only one clocking wizard, we need two MMCM/PLL.   
 
-\paragraph{FPGA system Clock: {\tt sys\_clk} at 125Mhz}
-The {\em internal} FPGA clock that triggers every registers of the FPGA is depending of the complexity of the design (i.e. the complexity of the longest combinatorial path), it is called {\tt sys\_clk} on Vivado block design. We usually impose this clock to be {\bf 125Mhz} (i.e. setting  a {\bf 8ns} clock when creating {\tt vivado} and {\tt vivado\_hls} projects). If {\tt vivado} fails in synthesizing a design that can be clocked at that speed, it will issue an error message, however it should be easy to change this clock to another value as all other clocks are generated independently of this one. Faster clocks have been tested with  Syfala and should work too.
+\paragraph{FPGA system Clock: {\tt sys\_clk} at 122.88MHz}
+The {\em internal} FPGA clock that triggers every registers of the FPGA is depending of the complexity of the design (i.e. the complexity of the longest combinatorial path), it is called {\tt sys\_clk} on Vivado block design. We follow two rules to set this clock:
+\begin{itemize}
+\item {\tt sys\_clk} can be as fast as wanted as long as it met timing constraints.
+\item  {\tt sys\_clk} and {\tt mclk} should be multiples to facilitate the timing closure and minimize the negative slack.
+\end{itemize}
+{\tt mclk} is a multiple of 48kHz and $f_{mclk}$=12.288MHz at 48kHz sampling rate (see below). So we usually impose {\tt sys\_clk} clock to be {\bf 122.88MHz} (i.e. setting  a {\bf 8.13ns} clock when creating {\tt vivado} and {\tt vivado\_hls} projects). Faster clocks have been tested with Syfala and should work too.
 
-\paragraph{Audio codec internal Master Clock: $ 2\times 4 \times d_{width}\times f_s$}
+\paragraph{I2S Transceiver Master Clock: {\tt clk\_I2S} at $ 2\times 4 \times d_{width}\times f_s$}
 We call $d_{width}$ the number of cycle needed to send the bits of one sample,  remember that, as explained above: $d_{width}$ is 16 for 16 bit-wide samples but 32 for 24 bit wide samples (and 32 for 32 bit wide samples too).   
-The clock regulating the SSM2603 ({\tt mclk}) should be a multiple of the sampling frequency, it should be exactly $f_{mclk}=2\times 4\times d_{width}\times f_s$, where $f_s$ is the sample rate. Indeed, as $bclk$ clock will be four times  slower than $mclk$ clock, we will have time to send 2 samples of $d_{width}$ bits in one sample cycle. 
+The clock regulating the transceiver ({\tt mclk}) should be a multiple of the sampling frequency, it should be exactly $f_{mclk}=2\times 4\times d_{width}\times f_s$, where $f_s$ is the sample rate. Indeed, as $bclk$ clock will be four times  slower than $mclk$ clock, we will have time to send 2 samples of $d_{width}$ bits in one sample cycle. 
 
-For instance, if  we configure the chip to run with 48kHz sampling rate with 24 bit samples, $f_{mclk}$ should be: $$f_{mclk}=8 \times 32 \times f_s=256*48kHz =12.288MHz$$
+For instance, if we want an I2S signal at 48kHz sampling rate with 24 bit samples, $f_{mclk}$ should be: $$f_{mclk}=8 \times 32 \times f_s=256*48kHz =12.288MHz$$
 
-In our design, this clock is generated with the {\tt clocking Wizard} IP and transmitted to both {\tt i2s\_transceiver} and {\tt ssm2603}  codec to ports name {\tt mclk}. {\em In practice, the real sample frequency obtained is not exactly 48kHz because the clocking wizard is not able to obtain exactly this value}. {\tt TODO: check}
+\paragraph{Codec system clock: {\tt clk\_24Mhz} at 24.576MHz} The last generated clock is the system clock needed by the codecs to works. It's configurable on each codec and has no effect on the sampling rate. We use a {\bf 24.576MHz} clock which is compatible with all our tested codecs and ensure the best performances.\\
 
-\paragraph{Vivado IP's clocks}
-The AXI bus and the Zynq processing system require a 100Mhz clock. The Zynq processing system requires also a 50Mhz clock\todo{To be checked, on most recent syfala version, no such clock is generated}
-
+{\em In practice, the clocking wizard is not able to obtain exactly the these frequencies (because of the limitation of a PLL) so the real sample frequency obtained is not exactly 48kHz. But we ensure that all frequencies are multiples specifying the nearest synthesizable frequency. For exemple, on ZYBO we have:}
+$f_{sys\_clk}$=122.885835MHz, $f_{clk\_I2S}$=12.2885835MHz so $f_{s}$=48.002279kHz
 
 \paragraph{The {\tt i2s\_transceiver} clocks}
 The I2S transceiver is using two more clocks: the {\bf sclk} clock, sometimes called  {\bf bclk} ({\em bit clock} because it is clocking each bit as illustrated on figure~\ref{figi2s}) and the {\bf ws} clock (word select) which select the left or right channel (illustrated as {\tt ws} on Fig.~\ref{figi2s}).
 
-There is a fixed ratio between these two clocks and the {\tt mclk} mentioned above:{\tt mclk/sclk}=4 (i.e. {\tt mclk} is 4 time faster {\tt sclk}). The ratio between {\tt sclk} and {\tt ws} is also fixed but it depends on the bit depth of the sample: {\tt sclk/ws}$=2\times d_{width}$. We have hard-coded these ratios  in {\tt i2c\_transceiver.vhd} generic VHDL parameters which are generated at compile time, depending on the sample bit-depth given as options to the {\tt syfala} command (24 by default).
+There is a fixed ratio between these two clocks and the {\tt mclk} mentioned above:{\tt mclk/sclk}=4 (i.e. {\tt mclk} is 4 time faster {\tt sclk}). The ratio between {\tt sclk} and {\tt ws} is also fixed but it depends on the bit depth of the sample: {\tt sclk/ws}$=2\times d_{width}$. We have hard-coded these ratios  in {\tt i2s\_transceiver.vhd} generic VHDL parameters which are generated at compile time, depending on the sample bit-depth given as options to the {\tt syfala} command (24 by default).
 
 For instance, at  48kHz sampling rate with 24 bit samples,  one {\tt ws} period is $T_{ws}=4\times 2\times 32\times T_{mclk}=256\times T_{mclk}=T_{audio}=\frac{1}{48kHz}=20.83\mu s$. Here are the generic parameters used for this configuration in {\tt i2s\_transceiver.vhd}
 
@@ -398,18 +407,24 @@ For instance, at  48kHz sampling rate with 24 bit samples,  one {\tt ws} period 
 
 \begin{figure}[ht]
   \centerline{\includegraphics[width=7cm]{zynq-mp-core-dual1.png}}
-  \caption{Architecture of Xilinx Zynq processing system (from \url{https://www.rs-online.com/designspark/getting-started-with-xilinx-zynq-all-programmable-soc})}
+  \caption{Architecture of Xilinx Zynq 7000 (ZYBO) processing system (from \url{https://www.xilinx.com/products/silicon-devices/soc/zynq-7000.html})}
   \label{zynq}
 \end{figure}
 
+\begin{figure}[ht]
+  \centerline{\includegraphics[width=7cm]{fig/ultrascale_MPSOC.png}}
+  \caption{Architecture of Xilinx UltraScale+ (Genesys) processing system (from \url{https://www.xilinx.com/products/silicon-devices/soc/zynq-ultrascale-mpsoc.html})}
+  \label{ultrascale}
+\end{figure}
 \subsection{The ARM application software  and the {\tt arm.cpp} architecture file}
 \label{sec:arm}
 
-Zynq FPGAs include a so-called {\em processing system} which consists in a complete SoC integrating $i)$ a dual core ARM CorteX A9 processor, $ii)$ the FPGA fabric, $iii)$ high performance and general purpose buses between ARM and FPGA (axilite port) and $iv)$ an interface to an external DDR3 memory (see Fig.~\ref{zynq}). Ideally,  the DSP computations should be executed on the FPGA and the control and initialization should be executed on  the ARM processor.  The Faust language proposes several interfaces to the user: sliders or button and even feedback information. In the remaining of this documents, we will refer to these interface devices as {\em controllers}.  
 
+Zynq SoCs include a so-called {\em processing system} which consists in a
+ dual-core ARM Cortex-A9 for Zynq7000 SoC for ZYBO, or a Quad-core ARM Cortex-A53 on Ultrascale+ MPSoC for Genesys ZU-3EG.
+These SoC also embed a high performance and general purpose buses between ARM and FPGA (axilite port) and an interface to an external DDR memory (see Fig.~\ref{zynq} and Fig.~\ref{ultrascale}). 
 
-
-
+Ideally, the DSP computations should be executed on the FPGA and the control and initialization should be executed on  the ARM processor.  The Faust language proposes several interfaces to the user: sliders or button and even feedback information. In the remaining of this documents, we will refer to these interface devices as {\em controllers}.
 
 The {\tt faust}  compiler is invoked a second time. The first invocation  has generated the {\tt syfala.cpp} file used to generate the IP (using the {\tt fpga.cpp} architecture file). The second invocation is used to generate the {\tt syfala\_application.cpp} program that will run on the ARM (using the {\tt arm.cpp} architecture file).
 
@@ -421,18 +436,18 @@ The   {\tt syfala\_application.cpp} is quite long because it re-uses many contri
     u32* ddr_ptr = (u32*)FRAME_BUFFER_BASEADDR;
 \end{verbatim}
 
-\item it initializes the {\tt izone} and {\tt fzone} which are then transmitted to the Faust IP:
+\item It initializes the {\tt izone} and {\tt fzone} which are then transmitted to the Faust IP:
 \begin{verbatim}
         iZone = (int*)(ddr_ptr);
         fZone = (float*)(ddr_ptr + FAUST_INT_ZONE);
 \end{verbatim}
-\item it initializes various peripherals of the Soc:
+\item It initializes various peripherals of the Soc:
   \begin{itemize}
   \item GPIOs
   \item SPI peripheral (used to get controlers/sliders valuers)
   \item I2C (used to configure the audio codec)
   \item Faust IP
-  \item DDR3 memory
+  \item DDR memory
   \end{itemize}
 \item It defines a user interface for the DSP program ({\tt UI})
 \item It defines a class {\tt mydsp} which correspond to all the variables of the DSP program  stored in the Block Rams by the Faust IP: delay lines, temporary computation, etc. This ``additional'' declaration is used to initialize some of these variables (in particular constants).
@@ -472,3 +487,4 @@ Depending on the information of the syfala command, the code executed by {\tt sy
 
 
 \end{document}
+

@@ -5,45 +5,71 @@ namespace import Syfala::*
 
 print_info "Running full automated tests on the Syfala toolchain"
 cd $::Syfala::ROOT
-set mainscript [file normalize "syfala.tcl"]
-variable count 1
 
-proc test { arguments description } {
-    upvar mainscript mainscript
-    upvar count count
-    set tstart [clock seconds]
-    print_info "Test-$count ($description) now running with arguments: $arguments"
-    exec $mainscript {*}$arguments
-    print_ok "Test-$count successfully passed!"
-    print_elapsed_time $tstart
-    incr count
+namespace eval rt {
+set mainscript [file normalize "syfala.tcl"]
+set tests [list]
+variable count 1
+}
+
+proc add_test { arguments description } {
+    set testno [llength $::rt::tests]
+    lappend ::rt::tests [list $arguments $description]
+    print_ok "Added test [expr $testno+1] ($description)"
 }
 
 proc clean { } {
-    upvar mainscript mainscript
-    exec $mainscript clean
+    exec $::rt::mainscript clean
 }
 
-# 1. print version and help
-test --version  "checking version"
-test --help "displaying help"
-test clean "cleaning build directory"
+proc run { testno } {
+    set tstart [clock seconds]
+    set test   [lindex $::rt::tests $testno]
+    set arguments   [lindex $test 0]
+    set description [lindex $test 1]
+    incr testno
+    print_info "Test-$testno ($description) now running with arguments: $arguments"
+    exec $::rt::mainscript {*}$arguments
+    print_ok "Test-$testno successfully passed!"
+    print_elapsed_time $tstart
+    incr ::rt::count
+}
 
-test {examples/fm.dsp --arch --hls --project} "1-output example"
-test {examples/dist.dsp --arch --hls --project --reset} "1-input example"
-test {examples/flanger.dsp --arch --hls --reset} "2/2 io example"
-test {next} "'next' command"
-clean
+add_test --version  "checking version"
+add_test --help "displaying help"
+add_test clean "cleaning build directory"
+add_test {examples/fm.dsp --arch --hls --project} "1-output example"
+add_test {examples/dist.dsp --arch --hls --project --reset} "1-input example"
+add_test {examples/flanger.dsp --arch --hls --reset} "2/2 io example"
+add_test {next} "'next' command"
+add_test {examples/multichannel_test.dsp --arch --hls --project --reset} "multichannel output example"
+add_test {demo --reset} "full demo build (Z710 board)"
+add_test rebuild-app "rebuilding-app"
+add_test {export demo-z710-test} "exporting demo build"
 
-test demo "full demo build (Z710 board)"
-test rebuild-app "rebuilding-app"
-test {export demo-z710-test} "exporting demo build"
-clean
+foreach f [glob -directory $::Syfala::EXPORT_DIR *.zip] {
+    if [contains "demo-z710-test" $f] {
+        set a [list "import" [file normalize $f]]
+        add_test $a "import build test"
+        add_test {--host --gui} "rebuild host & gui after import"
+        break
+    }
+}
 
-test {import export/demo-z710-test} "import build test"
-test {--host --gui} "rebuild host & gui after import"
 
-test {examples/virtualAnalog.dsp --board Z20 --reset} "Zybo Z20 build"
-test {demo --board GENESYS --reset} "Genesys board"
+add_test {examples/virtualAnalog.dsp --board Z20 --reset} "Zybo Z20 build"
+add_test {demo --board GENESYS --reset} "Genesys board"
+add_test {demo --memory STATIC --reset} "static memory test"
 
-# 5. faust2vhdl compiler (TODO)
+# run tests
+if [is_empty $::argv] {
+    set index 0
+    print_info "Running all [llength $::rt::tests] tests"
+    foreach test $::rt::tests {
+        run $index
+        incr index
+    }
+} else {
+    print_info "Running tests $::argv"
+    foreach testno $::argv { run [expr $testno - 1]}
+}

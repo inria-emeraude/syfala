@@ -55,7 +55,7 @@ domain create -name $domain_name            \
               -proc $proc_name              \
               -runtime "cpp"                \
               -arch $arch                   \
-	      			-support-app "hello_world"
+              -support-app "hello_world"
 
 
 # Generate platform
