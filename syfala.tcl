@@ -336,7 +336,7 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
         }
         open-project {
             parse_xroot
-            exec vivado $::Syfala::BUILD_PROJECT_DIR/syfala_project.xpr
+            exec [Xilinx::vivado] $::Syfala::BUILD_XPR_FILE
             exit 0
         }
         report - rpt {

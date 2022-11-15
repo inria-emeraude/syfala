@@ -2,7 +2,7 @@ G04 #@! TF.GenerationSoftware,KiCad,Pcbnew,6.0.8-f2edbf62ab~116~ubuntu20.04.1*
 G04 #@! TF.CreationDate,2022-11-15T13:28:35+01:00*
 G04 #@! TF.ProjectId,controllerBoard,636f6e74-726f-46c6-9c65-72426f617264,3*
 G04 #@! TF.SameCoordinates,Original*
-G04 #@! TF.FileFunction,Paste,Top*
+G04 #@! TF.FileFunction,Legend,Bot*
 G04 #@! TF.FilePolarity,Positive*
 %FSLAX46Y46*%
 G04 Gerber Fmt 4.6, Leading zero omitted, Abs format (unit mm)*
