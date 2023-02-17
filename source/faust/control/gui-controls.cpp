@@ -3,6 +3,9 @@
 #include <faust/gui/GTKUI.h>
 #include <faust/gui/meta.h>
 #include <faust/dsp/dsp.h>
+#include <faust/gui/MidiUI.h>
+#include <faust/midi/rt-midi.h>
+#include <faust/midi/RtMidi.cpp>
 
 /******************************************************************************
  *******************************************************************************
@@ -38,9 +41,14 @@ int main(int argc, char* argv[])
     // UART interface
     UARTSenderUI uart_ui;
     DSP.buildUserInterface(&uart_ui);
-    // Start sending
+
+    // MIDI interface
+    rt_midi rt("MIDI");
+    MidiUI midi_ui(&rt);
+    DSP.buildUserInterface(&midi_ui);
+
+    // start sending & run
     uart_ui.start();
-    
-    // Run
+    midi_ui.run();
     gtk_ui.run();
 }

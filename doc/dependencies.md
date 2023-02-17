@@ -107,3 +107,15 @@ On **Archlinux**, if you see an error like this one
 ```
 
 you'll have to rename the `Vivado/2020.2/tps/lnx64/binutils-2.26` (Vitis will then search in the system libraries).
+
+#### Vitis/JAVA problems
+
+On recent systems (or **archlinux**), you might have problems compiling the host-side (**ARM**) application. The problem is caused by system libraries requiring newer versions of GCC than the one provided by Vitis. Replacing GCC target in Vitis' path **by system GCC** works :
+
+```bash
+$ cd $XILINX_ROOT_DIR/Vitis/2020.2/lib/lnx64.o/Default
+$ mv libstdc++.so.6 libstdc++.so.6.old
+$ rm -rf libstdc++.so (symlink)
+$ sudo ln -s /usr/lib/libstdc++.so.6 libstdc++.so.6
+```
+

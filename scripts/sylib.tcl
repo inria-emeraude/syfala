@@ -443,6 +443,7 @@ proc generate_gui_app { dsp } {
     # I guess that's one of the limits of tcl...
     set pkgc [exec pkg-config --libs --cflags gtk+-2.0]
     lappend pkgc -I$::Syfala::INCLUDE_DIR
+    lappend pkgc "-lasound"
     set cmd "c++ -v -std=c++14 $::Syfala::GUI_DST_FILE $pkgc -o $::Syfala::BUILD_GUI_DIR/faust-gui"
     print_info "Executing command: $cmd"
     exec {*}$cmd >&@stdout | tee -a $Syfala::BUILD_LOG
