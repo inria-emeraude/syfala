@@ -9,7 +9,10 @@ proc get_root {} {
 # general
 # -----------------------------------------------------------------------------
 
-set VERSION                     7
+set VERSION_MAJOR               0
+set VERSION_MINOR               7
+set VERSION_PATCH               1
+set VERSION                     "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
 set ROOT                        [get_root]
 set SOURCE_DIR                  $ROOT/source
 set INCLUDE_DIR                 $ROOT/include
@@ -17,6 +20,7 @@ set SCRIPTS_DIR                 $ROOT/scripts
 set BUILD_DIR                   $ROOT/build
 set EXPORT_DIR                  $ROOT/export
 set TESTS_DIR                   $ROOT/tests
+set TOOLS_DIR                   $ROOT/tools
 set CONFIG_FILE                 $INCLUDE_DIR/syconfig.hpp
 set DEFAULT_EXAMPLE             $ROOT/examples/virtualAnalog.dsp
 set CLK_DYNAMIC_RECONFIG        0
@@ -42,43 +46,51 @@ set BUILD_GUI_DIR               $BUILD_DIR/gui
 set BUILD_GUI_TARGET            $BUILD_DIR/gui/faust-gui
 set BUILD_CONFIG_FILE           $BUILD_INCLUDE_DIR/syconfig.hpp
 set BUILD_LOG                   $ROOT/syfala_log.txt
+set BUILD_EXTERNAL_BD           $BUILD_DIR/sources/main.tcl
 
 # -----------------------------------------------------------------------------
 # scripts
 # -----------------------------------------------------------------------------
 
-set HLS_SCRIPT                  $Syfala::SCRIPTS_DIR/hls.tcl
-set FAUST2VHDL_SCRIPT           $Syfala::SCRIPTS_DIR/faust2vhdl.tcl
-set APPLICATION_SCRIPT          $Syfala::SCRIPTS_DIR/application.tcl
-set PROJECT_SCRIPT_TEMPLATE     $Syfala::SCRIPTS_DIR/project.tcl
-set PROJECT_SCRIPT              $Syfala::BUILD_SOURCES_DIR/project.tcl
-set SYNTHESIS_SCRIPT            $Syfala::SCRIPTS_DIR/synthesis.tcl
-set JTAG_SCRIPT                 $Syfala::SCRIPTS_DIR/jtag.tcl
-set BIN_GENERATOR               $Syfala::SCRIPTS_DIR/bin_generator.bif
+set HLS_SCRIPT                  $SCRIPTS_DIR/hls.tcl
+set FAUST2VHDL_SCRIPT           $SCRIPTS_DIR/faust2vhdl.tcl
+set APPLICATION_SCRIPT          $SCRIPTS_DIR/application.tcl
+set PROJECT_SCRIPT_TEMPLATE     $SCRIPTS_DIR/project.tcl
+set PROJECT_SCRIPT              $BUILD_SOURCES_DIR/project.tcl
+set SYNTHESIS_SCRIPT            $SCRIPTS_DIR/synthesis.tcl
+set JTAG_SCRIPT                 $SCRIPTS_DIR/jtag.tcl
+set BIN_GENERATOR               $SCRIPTS_DIR/bin_generator.bif
 
 # -----------------------------------------------------------------------------
 # sources
 # -----------------------------------------------------------------------------
 
-set VHDL_DIR                    $Syfala::SOURCE_DIR/vhdl
-set XDC_DIR                     $Syfala::VHDL_DIR/constraints
-set FIXED_FLOAT_TYPES_C         $Syfala::VHDL_DIR/fixed_float_types_c.vhd
-set FIXED_PKG_C                 $Syfala::VHDL_DIR/fixed_pkg_c.vhd
-set FLOAT_PKG_C                 $Syfala::VHDL_DIR/float_pkg_c.vhd
-set SINCOS_24                   $Syfala::VHDL_DIR/SinCos24.vhd
-set FAUST_VHD_EXAMPLE           $Syfala::VHDL_DIR/faust.vhd
+set VHDL_DIR                    $SOURCE_DIR/vhdl
+set XDC_DIR                     $VHDL_DIR/constraints
+set FIXED_FLOAT_TYPES_C         $VHDL_DIR/fixed_float_types_c.vhd
+set FIXED_PKG_C                 $VHDL_DIR/fixed_pkg_c.vhd
+set FLOAT_PKG_C                 $VHDL_DIR/float_pkg_c.vhd
+set SINCOS_24                   $VHDL_DIR/SinCos24.vhd
+set FAUST_VHD_EXAMPLE           $VHDL_DIR/faust.vhd
+
+# -----------------------------------------------------------------------------
+# external bd
+# -----------------------------------------------------------------------------
+set EXTERNAL_BD_DIR             $SOURCE_DIR/bd
+set EXTERNAL_BD_SIGMA_DELTA     $EXTERNAL_BD_DIR/sigma-delta.tcl
+set EXTERNAL_BD_TDM             $EXTERNAL_BD_DIR/tdm.tcl
 
 # -----------------------------------------------------------------------------
 # architecture files
 # -----------------------------------------------------------------------------
 
-set ARCH_FPGA_TEMPLATE          $Syfala::SOURCE_DIR/faust/architecture/fpga.cpp
-set ARCH_FPGA_SRC_FILE_VHDL     $Syfala::BUILD_IP_DIR/faust.vhd
-set ARCH_FPGA_SRC_FILE_HLS      $Syfala::BUILD_SOURCES_DIR/fpga.cpp
-set ARCH_ARM_FILE_HLS           $Syfala::SOURCE_DIR/faust/architecture/arm.cpp
-set ARCH_ARM_FILE_VHDL          $Syfala::SOURCE_DIR/faust/architecture/arm_vhdl.cpp
-set GUI_SRC_FILE                $Syfala::SOURCE_DIR/faust/control/gui-controls.cpp
-set GUI_DST_FILE                $Syfala::BUILD_GUI_DIR/faust-gui.cpp
+set ARCH_FPGA_TEMPLATE          $SOURCE_DIR/faust/architecture/fpga.cpp
+set ARCH_FPGA_SRC_FILE_VHDL     $BUILD_IP_DIR/faust.vhd
+set ARCH_FPGA_SRC_FILE_HLS      $BUILD_SOURCES_DIR/fpga.cpp
+set ARCH_ARM_FILE_HLS           $SOURCE_DIR/faust/architecture/arm.cpp
+set ARCH_ARM_FILE_VHDL          $SOURCE_DIR/faust/architecture/arm_vhdl.cpp
+set GUI_SRC_FILE                $SOURCE_DIR/faust/control/gui-controls.cpp
+set GUI_DST_FILE                $BUILD_GUI_DIR/faust-gui.cpp
 
 # -----------------------------------------------------------------------------
 # exported procedures
@@ -92,15 +104,19 @@ print_ok                        \
 print_info                      \
 print_error                     \
 syexec                          \
+lcontains                       \
 contains                        \
 is_empty                        \
 not_empty                       \
 ffindl                          \
 ffindlN                         \
 freplacel                       \
+freplacelfn                     \
 rstbuild                        \
+get_dsp_name                    \
 check_xroot                     \
 set_xenv                        \
+get_num_io                      \
 get_syconfig_define             \
 set_syconfig_define             \
 generate_build_id               \
@@ -115,15 +131,15 @@ export_build
 # general-purpose utilities
 # -----------------------------------------------------------------------------
 
-proc color { c t } {
+proc color {c t} {
     return [exec tput setaf $c]$t[exec tput sgr0]
 }
 
-proc emph { t } {
+proc emph {t} {
     return [exec tput bold]$t[exec tput sgr0]
 }
 
-proc indent { t {N 1} } {
+proc indent {t {N 1}} {
     set str ""
     for {set i 0} {$i < $N} {incr i} {
          append str "\t"
@@ -131,22 +147,24 @@ proc indent { t {N 1} } {
     return "$str$t"
 }
 
-proc basic_print { txt } {
-    set foutput [open $::Syfala::BUILD_LOG a+   ]
+proc basic_print {txt {f 1}} {
     puts  $txt
-    puts  $foutput "[get_time] - $txt"
-    close $foutput
+    if $f {
+        set foutput [open $::Syfala::BUILD_LOG a+]
+        puts  $foutput "[get_time] - $txt"
+        close $foutput
+    }
 }
 
-proc print_ok { txt } {
+proc print_ok {txt} {
     basic_print "\[  [color 2 OK]  \] $txt"
 }
 
-proc print_info { txt } {
-    basic_print "\[ [color 11 INFO] \] $txt"
+proc print_info {txt {f 1}} {
+    basic_print "\[ [color 11 INFO] \] $txt" $f
 }
 
-proc print_error { txt } {
+proc print_error {txt} {
     basic_print "\[ [color 1 ERR!] \] $txt"
 }
 
@@ -191,6 +209,14 @@ proc contains { pattern str } {
      } else {
          return 0
      }
+}
+
+proc lcontains {ptn lst} {
+    if {[lsearch -exact $lst $ptn] >= 0} {
+        return 1
+    } else {
+        return 0
+    }
 }
 
 # returns 1 if 'str' is empty, 0 otherwise
@@ -267,6 +293,33 @@ proc freplacel { f A B } {
     }
 }
 
+proc freplacelfn {f pattern args fn} {
+    set fr     [open $f r]
+    set data   [read $fr]
+    close      $fr
+    set fw     [open $f w]
+    set found  0
+    set index  0
+    set lines  [split $data "\n"]
+    set len    [llength $lines]
+    foreach line $lines {
+        if {!$found && [contains $pattern $line]} {
+            set found 1
+            set line [apply $fn $line $args]
+        }
+        if {$index < [expr $len-1]} {
+            # we don't want to output the last empty line
+            puts $fw $line
+        }
+        incr index
+    }
+    close $fw
+    if {$found == 0} {
+        print_error "Couldn't find pattern '$pattern' in file '$f'"
+        exit 1
+    }
+}
+
 # find lines containing patterns {A} in file 'f'
 # replace them by lines {B}
 proc freplacelN { f A B } {
@@ -305,6 +358,14 @@ proc rstbuild {} {
     file delete -force -- .Xil
 }
 
+proc get_dsp_name {} {
+    foreach f [glob -directory $::Syfala::BUILD_DIR *.dsp] {
+       # pick the first one
+       return [file rootname [file tail $f]]
+    }
+}
+
+
 ## Checks installation of a specific Xilinx tool
 ## aborts process if path is incorrect
 proc check_xpath { x v t } {
@@ -329,6 +390,14 @@ proc check_xroot { x v } {
 # PATH environment variable, for the time the script is being run
 proc set_xenv { x v t } {
     set ::env(PATH) "$::env(PATH):$x/$t/$v:$x/$t/$v/bin"
+}
+
+proc get_num_io {} {
+    set line_i [ffindl $::Syfala::BUILD_IP_FILE "#define FAUST_INPUTS"]
+    set line_o [ffindl $::Syfala::BUILD_IP_FILE "#define FAUST_OUTPUTS"]
+    set n_inputs [lindex [split $line_i] end]
+    set n_outputs [lindex [split $line_o] end]
+    return [list $n_inputs $n_outputs]
 }
 
 # Parses a cpp definition value in file 'f'
@@ -403,12 +472,16 @@ proc mem_access_count {} {
 ## generated output will be located in $ARCH_FPGA_DST_FILE
 proc generate_ip_hls { dsp } {
     print_info "Generating Faust IP from Faust compiler & architecture file"
+    # create a 'sources' directory in build directory
+    # copy fpga.cpp template file to be modified accordingly
     file mkdir $::Syfala::BUILD_SOURCES_DIR
     file mkdir $::Syfala::BUILD_IP_DIR
-    file copy -force $::Syfala::ARCH_FPGA_TEMPLATE $::Syfala::BUILD_SOURCES_DIR
-    syexec faust $dsp -lang c -light -os2 -uim -mcd 0       \
-                      -a $Syfala::ARCH_FPGA_SRC_FILE_HLS    \
-                      -o $Syfala::BUILD_IP_FILE             \
+    file copy -force $::Syfala::ARCH_FPGA_TEMPLATE          \
+                     $::Syfala::ARCH_FPGA_SRC_FILE_HLS
+    syexec faust $dsp -lang c -light -os2 -uim                \
+                      -mcd $::runtime::mcd                    \
+                      -a $::Syfala::ARCH_FPGA_SRC_FILE_HLS    \
+                      -o $::Syfala::BUILD_IP_FILE             \
                       -t 0
     print_ok "Generated $::Syfala::BUILD_IP_FILE"
 }
@@ -429,7 +502,8 @@ proc generate_ip_vhdl { dsp t } {
 proc generate_host { dsp src } {
     print_info "Generating HOST Control Application from Faust compiler & architecture file"
     file mkdir $Syfala::BUILD_APPLICATION_DIR
-    syexec faust $dsp -i -lang cpp -os2 -uim -mcd 0         \
+    syexec faust $dsp -i -lang cpp -os2 -uim                \
+                      -mcd $::runtime::mcd                  \
                       -a $src                               \
                       -o $Syfala::BUILD_APPLICATION_FILE    \
                       -t 0
@@ -440,7 +514,6 @@ proc generate_gui_app { dsp } {
     file mkdir $::Syfala::BUILD_GUI_DIR
     print_info "Generating & compiling GUI control application"
     syexec faust $dsp -a $Syfala::GUI_SRC_FILE -o $Syfala::GUI_DST_FILE
-    # I guess that's one of the limits of tcl...
     set pkgc [exec pkg-config --libs --cflags gtk+-2.0]
     lappend pkgc -I$::Syfala::INCLUDE_DIR
     lappend pkgc "-lasound"
@@ -452,8 +525,6 @@ proc generate_gui_app { dsp } {
 # -------------------------------------------------------------------------------------------------
 namespace eval Xilinx {
 # -------------------------------------------------------------------------------------------------
-
-set VERSION 2020.2
 
 namespace export vivado vitis vitis_hls xsct
 
@@ -495,12 +566,19 @@ namespace eval Genesys {
     set ID          "gzu_3eg"
     set PART        "xczu3eg-sfvc784-1-e"
     set PART_FULL   "digilentinc.com:gzu_3eg:part0"
-    set CONSTRAINT	"master_Genesys-ZU-3EG.xdc"
+    set CONSTRAINT  "master_Genesys-ZU-3EG.xdc"
 }
 }
 
 proc get_board_version {board} {
-    set path "$::Xilinx::ROOT/Vivado/$::Xilinx::VERSION/data/boards/board_files/"
+    switch $::Xilinx::VERSION {
+    2020.2 {
+        set path "$::Xilinx::ROOT/Vivado/$::Xilinx::VERSION/data/boards/board_files/"
+    }
+    2022.2 {
+        set path "$::Xilinx::ROOT/Vivado/$::Xilinx::VERSION/data/xhub/boards/XilinxBoardStore/boards/Xilinx/"
+    }
+    }
     switch $board {
     Z10 - Z20 {
         append path [get_board_id $board]
@@ -572,7 +650,7 @@ proc generate_boot {} {
 
 proc flash_jtag {board} {
     print_info "Flashing image (JTAG)"
-    syexec [Xilinx::xsct] $::Syfala::JTAG_SCRIPT $board >&@stdout
+    syexec [Xilinx::xsct] $::Syfala::JTAG_SCRIPT $board $::Xilinx::ROOT >&@stdout
 }
 
 # -----------------------------------------------------------------------------

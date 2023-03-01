@@ -14,6 +14,7 @@ set PROJECT_NAME    "syfala_project"
 namespace eval Syfala {
 #    set SAMPLE_RATE  [lindex $ARGUMENTS 1]
 #    set SAMPLE_WIDTH [lindex $ARGUMENTS 2]
+    set EXTERNAL_BD [lindex $ARGUMENTS 1]
     set HLS_IP_NAME  "syfala"
 }
 
@@ -22,7 +23,8 @@ namespace eval Xilinx {
     # we have to pass Xilinx::ROOT as an argument and set it from here
     # it will also propagate to the sylib.tcl source
     # (we need Xilinx::ROOT to retrieve the proper board_files version)
-    set ROOT [lindex $ARGUMENTS 1]
+    set ROOT [lindex $ARGUMENTS 2]
+    set VERSION [lindex $ARGUMENTS 3]
 }
 
 set BOARD_PART          [Xilinx::get_board_part $BOARD]
@@ -50,63 +52,44 @@ set_property -objects $PROJECT -name "simulator_language" -value "Mixed"
 set_property -objects $PROJECT -name "target_language" -value "VHDL"
 set_property -objects $PROJECT -name "xpm_libraries" -value "XPM_CDC XPM_MEMORY"
 
-# Create 'sources_1' fileset (if doesn't exist)
-if {[string equal [get_filesets -quiet sources_1] ""]} {
-     create_fileset -srcset sources_1
-}
+# -----------------------------------------------------------------------------
+# File imports
+# -----------------------------------------------------------------------------
 
-# Set IP repository paths
-set fset_sources_1 [get_filesets sources_1]
-set_property -objects $fset_sources_1 -name "ip_repo_paths" -value [file normalize $PROJECT_IP_PATH]
+# Create 'sources_1' fileset (if doesn't exist)
+if [is_empty [get_filesets -quiet "sources_1"]] {
+    create_fileset -srcset "sources_1"
+}
+# Set IP repository paths, update catalog
+set sources_1_fset [get_filesets "sources_1"]
+set_property -objects $sources_1_fset -name "ip_repo_paths" -value $PROJECT_IP_PATH
 update_ip_catalog -rebuild
 
 # Import VHDL files, setting their properties
-set files [list	    \
-<<IMPORT_FILES>>    \
-]
-
-set imported_files [import_files -fileset sources_1 $files]
-
-set sources_1_files [get_files -of [get_filesets sources_1]]
-set_property -objects $sources_1_files -name "file_type" -value "VHDL"
-
-# Set 'sources_1' fileset properties
-set_property -objects $fset_sources_1 -name "top" -value "main_wrapper"
-
-# Create 'constrs_1' fileset (if doesn't exist)
-if {[string equal [get_filesets -quiet constrs_1] ""]} {
-    create_fileset -constrset constrs_1
+set sources_1 [list]
+foreach f [glob -directory $::Syfala::BUILD_SOURCES_DIR *.vhd] {
+    print_ok "Added $f source file to the project"
+    lappend sources_1 [file normalize $f]
 }
-# Set 'constrs_1' fileset object
-set fset_constrs_1 [get_filesets constrs_1]
+set sources_1 [import_files -fileset "sources_1" $sources_1]]
+set sources_1 [get_files -of [get_filesets "sources_1"]]
+set_property -objects $sources_1 -name "file_type" -value "VHDL"
+set_property -objects $sources_1_fset -name "top" -value "main_wrapper"
 
-# Add/Import constrs file and set constrs file properties
-set f_master_xdc [file normalize $CONSTRAINT_FILE]
-set imported_files [import_files -fileset constrs_1 [list $f_master_xdc]]
-set constrs_1_files [get_files -of [get_filesets constrs_1]]
-set_property -objects $constrs_1_files -name "file_type" -value "XDC"
-
-# Set 'constrs_1' fileset properties
-# set obj [get_filesets constrs_1]
-
-# Create 'sim_1' fileset (if not found)
-if {[string equal [get_filesets -quiet sim_1] ""]} {
-     create_fileset -simset sim_1
+# Constraint file
+if [is_empty [get_filesets -quiet "constrs_1"]] {
+    create_fileset -constrset "constrs_1"
 }
+set constrs_1 [get_filesets "constrs_1"]
+set constraint_file [file normalize $CONSTRAINT_FILE]
+set constrs_1 [import_files -fileset "constrs_1" [list $CONSTRAINT_FILE]]
+set constrs_1 [get_files -of [get_filesets "constrs_1"]]
+set_property -objects $constrs_1 -name "file_type" -value "XDC"
 
-# Set 'sim_1' fileset object and its properties
-set fset_sim_1 [get_filesets sim_1]
-set_property -objects $fset_sim_1 -name "hbs.configure_design_for_hier_access" -value "1"
-set_property -objects $fset_sim_1 -name "top" -value "main_wrapper"
-set_property -objects $fset_sim_1 -name "top_lib" -value "xil_defaultlib"
+# -----------------------------------------------------------------------------
+# Block design creation
+# -----------------------------------------------------------------------------
 
-# Set 'utils_1' fileset object
-set fset_utils_1 [get_filesets utils_1]
-# Empty (no sources present)
-# Set 'utils_1' fileset properties
-# set obj [get_filesets utils_1]
-
-# Proc to create BD main
 proc cr_bd_main { parentCell } {
   # CHANGE DESIGN NAME HERE
   set design_name main
@@ -269,7 +252,12 @@ proc cr_bd_main { parentCell } {
 #  close_bd_design $design_name
 }
 # End of cr_bd_main()
-cr_bd_main ""
+if $::Syfala::EXTERNAL_BD {
+    source $::Syfala::BUILD_EXTERNAL_BD
+} else {
+    cr_bd_main ""
+}
+
 set_property REGISTERED_WITH_MANAGER "1" [get_files main.bd ]
 set_property SYNTH_CHECKPOINT_MODE "Hierarchical" [get_files main.bd ]
 

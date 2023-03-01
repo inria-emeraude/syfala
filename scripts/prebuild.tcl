@@ -1,10 +1,9 @@
 #!/usr/bin/tclsh
 
-source ../scripts/sylib.tcl
-namespace import Syfala::*
-
 namespace eval arguments {
-    set board [lindex $::argv 0]
+    set board        [get_value $::runtime::board]
+    set sample_rate  [get_value $::runtime::sample_rate]
+    set sample_width [get_value $::runtime::sample_width]
 }
 
 namespace eval runtime {
@@ -63,11 +62,6 @@ proc overwrite { F A N lambda } {
     }
     freplacel $F $A $B
 }
-
-# create a 'sources' directory in build directory
-# copy fpga.cpp template file to be modified accordingly
-file mkdir $::Syfala::BUILD_DIR/sources
-file copy -force $::Syfala::ARCH_FPGA_TEMPLATE $::Syfala::BUILD_DIR/sources
 
 # retrieve number of I/O channels from Faust macro definitions
 # in the generated syfala_ip.cpp file
@@ -196,10 +190,8 @@ freplacel $f "static float fcontrol\[FAUST_REAL_CONTROLS\]"                 \
 # -----------------------------------------------------------------------------
 # call syfala maker
 # -----------------------------------------------------------------------------
-
-exec $::Syfala::SCRIPTS_DIR/syfala_maker.tcl $::runtime::nchannels_i        \
-                                             $::runtime::nchannels_o        \
-                                             $channels_max                  \
-                                             $::arguments::board            \
-                                             >&@stdout
-
+# if we don't use an external block-design, source syfala_maker
+# in order to create the appropriate i2s and project source files
+if {$::runtime::external_bd == 0} {
+    source $::Syfala::SCRIPTS_DIR/syfala_maker.tcl
+}

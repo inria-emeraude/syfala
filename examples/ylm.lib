@@ -1,0 +1,259 @@
+declare name        "Spherical Harmonics library";
+declare version     "1.1";
+declare author      "Pierre Lecomte";
+declare license     "CC-BY-NC-SA-4.0";
+declare copyright   "(c) Pierre Lecomte 2017"; 
+
+// Changelog
+// (2022-09-12) v1.1
+// - sylm, syacn, syvec functions for azimuth-smoothed SH signals.
+// (2021-04-24)
+// - Revert to azimuth-elevation spherical coordinate system $(\theta, \phi)$.
+// (2020-07-14)
+// - Change order $m$ by degree $l$ and degree $n$ by order $l$.
+// - Spherical coordinate system with zenith angle $\phi$.
+// (2018-07-17)
+// Initial release according to [^ambitools]
+
+
+//#################################### ylm.lib ########################################
+// A library to compute real N3D[^n3d] Spherical Harmonics at arbitrary degree $l$ and
+// order $m$, according to the following formula:
+//
+// $$\begin{equation}
+// Y_{l,m}(\theta, \phi) =
+//    \left\lbrace 
+//        \begin{aligned}
+//            N_{l,m} P_l^m\left(\sin(\phi)\right) 
+//            \cos(m \theta) & & \text{for} & & m \geq 0 \\
+//            N_{l,m} P_l^m\left(\sin(\phi)\right) \sin(m \theta)  & & \text{for} & & m < 0  
+//       \end{aligned} 
+//   \right.,
+// \label{eq:sph}
+// \end{equation}$$
+//
+// where  $P_l^m$ are the associated Legendre polynomial of the first kind of 
+// degree $l$ and order $m$, with $\{(l,m) \in (\mathbb{N}, \mathbb{Z}) ~|~ |m| \leq l\}$. The Condon-Shortley Phase is not included, and the  ACN convention[^acn] is used. 
+// $N_{l,m}$ is the "N3D" normalization factor ensuring the orthonormality of the SHs on the unit sphere[^def]. 
+// It is given by:
+// \begin{equation}
+// N_{l,m} = \sqrt{(2- \delta_m) (2 l + 1)\frac{(l-|m|)!}{(l+|m|)!}},
+// \label{eq:norm}
+// \end{equation}
+// where $\delta_m$ is the Kronecker delta function.
+// Details of implementation are given in[^ambitools] 
+// (Note that spherical coordinate system and notations differ in[^ambitools])
+//
+// [^ambitools]: P. Lecomte, « Ambitools: Tools for Sound Field Synthesis with Higher Order Ambisonics - V1.0 », in International Faust Conference, Mainz, 2018, p. 1‑9.
+// [^n3d]: T. Carpentier, « Normalization schemes in Ambisonic: does it matter? », in Audio Engineering Society Convention 142, Berlin, 2017.
+// [^def]: E. G. Williams, Fourier Acoustics: Sound Radiation And Nearfield Acoustical Holography. London: Academic Press, 1999.
+// [^acn]: Nachbar, C., Zotter, F., Deleflie, E., & Sontacchi, A, Ambix - A suggested ambisonics format, in Ambisonics Symposium, Lexington, 2011.
+// [^zotter]: F. Zotter, M. Zaunschirm, M. Frank, et M. Kronlachner, « A beamformer to play with wall reflections: The icosahedral loudspeaker », Computer Music Journal, vol. 41, nᵒ 3, p. 50‑68, 2017.
+//########################################################################################
+
+//=============================Functions========================================
+//==============================================================================
+
+import("stdfaust.lib");
+
+//---`factorial(m)`---
+// Computes the factorial $m!$ of integer $m$.
+//---
+factorial(m) = ma.gamma(m+1);
+
+
+//---`factorial2(m)`---
+// Computes the double factorial $m!!$ of integer $m$.
+//---
+// From https://mathworld.wolfram.com/DoubleFactorial.html Eq. (5)
+factorial2(m) = 2^(m/2 + 1/4*(1 - cos(m*ma.PI)))*ma.PI^(1/4*(-1 + cos(m*ma.PI)))*ma.gamma(1+m/2);
+
+
+//---`legendre(l,x)`---
+// Computes the Legendre polynomial $P_{l}(x)$ of degree $l$.
+//---
+legendre(l,x) = case{
+                (0) => 1;
+                (1) => x;
+                (l) => ((2*l-1)*x*legendre(l-1,x) - (l-1)*legendre(l-2,x))/l;
+                }(l);
+
+
+//---`alegendre(l,x)`---
+// Computes the associated Legendre polynomial $P_{l,m}(x)$ of degree $l$ and order $m$.
+//---
+alegendre(l,m,x) =  case{
+                (1,0,1) => 1; // special case to avoid evaluate factorial2(-1)
+                (1,0,0) => factorial2(2*l-1)*(1-x^2)^(l/2); // (1)^m not included here
+                (0,1,0) => x*(2*l-1)*alegendre(l-1,l-1,x);
+                (0,0,0) => 1/(l-m)*((2*l-1)*x*alegendre(l-1,m,x)-(l-1+m)*alegendre(l-2,m,x));
+                }(m==l,m==(l-1),l==0);
+
+
+//---`chebychev2(m,x)`---
+// Computes the Chebyshev polynomial $U_m(x)$ of $2^{\text{nd}}$ kind.
+//---
+chebyshev2(m,x) = case{
+                (0) => 1;
+                (1) => 2*x;
+                (m) => 2*x*chebyshev2(m-1,x) - chebyshev2(m-2,x);
+                }(m);
+
+
+//---`n3d(l,m)`---
+// Computes the "N3D" norm $N_{l,|m|}$ of Eq. \eqref{eq:norm}.
+//---
+n3d(l,m) =  sqrt((2*l+1)*factorial(l-abs(m))/factorial(l+abs(m)))*
+            case{
+            (0) => 1;
+            (m) => sqrt(2);
+            }(m);
+
+
+//---`ylm(l,m,t,p)`---
+// Computes the N3D real Spherical Harmonic $Y_{l,m}(\theta,\phi)$ of Eq. \eqref{eq:sph}.
+//---        
+ylm(l,m,t,p) = n3d(l,m)*alegendre(l,abs(m),sin(p))*
+            case{
+            //(1) => sin(abs(m)*t);
+            (1) => chebyshev2(abs(m)-1,cos(t))*sin(t); // [8];
+            //(0) => cos(abs(m)*t);
+            (0) => ma.chebychev(abs(m),cos(t)); // [8]
+            }(m<0);
+            
+//---`acn(l,m)`---
+// Computes the Ambisonic Channel Number (ACN)[^acn] from indexes $(l,m)$:
+//
+// $$\begin{equation}
+//   \left\lbrace
+//   \begin{aligned}
+//      &\text{ACN}(l,m) = i = l^2 + l + m \\
+//        &m = \lfloor \sqrt{i} \rfloor \\
+//        &l = i - m^2 - m
+//   \end{aligned}
+//   \right.
+// \label{eq:acn}
+// \end{equation}$$
+//
+// In Eq. \eqref{eq:acn}, $\lfloor \cdot \rfloor$ is the floor function.
+//---
+acn(l,m)=l^2+l+m;
+
+//---`yacn(i,t,p)`---
+// Computes the $i^\text{th}$ N3D real Spherical Harmonic $Y_i(\theta,\phi)$ with ACN $i$.
+//---
+yacn(i,t,p) = ylm(l,m,t,p) with 
+            {
+                l = int(sqrt(i));
+                m = int(i - l^2 -l);
+            };
+
+//---`yvec(imax,t,p)`---
+// Vector of Spherical Harmonics $\mathbf{y}(\theta,\phi)$. 
+// A signal bus of dimensions $i_\text{max}$ is multiplied with the corresponding Spherical Harmonics, 
+// i.e., the $i^\text{th}$ signal is multiplied with $Y_i(\theta,\phi)$.
+//---
+yvec(imax,t,p) = par(i,imax,_*yacn(i,t,p));
+
+//---`costheta(t1,p1,t2,p2)`---
+// Cosine of angle $\Theta$ between directions $(\theta_1,\phi_1)$ and $(\theta_2,\phi_2)$ such that:
+//
+// $$ \cos(\Theta) = \cos(\phi_1)\cos(\phi_2)\cos(\theta_1 - \theta_2) + \sin(\phi_1) \sin(\phi_2)$$
+//
+//---
+costheta(t1,p1,t2,p2) = cos(p1)*cos(p2)*cos(t1-t2) + sin(p1)*sin(p2);
+
+//  BEGIN of Ambisonic decoder toolbox functions
+/*
+Copyright (c) 2013-2019, Aaron J. Heller
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+1. Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+//---`buswg(c)`---
+// Apply the gains defined in the list `c` to the input bus. Useful for matrix multiplication.
+//---
+buswg(c) = R(c) with {
+  R((c,cl)) = R(c),R(cl);
+  R(1)      = _;
+  R(0)      = !:0;
+  R(float(0)) = R(0);
+  R(float(1)) = R(1);
+  R(c)      = *(c);
+};
+
+//---`sup(c)`---
+// Returns the maximum of input bus.
+//---
+sup(c) = R(c) with {
+ R((c,cl)) = max(R(c),R(cl));
+ R(c)      = c;
+};
+// END OF of Ambisonic decoder toolbox functions
+
+
+//---`wre(lmax, l1, l)`---
+// For a on-axis normalized max-$r_E$ beampattern at degree $L$, the weights at degree $l$, denoted $w_L(l)$ are given by[^zotter]:
+//
+// $$\begin{equation}
+//   w_{\text{max-}r_E,l}(L) = \left\lbrace
+//   \begin{aligned}
+//        &\frac{P_l\left(\cos\left(\frac{137.9^\circ}{L + 1.51}\right)\right)}{\sum_\limits{i=0}^{L} (2 i + 1) P_i\left(\cos\left(\frac{137.9^\circ}{L + 1.51}\right)\right)} & \text{for } & l \leq L \\
+//        &0 & \text{for } & l > L
+//   \end{aligned}
+//   \right.
+// \label{eq:acn2}
+// \end{equation}$$
+//
+//
+// - `lmax`: maximum degree needed at compilation time: If `l1 > lmax`, then `wre(lmax, l1, l) = 0`.
+// - `l1`: beampattern degree,
+// - `l`: required degree.
+//
+//---
+wre(lmax, l1, l) = legendre(l,cos(137.9 * ma.PI / 180 / (l1 + 1.51))) / sum(ll, lmax + 1, (2 * ll + 1) * legendre(ll, cos(137.9 * ma.PI / 180 / (l1 + 1.51))) * (ll <= l1)) * (l <= l1);
+               
+//---`vecwre(lmax,l)`---
+// Vector of on-axis normalized max-$r_E$ beampattern weights.
+//
+// - `lmax`: maximum degree needed at compilation time: If `l1 > lmax`, then `wre(lmax, l1, l) = 0`.
+// - `l1`: beampattern degree.
+//
+//---
+vecwre(lmax, l1) = par(l, lmax + 1, par(m, 2*l + 1, wre(lmax, l1, l)));
+
+//---`maxre(lmax,l1)`---
+// Vector of on-axis normalized max-$r_E$ beampattern weights.
+// The beampattern degree is `l1` and its steering angle $(\theta_0, \phi_0)$
+//
+// - `lmax`: maximum degree needed at compilation time: If `l1 > lmax`, then `wre(lmax, l1, l) = 0`.
+// - `l1`: beampattern degree.
+//
+//---
+maxre(lmax, l1, t0, p0) = par(l, lmax + 1, par(m, 2*l + 1, wre(lmax, l1, l))) : yvec((lmax +1)^2, t0, p0);

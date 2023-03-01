@@ -41,11 +41,13 @@
 #include <syfala/arm/spips.h>
 #include <syfala/arm/iic_config.h>
 #include <syfala/arm/uart-interface.hpp>
+#include <syfala/arm/utils.h>
 
 
 #include <faust/gui/meta.h>
 #include <faust/dsp/one-sample-dsp.h>
 #include <faust/gui/DecoratorUI.h>
+
 
 /* Faust IP configuration */
 #define FAUST_UIMACROS 1
@@ -59,6 +61,10 @@
 #define FAUST_ADDNUMENTRY(l,f,i,a,b,s)
 #define FAUST_ADDVERTICALBARGRAPH(l,f,a,b)
 #define FAUST_ADDHORIZONTALBARGRAPH(l,f,a,b)
+
+/* Define the maximum number of ADAU1787 that can be connected
+ * It depends of the available addresses */
+#define MAX_EXTERNAL_1787 16
 
 /* DDR zone coherent with linker script lscript.ld */
 
@@ -89,6 +95,9 @@
 using namespace std;
 
 XUartPs Uart_Ps;        // The instance of the UART Driver
+uint16_t codec_IIC_addr; //global addr to set the address of the currently configured codec just once
+XIicPs Iic0;		/* Instance of the IIC_0 Device */
+XIicPs Iic1;		/* Instance of the IIC_1 Device */
 
 // The Faust compiler will insert the C++ code here
 <<includeIntrinsic>>
@@ -137,52 +146,6 @@ struct ARMControlUIBase : public GenericUI {
     // -- passive widgets
     void addHorizontalBargraph(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT min, FAUSTFLOAT max) {}
     void addVerticalBargraph(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT min, FAUSTFLOAT max) {}
-
-    void printParams()
-    {
-        //xil_printf("\n");
-        xil_printf("\033[10;0H"); // Move cursor to (0, 0)
-        xil_printf("\e[?25l"); // hide cursor (prevent the cursor from flashing anywhere)
-        int nbParams = fControlIn.size();
-        for (int index = 0; index < nbParams; index++) {
-            xil_printf("/----------------\\ ");
-        }
-        xil_printf("\n");
-        for (int index = 0; index < nbParams; index++) {
-            xil_printf("|\e[3%dm %-15d \e[0m|", index+1, index);
-        }
-        xil_printf("\n");
-
-        int index = 0;
-        for (const auto& item : fControlIn) {
-            xil_printf("|\e[3%d;1m %-15.15s \e[0m|", index+1, item.second.fLabel.c_str());
-            index++;
-        }
-        xil_printf("\n");
-
-        index = 0;
-        for (const auto& item : fControlIn) {
-            xil_printf("|\e[3%d;1m %-15.6f \e[0m|", index+1, *item.second.fZone);
-            index++;
-        }
-        xil_printf("\n");
-        for (int index = 0; index < nbParams; index++) {
-            xil_printf("\\________________/ ");
-        }
-        xil_printf("\n Try to enlarge the terminal if the display is flickering (and relaunch) \n");
-        xil_printf("\e[?25h"); // show the cursor
-    }
-
-    void sendParamsServer()
-    {
-        int index = 0;
-        for (const auto& item : fControlIn) {
-            xil_printf("%f/", *item.second.fZone);
-            index++;
-        }
-        xil_printf("\r\n");
-        usleep(100000);
-    }
 
     virtual void update() {}
 
@@ -365,7 +328,7 @@ struct ARMController {
 
     //switch on LEDs 0b101
     XGpio_DiscreteWrite(&gpioLED, 2, OK_LED);	//write data to the LEDs
-    xil_printf("Ready! \n\r");
+    PRINT_INFO("Ready! \n\r");
   }
 
   ~ARMController()
@@ -412,38 +375,41 @@ struct ARMController {
 	XUartPs_Config *Config;
 	Config = XUartPs_LookupConfig(XPAR_XUARTPS_0_DEVICE_ID);
 	if (NULL == Config) {
-		xil_printf("Error while XUartPs_LookupConfig\n");
+		PRINT_INFO("Error while XUartPs_LookupConfig\n\r");
 	}
 	int Status = XUartPs_CfgInitialize(&Uart_Ps, Config, XPAR_XUARTPS_0_BASEADDR);
 	if (Status != XST_SUCCESS) {
-		xil_printf("Error while XUartPs_CfgInitialize\n");
-	} else {
-		xil_printf("UART OK\n");
+		PRINT_INFO("Error while XUartPs_CfgInitialize\n\r");
 	}
 	XUartPs_SetBaudRate(&Uart_Ps, 115200);
+  PRINT_INFO("\n\n\r[UART] Init Done\n\r");
+
   }
   void init_ip()
   {
+    PRINT_INFO("[SYFALA IP] Init... ");
+
 #ifndef __linux__
     XSyfala_Config* xsyfala_Ptr = XSyfala_LookupConfig(XPAR_XSYFALA_0_DEVICE_ID);
     if (!xsyfala_Ptr) {
-      xil_printf("ERROR: Lookup of Faust v6 failed.\n\r");
+      PRINT_INFO("ERROR: Lookup of Faust v6 failed.\n\r");
     }
 
     // Initialize the device
     if (XSyfala_CfgInitialize(&xsyfala, xsyfala_Ptr) != XST_SUCCESS) {
-      xil_printf("ERROR: Could not initialize Faust v6.\n\r");
+      PRINT_INFO("ERROR: Could not initialize Faust v6.\n\r");
     }
 
     // Initialize with other function (not sure if it's useful)
     if (XSyfala_Initialize(&xsyfala, XPAR_XSYFALA_0_DEVICE_ID) != XST_SUCCESS) {
-      xil_printf("ERROR: Could not initialize Faust v6.\n\r");
+      PRINT_INFO("ERROR: Could not initialize Faust v6.\n\r");
     }
 #else
     if (XSyfala_Initialize(&xsyfala, "xsyfala") != XST_SUCCESS) {
-        xil_printf("Error while initializing xsyfala\n");
+        PRINT_INFO("Error while initializing xsyfala\n\r");
     }
 #endif
+    PRINT_INFO("Done\n\r");
   }
 
 #if (SYFALA_MEMORY_USE_DDR == 1)
@@ -453,7 +419,7 @@ struct ARMController {
     iZone = (int*)(ddr_ptr);
     fZone = (float*)(ddr_ptr + FAUST_INT_ZONE);
 
-    xil_printf("\r\nErase memory ");
+    PRINT_INFO("[DDR] Erase memory");
 
     reset_ddr();		//Write zeros everywhere
 
@@ -479,33 +445,94 @@ struct ARMController {
   void init_spi()
   {
     // initializing SPI driver
-    xil_printf("Init SPI... ");
+    PRINT_INFO("[SPI] Init... ");
     int Status = SpiPs_Init(XPAR_XSPIPS_0_DEVICE_ID);
-    if (Status == XST_SUCCESS) xil_printf("OK\r\n");
-    else xil_printf("Initialization error\r\n");
+    if (Status == XST_SUCCESS) PRINT_INFO("Done\r\n");
+    else PRINT_INFO("Initialization error\r\n");
   }
 
   void init_audio()
   {
-    xil_printf("Init Audio Codec... ");
-    // Initialize IIC controller
-    if (fnInitIic() != XST_SUCCESS) {
+    PRINT_INFO("[I2C AUDIO] Init... \r\n");
+
+    // Initialize IIC_0 controller
+    if (initIic(&Iic0, XPAR_XIICPS_0_DEVICE_ID) != XST_SUCCESS) {
        XGpio_DiscreteWrite(&gpioLED, 2, ERROR_LED);
-       xil_printf("Error initializing I2C controller");
+       PRINT_INFO("[I2C AUDIO] Error initializing I2C_0 controller\n\r");
     }
+    // Initialize IIC_1 controller
+    if (initIic(&Iic1, XPAR_XIICPS_1_DEVICE_ID) != XST_SUCCESS) {
+       XGpio_DiscreteWrite(&gpioLED, 2, ERROR_LED);
+       PRINT_INFO("[I2C AUDIO] Error initializing I2C_1 controller\n\r");
+    }
+    // Interrupt mode for IIC_1 (Polled mode for IIC_0)
+  /*  if (initIicInterrupt(&Iic1) != XST_SUCCESS) {
+       XGpio_DiscreteWrite(&gpioLED, 2, ERROR_LED);
+       PRINT_INFO("[I2C AUDIO] Error initializing I2C_1 Interrupt\n\r");
+    }*/
+
+    PRINT_DEBUG("[I2C AUDIO] I2Cs initialized\n\r");
 
 #if SYFALA_BOARD_GENESYS
-    // Initialize Audio I2S
-    if (GenCodecSetConfig() != XST_SUCCESS) {
-        xil_printf("Audio initializing ERROR");
+    // Initialize ADAU1761
+    codec_IIC_addr = IIC_GENESYS_SLAVE_ADDR;
+    if (ADAU1761SetConfig() != XST_SUCCESS) {
+        PRINT_INFO(" >[ADAU1761] Audio Codec initializing ERROR\n\r");
     }
+    else PRINT_INFO(" >[ADAU1761] Init done\n\r");
 #elif SYFALA_BOARD_Z10 || SYFALA_BOARD_Z20
+    // Initialize SSM2603
     if (SSMSetConfig(SYFALA_SSM_VOLUME, SSM_R07, SSM_R08)!= XST_SUCCESS) {
         XGpio_DiscreteWrite(&gpioLED, 2, ERROR_LED);
-        xil_printf("ERROR: SSMSetConfig failed.\n\r");
+        PRINT_DEBUG(" >[SSM2603] ERROR: SSMSetConfig failed.\n\r");
     }
-    //else xil_printf("OK\r\n");
+    else PRINT_INFO(" >[SSM2603] Init done\n\r");
 #endif
+
+// Initialize ADAU1777
+PRINT_DEBUG("\n >[ADAU1777] Searching for connected devices...\n\r");
+int nb_codec77_found=0;
+
+for (int i=0;i<4; i++) {
+  codec_IIC_addr = (IIC_ADAU1777_SLAVE_ADDR_0+i);
+  PRINT_DEBUG("\n");
+
+  if (ADAU1777SetConfig() != XST_SUCCESS) {
+      PRINT_DEBUG(" >[ADAU1777]-0x%02x Audio Codec initializing ERROR\n\r",codec_IIC_addr);
+  }
+  else {
+    PRINT_DEBUG(" >[ADAU1777]-0x%02x Init done\n\r",codec_IIC_addr);
+    nb_codec77_found++;
+  }
+}
+PRINT_DEBUG("\n");
+PRINT_INFO(" >[ADAU1777] %d codecs found \n\r",nb_codec77_found);
+
+ // Initialize ADAU1787
+  PRINT_DEBUG("\n >[ADAU1787] Searching for connected devices...\n\r");
+  int nb_codec87_found=0;
+
+  for (int i=0;i<MAX_EXTERNAL_1787; i++) {
+    codec_IIC_addr = (((i/4)<<8) | (IIC_ADAU1787_SLAVE_ADDR_0+(i%4)));
+    PRINT_DEBUG("\n");
+
+    if (ADAU1787BootSequence() != XST_SUCCESS) {
+        PRINT_DEBUG(" >[ADAU1787]-0x%04x Audio Codec boot ERROR\n\r",codec_IIC_addr);
+    }
+    else if (ADAU1787SetConfig() != XST_SUCCESS) {
+        PRINT_DEBUG(" >[ADAU1787]-0x%04x Audio Codec initializing ERROR\n\r",codec_IIC_addr);    }
+    else {
+      PRINT_DEBUG(" >[ADAU1787]-0x%04x Init done\n\r",codec_IIC_addr);
+      nb_codec87_found++;
+    }
+  }
+  PRINT_DEBUG("\n");
+  PRINT_INFO(" >[ADAU1787] %d codecs found \n\r",nb_codec87_found);
+  int tot_codec_found=(nb_codec77_found+nb_codec87_found);
+  if (get_max(FAUST_INPUTS,FAUST_OUTPUTS)/2>tot_codec_found) PRINT_INFO("[I2C AUDIO] WARNING: Not enough external codecs (%d codecs=%d channels) to satisfy the DSP channels need (%d) \n\r",tot_codec_found,tot_codec_found*2,get_max(FAUST_INPUTS,FAUST_OUTPUTS));
+
+  PRINT_INFO("[I2C AUDIO] Init Done\n\r");
+
   }
 
  void reset_ddr(void)
@@ -520,13 +547,13 @@ struct ARMController {
 			for (uint32_t j = i; j < i+DDR_CLEAR_STEP; j+=4) {
 				Xil_Out32(FRAME_BUFFER_BASEADDR+j, (int)0);
 			}
-            xil_printf(".");
+            PRINT_INFO(".");
         /* Note: use xil_printf instead of printf:
            https://support.xilinx.com/s/question/0D52E00006hpTbUSAU/xil_printf-vs-xilxil_printf?language=en_US */
 		}
 		Xil_DCacheFlush();
 		Xil_DCacheDisable();
-		xil_printf("OK \r\n");
+		PRINT_INFO(" Done\r\n");
 
   }
 
@@ -544,10 +571,11 @@ struct ARMController {
       rgbState=WARNING_LED;
       ledState |= (timer<5000?0:1) << 0;
     }
-    /* if bypass enable, LED 1 flash and WARNING, else LED 1 off */
+    /*  if bypass enable and there is no inputs:ERROR_LED, else if bypass: LED 1 flash and WARNING, else LED 1 off */
     if (!(XGpio_DiscreteRead(&gpioSW, 1) & 1 << 1)) ledState |= 0 << 1;
     else{
-      rgbState=WARNING_LED;
+      if (FAUST_INPUTS == 0 ) rgbState=ERROR_LED;
+      else  rgbState=WARNING_LED;
       ledState |= (timer<5000?0:1) << 1;
     }
     /* if SSM selected on incompatible config, LED 2 flash, else LED 2 on when ADAU selected*/

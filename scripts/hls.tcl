@@ -13,7 +13,11 @@ open_solution -reset "syfala" -flow_target vivado
 
 set_part [Xilinx::get_board_part $BOARD]
 
-create_clock -period 8.137634
+if { $BOARD == "Z10" || $BOARD == "Z20" } {
+  create_clock -period 8.137634
+} elseif { $BOARD == "GENESYS" } {
+  create_clock -period 8.138352
+}
 #create_clock -period 1.355932
 #csim_design
 csynth_design

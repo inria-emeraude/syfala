@@ -64,7 +64,8 @@
 /* ######################## Sample rate ############################### */
 /**
   * @brief Change sample rate value (Hz).
-  *	Only 48k and 96k is available for SSM embeded codec
+  *	Only 96k and lower is available for SSM embeded codec
+  *     24000
   *	 	48000 (default)
   *	 	96000
   *	 	192000 (ADAU1777 and ADAU1787 only)

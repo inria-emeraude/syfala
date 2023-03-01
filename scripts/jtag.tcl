@@ -11,7 +11,8 @@ namespace import Syfala::*
 
 
 set BOARD [lindex $argv 0]
-set TEMP_XILINX_ROOT "/home/Xilinx"  ;#Don't know how to fetch the path directrly
+set XILINX_ROOT [lindex $argv 1]  ;#Don't know how to fetch the path directrly
+
 
 if { $BOARD == "Z10" || $BOARD == "Z20" } {
 	set targetName "*A9*#0"
@@ -20,7 +21,7 @@ if { $BOARD == "Z10" || $BOARD == "Z20" } {
 } elseif { $BOARD == "GENESYS" } {
 	set targetName "*A53*#0"
 	set address "{0x80000000 0xbfffffff} {0x400000000 0x5ffffffff} {0x1000000000 0x7fffffffff}"
-	source $TEMP_XILINX_ROOT/Vitis/2020.2/scripts/vitis/util/zynqmp_utils.tcl
+        source $XILINX_ROOT/Vitis/2020.2/scripts/vitis/util/zynqmp_utils.tcl
 } else {
 	print_error "Invalid Zybo version, aborting..."
 	exit 2;

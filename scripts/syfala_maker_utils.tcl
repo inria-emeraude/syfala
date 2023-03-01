@@ -1,9 +1,11 @@
 #-------------------------------------------------------------------------------------------------------------------------------------------------------
-#------------------- replace_right_left------------------------------------------
+#-------------------generate_I2S_file------------------------------------------
 # Function to generate i2s_transceiver.vhd with automatic In/Out channels number adjustment.
 # Replace all "right_" and "left_" words with "ch0, ch1, ch2,..."
 # Can handle nested "if" only if the nested conditions don't imply "right" or "left"
-proc replace_right_left {input_file output_file channelNb} {
+# AND write the generic header with the right ratio values
+# (Easier to do all in one function to avoid processing the file twice)
+proc generate_I2S_file {input_file output_file channelNb header_generic} {
 	set ifStatement false
 	set ifLevel 0
 	while {[gets $input_file line] >= 0} {
@@ -18,9 +20,9 @@ proc replace_right_left {input_file output_file channelNb} {
 				set ifStatement false
 				for {set i 0} {$i < $channelNb} {incr i 2} {
 					foreach ifLine [split $ifBloc \n] {
-						set newline [string map "right ch$i" $ifLine]
+						set newline [string map "left ch$i" $ifLine]
 						set increment [expr {$i + 1}]
-						set newline [string map "left ch$increment" $newline]
+						set newline [string map "right ch$increment" $newline]
 						puts $output_file $newline
 					}
 				}
@@ -28,20 +30,22 @@ proc replace_right_left {input_file output_file channelNb} {
 
 
 		} else {
-			if {([string first "right_" $line] != -1 || [string first "left_" $line] != -1) && [ string first "end if" $line] == -1 } {
+			if {([string first "left_" $line] != -1 || [string first "right_" $line] != -1) && [ string first "end if" $line] == -1 } {
 				if {[string match "if*" [string trim $line]]} { ;#if we're in a if statement, wait for the end of statement and copy all the bloc.
 					set ifStatement true
 					set ifLevel 1
 					set ifBloc "$line\n"
 				} else {
 					for {set i 0} {$i < $channelNb} {incr i} {
-						set newline [string map "right ch$i" $line] ;# Use "", not {·} in map for var: https://community.f5.com/t5/technical-forum/string-map-does-it-accept-variables/td-p/208031
+						set newline [string map "left ch$i" $line] ;# Use "", not {·} in map for var: https://community.f5.com/t5/technical-forum/string-map-does-it-accept-variables/td-p/208031
 						incr i
-						set newline [string map "left ch$i" $newline]
+						set newline [string map "right ch$i" $newline]
 						puts $output_file $newline
 					}
 				}
-			} else {
+			} elseif {[string first "<<GENERIC_HEADER>>" $line] != -1} {
+			            puts $output_file $header_generic
+			}  else {
 				puts $output_file $line
 			}
 		}

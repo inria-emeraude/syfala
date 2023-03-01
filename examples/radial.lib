@@ -1,0 +1,375 @@
+declare name        "Radial Filters library";
+declare version     "1.1";
+declare author      "Pierre Lecomte";
+declare license     "CC-BY-NC-SA-4.0";
+declare copyright   "(c) Pierre Lecomte 2018";
+
+import("stdfaust.lib");
+import("ylm.lib"); // for factorial2(m)
+
+// Changelog
+// (2021-04-24)
+// - Revert to azimuth-elevation spherical coordinate system $(\theta, \phi)$.
+// (2020 09 12)
+// - Change order $m$ by degree $l$.
+// - FOS and SOS coefficients up to $L=10$.
+
+//#################################### radial.lib #######################################
+// Library of radials filters used with Ambisonics up to degree $L = 10$.
+// - Near-Field (NF) filters
+// - Near-Field Compensation (NFC) filters
+// - Rigid sphere diffraction filters
+//
+// ## Theoretical background
+// ### Near-Field filters
+// The Ambisonics components for a point source (spherical wave) with signal $S$, at wavenumber $k = \frac{2 \pi f}{c}$ ($f$ being the frequency and $c$ the sound speed), and located at $(r_s, \theta_s, \phi_s)$ are given by:
+//
+// $$\begin{equation}
+// B_{l,m} = S F_{l}(k r_s) Y_{l,m}(\theta_s, \phi_s),
+// \label{eq:blm}
+// \end{equation}$$
+//
+// In Eq. \eqref{eq:blm} $F_{l}(k r_s)$ is the Near-Field (NF) filter[^daniel] at degree $l$, radius $r_s$, given by:
+//
+// $$\begin{equation}
+// F_{l}(k r_s) = \frac{e^{- i k r_s}}{r_s} \sum_{n=0}^{l} \frac{(-i)^n}{l! (kr_s)^n}\frac{(l+n)!}{(l-n)!},
+// \label{eq:nf}
+// \end{equation}$$
+//
+// where $i = \sqrt{-1}$.
+//
+// <div style="width:65%; margin:0 auto;" align="center" markdown="1">
+// {% figure caption: "Near-Field filters for $r_s = 1$ m." label:nf%}
+// ![Image]({{site.baseurl}}/assets/docs/nf.png){:.rounded.border.shadow}
+// {%endfigure%}
+// </div>
+// An illustration of $F_{l}$ is shown in Fig. {% figref nf %} for $r = 1$ m and $l \in \\{0, 1, 2, 3, 4, 5\\}$.
+// The filters $F_{l}$ are not feasible as such as they present a infinite gain at $k r_s = 0$. 
+// 
+// ### Near-Field Compensation filters
+// Consider a loudspeaker array with $N$ loudspeaker, modeled as point source. For this array, the decoder matrix is denoted $\mathbf{D} \in \mathbb{R}^{(L+1)^2 \times N}$ and is working up to degree $L$. 
+// The driving signal of the $n$-th loudspeaker, located at a radial distance $r_\text{spk}$ is denoted $s_n$. It is given at wavenumber $k$ by:
+//
+// $$\begin{equation}
+// s_n = \sum_{l=0}^L \frac{1}{F_l(k r_\text{spk})} \sum_{m=-l}^l D_{n, l, m} B_{l, m}
+// \label{eq:spk}
+// \end{equation},$$
+//
+// where $\frac{1}{F_l(k r_\text{spk})}$ is the Near-Field Compensation (NFC) filter[^daniel] at degree $l$, and $D_{n, l, m}$ is the $(l, m)$ term of the $n$-th row of the matrix $\mathbf{D}$.
+//
+// <div style="width:65%; margin:0 auto;" align="center" markdown="1">
+// {% figure caption: "Near-Field Compensation filters for $r_s = 3$ m." label:nfc%}
+// ![Image]({{site.baseurl}}/assets/docs/nfc.png){:.rounded.border.shadow}
+// {%endfigure%}
+// </div>
+// An illustration of $F_{l}$ is shown in Fig. {% figref nfc %} for $r_\text{spk} = 3$ m and $l \in \\{0, 1, 2, 3, 4, 5\\}$.
+// The NFC filters are accessible with the function [`nfc`](#nfclr). Note that the negative delay $e^{i k r_\text{spk}}$ in Eq. \eqref{eq:nf} is not modeled in the current implementation.
+//
+// ### Stabilization of NF filters with NFC filters
+// In practice, the NF filters at radius $r_s$ are stabilized with the NFC filters at radius $r_\text{spk}$. 
+// <div style="width:65%; margin:0 auto;" align="center" markdown="1">
+// {% figure caption: "Ratio $\frac{F_l(k r_s)}{F_l(k r_\text{spk})}$ for $r_s = 3$ m and $r_\text{spk} = 1$ m." label:nfout%}
+// ![Image]({{site.baseurl}}/assets/docs/nfout.png){:.rounded.border.shadow}
+// {%endfigure%}
+// {% figure caption: "Ratio $\frac{F_l(k r_s)}{F_l(k r_\text{spk})}$ for $r_s = 1$ m and $r_\text{spk} = 3$ m." label:nfin%}
+// ![Image]({{site.baseurl}}/assets/docs/nfin.png){:.rounded.border.shadow}
+// {%endfigure%}
+// </div>
+// The resulting filters $\frac{F_l(k r_s)}{F_l(k r_\text{spk})}$ are shown for a $r_s > r_\text{spk}$ in Fig. {% figref nfout %} and $r_s < r_\text{spk}$ in Fig. {% figref nfin %}.
+//
+// In the latter case, note that the gain can be **extremely loud** at low frequencies and higher degrees $l$ and eventually damage the loudspeakers ! This is the so-called "Bass-Boost" effect[^daniel]. 
+// {:.warning}
+// The filters $\frac{F_l(r_s)}{F_l(r_\text{spk})}$ are accessible with the function [`nf`](#nflr1r2).
+//
+// ### Rigid sphere diffraction filters
+// When retrieving the Ambisonic components with a rigid Spherical Microphone Array (SMA) of radius $r_\text{sma}$, the rigid sphere diffraction has to be compensated. This is done by applying the filter $E_l$ as follows:
+//
+// $$\begin{equation}
+// B_{l,m} = E_l(k r_\text{sma}) p_{l,m}
+// \end{equation},$$
+//
+// where $p_{l,m}$ is the Spherical Fourier Transform (SFT) of the pressure measured on the SMA surface. The filters $E_l$ are given by:
+//
+// $$\begin{equation}
+// E_l(k r_\text{sma}) = i^{1 - l}(k r_\text{sma})^2 h'_l (k r_\text{sma}).
+// \end{equation}$$
+//
+// <div style="width:65%; margin:0 auto;" align="center" markdown="1">
+// {% figure caption: "Filters $E_l$ for $r_\text{sma} = 49$ mm" label:eq%}
+// ![Image]({{site.baseurl}}/assets/docs/eq.png){:.rounded.border.shadow}
+// {%endfigure%}
+// </div>
+// The filters $E_l(k r_\text{sma})$ are shown or $r_\text{sma} = 49$ mm and $l \in \\{0, 1, 2, 3\\}$ in Fig {% figref eq %}. They present an unreasonable amplification at low frequency and high degree $l$.
+// They are not feasible as they present a infinite gain a $k r_\text{sma} = 0$.
+//
+// ### Stabilization of rigid sphere diffraction filters with NFC filters
+// In practice, the filters $E_l$ at radius $r_\text{sma}$ are stabilized with the NFC filters at radius $r_\text{spk}$. 
+// <div style="width:65%; margin:0 auto;" align="center" markdown="1">
+// {% figure caption: "Ratio $\frac{E_l(k r_\text{sma})}{F_l(k r_\text{spk})}$ for $r_s = 0.5$ m and $r_\text{sma} = 49$ mm." label:eqnfc%}
+// ![Image]({{site.baseurl}}/assets/docs/eqnfc.png){:.rounded.border.shadow}
+// {%endfigure%}
+// </div>
+// The resulting filters $\frac{E_l(k r_\text{sma})}{F_l(k r_\text{spk})}$ are shown for a $r_\text{sma} = 49$ mm and $r_\text{spk} = 0.5$ m in Fig. {% figref eqnfc %}.
+//
+// Note that the gain can be **extremely loud** at low frequencies and higher degrees $l$. 
+// {:.warning}
+// The filters $\frac{E_l(r_\text{sma})}{F_l(r_\text{spk})}$ are accessible with the function [`eq`](#eqlr1r2).
+//
+// [^daniel]: J. Daniel, « Spatial sound encoding including near field effect: Introducing distance coding filters and a viable, new ambisonic format », in Audio Engineering Society Conference: 23rd International Conference: Signal Processing in Audio Recording and Reproduction, Helsingør, 2003.
+//######################################################################################
+
+
+//=============================Functions========================================
+//==============================================================================
+
+
+c = 340; // sound speed
+w(r) = 0.5 * c / (r * ma.SR);
+
+// Coefficients for FOS and SOS for F_l with 20 digits. WARNING: For each odd order, FOS comes first
+secF(1, 1)   =   (1, 1, 0);
+
+secF(2, 1)   =   (1, 3, 3);
+
+secF(3, 1)   =   (1, 2.3221853546260855929, 0);
+secF(3, 2)   =   (1, 3.6778146453739144071, 6.4594326934833653473);
+
+secF(4, 1)   =   (1, 4.2075787943592556632, 11.4878004768711997988);
+secF(4, 2)   =   (1, 5.7924212056407443368, 9.1401308902779310256);
+
+secF(5, 1)   =   (1, 3.6467385953296432597, 0);
+secF(5, 2)   =   (1, 6.7039127983070662860, 14.272480513279948265);
+secF(5, 3)   =   (1, 4.6493486063632904542, 18.156315313452237137);
+
+secF(6, 1)   =   (1, 8.4967187917267278899, 18.801130589570517411);
+secF(6, 2)   =   (1, 7.4714167126516293359, 20.852823177396347991);
+secF(6, 3)   =   (1, 5.0318644956216427742, 26.514025344068052456);
+
+secF(7, 1)   =   (1, 4.9717868585279356779, 0);
+secF(7, 2)   =   (1, 9.5165810563092578905, 25.666444752769034175);
+secF(7, 3)   =   (1, 8.1402783272762749434, 28.936546093263966238);
+secF(7, 4)   =   (1, 5.3713537578865314883, 36.596785156877450848);
+
+secF(8, 1)   =   (1, 11.1757720865261703980, 31.977225258279201354);
+secF(8, 2)   =   (1, 10.4096815812737638365, 33.934740085181713765);
+secF(8, 3)   =   (1, 8.7365784344048048141, 38.569253275096191935);
+secF(8, 4)   =   (1, 5.6779678977952609514, 48.432018652637095880);
+
+secF(9, 1)   =   (1, 6.2970191817149685378, 0);
+secF(9, 2)   =   (1, 12.2587358085485455756, 40.589267909914637799);
+secF(9, 3)   =   (1, 11.2088436390155628324, 43.646645753129244892);
+secF(9, 4)   =   (1, 9.2768797743607805933, 49.788502657376288447);
+secF(9, 5)   =   (1, 5.9585215963601424609, 62.041437621985133043);
+ 
+secF(10, 1)  =   (1, 13.8440898108544922308, 48.667548564148698918);
+secF(10, 2)  =   (1, 13.2305819309537405179, 50.582361562872006750); 
+secF(10, 3)  =   (1, 11.9350566571755716807, 54.839156202307484983);
+secF(10, 4)  =   (1, 9.7724391337179991598, 62.625585912537518586);
+secF(10, 5)  =   (1, 6.2178324672981964107, 77.442700531277433593);
+
+// Coefficients for 1st and 2nd order sections for E_l with 20 digits. WARNING: For each even order, FOS comes last. This procedure helps the implementation of Eq.37 in Radial_Filters.pdf
+secE(0, 1)   =   (1, 1, 0);
+
+secE(1, 1)   =   (1, 2, 2);
+
+secE(2, 1)   =   (1, 2.2167565719512513007, 5.0469834114840579821);
+secE(2, 2)   =   (1, 1.7832434280487486993, 0);
+
+secE(3, 1)   =   (1, 2.4037329195008024626, 9.8772142144938800908);
+secE(3, 2 )   =   (1, 4.5962670804991975374, 6.0745872972923539627);
+
+secE(4, 1)   =   (1, 5.3832867944767977670, 10.4110394732682762561);
+secE(4, 2)   =   (1, 2.5651183006117162280, 16.524880562433302232);
+secE(4, 3)   =   (1, 3.0515949049114860049, 0);
+
+secE(5, 1)   =   (1, 7.2605848253170709553, 13.9478547674454665087);
+secE(5, 2)   =   (1, 6.0318083252505300024, 16.248405251208010313);
+secE(5, 3)   =   (1, 2.7076068494323990423, 25.018709245986206833);
+
+secE(6, 1)   =   (1, 8.2194560046549150894, 19.969775062768702275);
+secE(6, 2)   =   (1, 6.5891550913521552220, 23.645611335708154734);
+secE(6, 3)   =   (1, 2.8357754344489018092, 35.379320022046638318);
+secE(6, 4)   =   (1, 4.3556134695440278794, 0);
+
+secE(7, 1)   =   (1, 9.9189760259295301276, 25.357965430902977764);
+secE(7, 2)   =   (1, 9.0470749588145724849, 27.419059898834012815);
+secE(7, 3)   =   (1, 7.0812315823788456368, 32.650032871550795225);
+secE(7, 4)   =   (1, 2.9527174328770517507, 47.621957636247279126);
+
+secE(8, 1)   =   (1, 10.9654671823982406750, 33.110913204697048332);
+secE(8, 2)   =   (1, 9.7801983704461354507, 36.339956434280834982);
+secE(8, 3)   =   (1, 7.5239253863350875613, 43.299413457802825802);
+secE(8, 4)   =   (1, 3.0605987807882796008, 61.758325613814196887);
+secE(8, 5)   =   (1, 5.6698102800322567122, 0);
+  
+secE(9,1)   =   (1, 12.5744597360595502226, 40.287505801708017502);
+secE(9,2)   =   (1, 11.8953574332293118355, 42.258813101069933082);
+secE(9,3)   =   (1, 10.4414336865307861281, 46.772345771802133873);
+secE(9,4)   =   (1, 7.9277563973133713570, 55.624283634428476986);
+secE(9,5)   =   (1, 3.1609927468669804567, 77.797701785579079508);
+
+secE(10,1)   =   (1, 13.6745122610479467020, 49.784985788603726121);
+secE(10,2)   =   (1, 12.7361783666828289639, 52.834812045904017480);
+secE(10,3)   =   (1, 11.0458156085737771211, 58.750914586690483455);
+secE(10,4)   =   (1, 8.3000868182951195276, 69.649789094091945674);
+secE(10,5)   =   (1, 3.2550792183729366116, 95.747635361500823968);
+secE(10,6)   =   (1, 6.9883277270273910738, 0);
+
+// Second order biquad with sum of past samples
+tf2sum(b0, b1, b2, a1, a2) = sub~sum1(a1, a2): sum2(b0, b1, b2)
+	with {
+		sum1(k1, k2, x) 	= x:(+~_<:((_':+~_),*(k1)):*(k2),_:+);
+		sum2(k0, k1, k2, x)  =x<:*(k0),+~_,_:_,(-<:*(k1),(_':+~_)*(k2):+):+;
+		sub(x, y)		= y - x;
+	};
+
+// nf filter second order section, stabilized with nfc corresponding second order section
+secNF(l,numsec,r1,r2) = _*g2(r1)/g2(r2):tf2sum(1,d21(r1),d22(r1),d21(r2),d22(r2))
+    with {
+        bp(r)   =   secF(l,numsec):(_*1,_*w(r),_*w(r)^2); // b' Coefficients
+        g2(r)   =   bp(r):(+,_):+; // g2 Coefficients
+        d21(r)  =   bp(r):(!,_*2,_*4):+/g2(r); // d21 Coefficients
+        d22(r)  =   bp(r):(!,!,_*4)/g2(r); // d22 Coefficients
+    };
+    
+// nfc filter second order section
+secNFC(l,numsec,r) = _*1/g2(r):tf2sum(1,0,0,d21(r),d22(r))
+    with {
+        bp(r)   =   secF(l,numsec):(_*1,_*w(r),_*w(r)^2); // b' Coefficients
+        g2(r)   =   bp(r):(+,_):+; // g2 Coefficients
+        d21(r)  =   bp(r):(!,_*2,_*4):+/g2(r); // d21 Coefficients
+        d22(r)  =   bp(r):(!,!,_*4)/g2(r); // d22 Coefficients
+    };
+    
+// nf filters by sequential composition of each section
+//---`nf(l,r1,r2)`---
+// Computes the filters $\frac{F_l(r_s)}{F_l(r_\text{spk})}$
+//---
+nf(0, r1, r2) = _*r2/r1;
+nf(l, r1, r2) = seq(i, ceil(l / 2), secNF(l, i+1, r1, r2))*r2/r1;
+
+
+// nfc filters by sequential composition of each section
+//---`nfc(l,r)`---
+// Computes the NFC filters $\frac{1}{F_l(r_\text{spk})}$
+//---
+nfc(0,r) = _ * r;
+nfc(l,r) = seq(i, ceil(l / 2), secNFC(l, i+1, r)) * r;
+
+
+// differenciator al-alaoui
+diff(r) = 1 / (2 * w(r)) * 8 / 7 * fi.tf2(1, -1, 0, 1/7, 0);
+
+secEQ(l,numsec,r1,r2) = _*g2E(r1)/g2F(r2):tf2sum(1,d21E(r1),d22E(r1),d21F(r2),d22F(r2))
+    with {
+        bpE(r)   =   secE(l,numsec):(_*1,_*w(r),_*w(r)^2); // b' Coefficients
+        g2E(r)   =   bpE(r):(+,_):+; // g2 Coefficients
+        d21E(r)  =   bpE(r):(!,_*2,_*4):+/g2E(r); // d21 Coefficients
+        d22E(r)  =   bpE(r):(!,!,_*4)/g2E(r); // d22 Coefficients
+              
+        bpF(r)   =   case{
+                    (0) => secF(l,numsec):(_*1,_*w(r),_*w(r)^2); // b' Coefficients
+                    (1) => (1,0,0); // to cancel the denominator
+                    }((l%2==0) & (numsec == ceil((l+1)/2))); // test if a feedback term is needed or not : if FOS for EQ no feedback, if SOS feedback see Eq. 37 for details
+                    
+        g2F(r)   =   bpF(r):(+,_):+; // g2 Coefficients
+        d21F(r)  =   bpF(r):(!,_*2,_*4):+/g2F(r); // d21 Coefficients
+        d22F(r)  =   bpF(r):(!,!,_*4)/g2F(r); // d22 Coefficients
+    };
+
+//---`eq(l,r1,r2)`---
+// Computes the filters $\frac{E_l(r_\text{sma})}{F_l(r_\text{spk})}$
+//---
+eq(l,r1,r2) =   diff(r1):seq(i,floor(l/2)+1,secEQ(l,i+1,r1,r2)) / r2; // divide by r2 not to modify amplitude because of nfc
+
+//---`delay(r)`---
+// Applies a delay corresponding to propagation time $\lceil r/c \rceil$.
+//---
+delay(r)  = d(r) with {
+ d(0) = _;
+ d(float(0)) = d(0);
+ d(r) = @(ceil(ma.SR * (r/c)));
+};
+
+//---`butter(n, i)`---
+// Returns the $i$-th sections coefficients of the $n$-th degree Butterworth polynomial $B_n(s)$.
+// The Butterworth polynomial is given for $n \in \mathbb{N}$ by:
+//
+// $$\begin{equation}
+// B_n(s) = (s+1)^{\text{mod}(n,2)} \prod_{j=1}^{\lfloor n/2 \rfloor} s^2 - 2 s \cos\left(\frac{2 j + n -1}{2n} \pi\right) + 1.
+// \label{eq:butter}
+// \end{equation}$$
+//
+//---
+butter(n, i) = case{
+                (0, 1, 1) => (1, 1, 0); // FOS for i=0 and odd degree
+                (0, 0, 1) => (1, -2 * cos((2 * i + n - 1) / (2 * n) * ma.PI), 1);
+                (1, 0, 1) => (1, -2 * cos((2 * i + n - 1) / (2 * n) * ma.PI), 1);
+                }(n%2==0, i==0, i <= floor(n/2)); 
+
+//---`fcnf(l, r, a)`---
+// Gives the frequency at which $20 \log_\text{10}(|F_{l}(2 \pi f_c r /c)|) = a$ dB.
+//---
+fcnf(l, r, a) = c / (2 * ma.PI * r) * (factorial2(2 * l - 1) / 10^(a / 20))^(1 / l);
+
+
+//---`fceq(l, r)`---
+// Gives the frequency at which $20 \log_\text{10}(|E_{l}(2 \pi f_c r /c)|) = a$ dB.
+//---
+fceq(l, r, a) = case{
+                    (0) => c / (2 * ma.PI * r) * ((factorial2(2 * l - 1) * (l + 1)) / 10^(a / 20))^(1 / l);
+                    (1) => 0; // for l=0
+                    }(l==0);
+
+secLRAP(n, fc, numsec) =  _ * g1 / g2 : tf2sum(1, d11, d12, d21, d22)
+                            with {
+                                bp1 = butter(n, numsec) : (_*1, _*(-1 * x), _ * (x^2));
+                                bp2 = butter(n, numsec) : (_*1, _* x, _ * (x^2));
+                                g1 = bp1 : (+, _) : +;
+                                g2 = bp2 : (+, _) : +;
+                                d11 = bp1 : (!, _*2, _*4) : + / g1;
+                                d12 = bp1 : (!, !, _*4) / g1;
+                                d21 = bp2 : (!, _*2, _*4) : + / g2;
+                                d22 = bp2 : (!, !, _*4) / g2;
+                                x =  (2 * ma.PI * fc / (2 * ma.SR));
+                                };
+
+lrap(n, fc) = case {
+                    (0) => seq(i, floor((n+1)/2), secLRAP(n, fc, i));
+                    (1) => seq(i, floor((n+1)/2), secLRAP(n, fc, i + 1));
+                    }(n%2==0);
+
+
+secEQ2(l, numsec, r, fc) = _ * g1 / g2 : tf2sum(1, d11, d12, d21, d22) 
+                     with{
+                         bp1 = secE(l, numsec) : (_*1, _*w(r), _*w(r)^2);
+                         bp2 = case{
+                                 (1, 0, 0, 1) => (1, 0, 0);
+                                 (1, 0, 0, 0) => (1, 0, 0);
+                                 (1, 1, 0, 0) => (1, 2, 1) : (_*1, _*x, _*x^2);
+                                 (0, 1, 0, 1) => (1, 2, 1) : (_*1, _*x, _*x^2);
+                                 (0, 0, 1, 1) => butter(ceil(l/2), numsec) : (_*1, _*x, _*x^2);
+                                 (0, 0, 1, 0) => butter(ceil(l/2), numsec) : (_*1, _*x, _*x^2);
+                                 (1, 1, 0, 1) => butter(ceil(l/2), numsec - floor((l+1)/4)) : (_*1, _*x, _*x^2);
+                                 (0, 1, 0, 0) => butter(ceil(l/2), numsec - floor((l+1)/4)) : (_*1, _*x, _*x^2);
+                                 (0, 0, 0, 0) => butter(ceil(l/2), numsec - floor((l+1)/4)) : (_*1, _*x, _*x^2);
+                                 (0, 0, 0, 1) => butter(ceil(l/2), numsec - floor((l+1)/4)) : (_*1, _*x, _*x^2);
+                                 }(numsec == ceil((l+1)/2), numsec == ceil(l/2), numsec <= floor((l+1)/4), ceil((l+1)/2) % 2 == 0);
+                         g1 = bp1 : (+, _) : +;
+                         g2 = bp2 : (+, _) : +;
+                         d11 = bp1 : (!, _*2, _*4) : + / g1;
+                         d12 = bp1 : (!, !, _*4) / g1;
+                         d21 = bp2 : (!, _*2, _*4) : + / g2;
+                         d22 = bp2 : (!, !, _*4) / g2;
+                         x =  (2 * ma.PI * fc / (2 * ma.SR));
+                     };
+
+eqlr(l, L,  r, a) =   diff(r):seq(i, floor(l/2) +  1,secEQ2(l,i+1, r, fceq(l, r, a))) : seq(i, L, test(i+1,l))
+                        with {
+                        test(i, l) = case {
+                                        (0) => lrap(ceil((i)/2), fceq(i, r, a));
+                                        (1) => _;
+                                        }(i==l);
+                            };
+
+testeq(l, numsec) =  (ceil(l/2), numsec - floor(l+1)/4);//(numsec == ceil((l+1)/2), numsec == ceil(l/2), numsec <= floor((l+1)/4), ceil((l+1)/2) % 2 == 0);
