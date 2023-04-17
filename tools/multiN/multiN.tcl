@@ -207,14 +207,14 @@ proc run { N } {
     # generate ip/app files from faust architecture files
     print_info "Generating IP file from architecture file"
     set tstart [clock milliseconds]
-    exec ./$::globals::syroot/syfala.tcl $::arguments::dsp --board $::arguments::board --arch --reset
+    exec ./$::globals::syroot/syfala.tcl $::arguments::dsp --board $::arguments::board --arch --xversion 2022.2 --mcd 32 --reset
     set arch_t [get_elapsed_time_msec $tstart]
     set mem [Faust::mem_access_count]
     print_info "ip/app files generated in $arch_t milliseconds"
 
     print_info "Synthesizing $::arguments::name with [emph N] = $N, please wait..."
     set tstart [clock seconds]
-    exec ./$::globals::syroot/syfala.tcl $::arguments::dsp --board $::arguments::board --hls
+    exec ./$::globals::syroot/syfala.tcl $::arguments::dsp --board $::arguments::board --hls --xversion 2022.2 >&@stdout
     set hls_t [get_elapsed_time_sec $tstart]
     print_info "hls done in $hls_t seconds"
 
@@ -234,7 +234,7 @@ print_ok "All done!"
 print_ok "Latency output successfully written in file '$fpattern-latency.txt'"
 print_ok "Utilization output successfully written in file '$fpattern-utilization.txt'"
 print_ok "Global output written in '$::arguments::fcsv'"
-print_info "Compiling file 'tex/output-template.tex' with pdflatex"
-cd tex
-exec pdflatex output-template.tex
-print_ok "Compiled/updated file 'tex/output-template.pdf'"
+#print_info "Compiling file 'tex/output-template.tex' with pdflatex"
+#cd tex
+#exec pdflatex output-template.tex
+#print_ok "Compiled/updated file 'tex/output-template.pdf'"

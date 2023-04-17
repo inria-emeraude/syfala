@@ -1,5 +1,7 @@
-open_project -quiet syfala_project/syfala_project.xpr
+source ../scripts/sylib.tcl
+namespace import Syfala::*
 
+open_project -quiet $::Syfala::BUILD_XPR_FILE
 set proj_dir [get_property directory [current_project]]
 
 #generate_target all [get_files main.bd]
@@ -25,5 +27,5 @@ launch_runs -to_step write_bitstream impl_1
 wait_on_run impl_1
 
 #write_bitstream -force master.bit
-
-write_hw_platform -fixed -include_bit -force -file ./hw_export/main_wrapper.xsa
+write_hw_platform -fixed -include_bit -force -file $::Syfala::BUILD_XSA_TARGET
+file copy -force $::Syfala::BUILD_BITSTREAM_SOURCE $::Syfala::BUILD_BITSTREAM_TARGET

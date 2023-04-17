@@ -20,7 +20,7 @@ set script_folder [_tcl::get_script_folder]
 ################################################################
 # Check if script is running in correct Vivado version.
 ################################################################
-set scripts_vivado_version $::Xilinx::VERSION
+set scripts_vivado_version 2020.2
 set current_vivado_version [version -short]
 
 if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
@@ -899,9 +899,9 @@ proc create_root_design { parentCell } {
   connect_bd_net -net sw1_Dout [get_bd_pins sw1/Dout] [get_bd_pins syfala/bypass]
   connect_bd_net -net sw2_Dout [get_bd_pins mux_2to1_0/Sel] [get_bd_pins sw2/Dout]
   connect_bd_net -net switches_1 [get_bd_ports switches] [get_bd_pins axi_gpio_SW/gpio_io_i] [get_bd_pins sw0/Din] [get_bd_pins sw1/Din] [get_bd_pins sw2/Din]
-  connect_bd_net -net syfala_outGPIO [get_bd_ports syfala_out_debug0] [get_bd_pins syfala/outGPIO]
-  connect_bd_net -net syfala_out_ch0_V [get_bd_pins sd_dac_first_0/input] [get_bd_pins syfala/out_ch0_V]
-  connect_bd_net -net syfala_out_ch0_V_ap_vld [get_bd_ports syfala_out_debug1] [get_bd_pins sd_dac_first_0/samp_clock] [get_bd_pins syfala/out_ch0_V_ap_vld]
+  connect_bd_net -net syfala_outGPIO [get_bd_ports syfala_out_debug0] [get_bd_pins syfala/outGPIO_o]
+  connect_bd_net -net syfala_audio_out_0 [get_bd_pins sd_dac_first_0/input] [get_bd_pins syfala/audio_out_0]
+  connect_bd_net -net syfala_audio_out_0_ap_vld [get_bd_ports syfala_out_debug1] [get_bd_pins sd_dac_first_0/samp_clock] [get_bd_pins syfala/audio_out_0_ap_vld]
   connect_bd_net -net vdd33_dout [get_bd_ports internal_codec_out_mute] [get_bd_pins processing_system7_0/SPI0_SS_I] [get_bd_pins vdd33/dout]
 
   # Create address segments

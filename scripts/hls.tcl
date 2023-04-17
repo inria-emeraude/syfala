@@ -7,7 +7,7 @@ namespace import Syfala::*
 set BOARD [lindex $::argv 2]
 
 open_project -reset syfala_ip
-add_files syfala_ip/syfala_ip.cpp -cflags "-Iinclude/"
+add_files $::Syfala::BUILD_IP_FILE -cflags "-Iinclude/"
 set_top syfala
 open_solution -reset "syfala" -flow_target vivado
 

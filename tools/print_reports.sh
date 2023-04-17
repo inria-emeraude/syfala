@@ -11,8 +11,6 @@ spi_controller=$7
 volume=$8
 num_inputs=$9
 num_outputs=${10}
-mem_r=${11}
-mem_w=${12}
 
 date=$(date +'%m/%d/%Y')
 
@@ -44,30 +42,18 @@ else
         app_exist=2 #2: donesn't exist
 fi
 
-
-if [ -d "$project_directory/build/gui" ]; then
-    if [ -f "$project_directory/build/gui/faust-gui" ]; then
-        gui_exist=0 #0: Success!
-    else
-        gui_exist=1 #1: failed
-    fi
-else
-        gui_exist=2 #2: donesn't exist
-fi
 #---------------------------------------------------
 if [[ $ip_exist == "0" ]]
 then
 ip_date=$(tail -1 "$project_directory/build/vitis_hls.log" |rev| cut -b8-23 | rev)
 
 
-((periodeRef=10000000/$sample_rate))
+periode=21833
 clock=$(grep -m 1 -A 2 "Clock" "$project_directory//build/syfala_ip/syfala/syn/report/syfala_csynth.rpt" | tail -n 1 | cut -d "|" -f3 | cut -d "." -f1)
+((maxCycle=$periode/$clock))
 
 latency=$(grep -m 1 -A 3 "Latency (cycles)" "$project_directory//build/syfala_ip/syfala/syn/report/syfala_csynth.rpt" | tail -n 1 | cut -d "|" -f3)
 latencyUs=$(grep -m 1 -A 3 "Latency (cycles)" "$project_directory//build/syfala_ip/syfala/syn/report/syfala_csynth.rpt" | tail -n 1 | cut -d "|" -f5)
-latencyNumber=$(echo $latencyUs | sed 's|[^0-9.]||g')
-MEGA="1000"
-latencyNs=$(awk '{print $1*$2}' <<<"${latencyNumber} ${MEGA}")
 
 TTbram=$(grep -m 1 "Total" "$project_directory//build/syfala_ip/syfala/syn/report/syfala_csynth.rpt" | cut -d "|" -f3)
 TTdsp=$(grep -m 1 "Total" "$project_directory//build/syfala_ip/syfala/syn/report/syfala_csynth.rpt" | cut -d "|" -f4)
@@ -84,22 +70,17 @@ then
 project_date=$(tail -1 "$project_directory/build/vivado.log" |rev| cut -b8-23 | rev)
 app_date=$(ls -l  --time-style locale "$project_directory/build/sw_export/application.elf" |rev| cut -b76-89 | rev)
 
-Vlut=$(grep -m 1 "LUTs" "$project_directory/build/syfala_project/syfala_project.runs/impl_1/main_wrapper_utilization_placed.rpt" | rev | cut -d "|" -f2 | rev | cut -d "." -f1) #get last field to be compatible with 2020 and 2022
-Vreg=$(grep -m 1 "Register" "$project_directory/build/syfala_project/syfala_project.runs/impl_1/main_wrapper_power_routed.rpt" | cut -d "|" -f6 | cut -d "." -f1)
-Vbram=$(grep -m 1 "Block RAM" "$project_directory/build/syfala_project/syfala_project.runs/impl_1/main_wrapper_power_routed.rpt" | cut -d "|" -f6 | cut -d "." -f1)
-Vdsp=$(grep -m 1 "DSPs" "$project_directory/build/syfala_project/syfala_project.runs/impl_1/main_wrapper_power_routed.rpt" | cut -d "|" -f6 | cut -d "." -f1)
+Vlut=$(grep -m 1 "Slice LUTs" "$project_directory/build/syfala_project/syfala_project.runs/impl_1/main_wrapper_utilization_placed.rpt" | rev | cut -d "|" -f2 | rev | cut -d "." -f1) #get last field to be compatible with 2020 and 2022
+Vreg=$(grep -m 1 "Register" "$project_directory//build/syfala_project/syfala_project.runs/impl_1/main_wrapper_power_routed.rpt" | cut -d "|" -f6 | cut -d "." -f1)
+Vbram=$(grep -m 1 "Block RAM" "$project_directory//build/syfala_project/syfala_project.runs/impl_1/main_wrapper_power_routed.rpt" | cut -d "|" -f6 | cut -d "." -f1)
+Vdsp=$(grep -m 1 "DSPs" "$project_directory//build/syfala_project/syfala_project.runs/impl_1/main_wrapper_power_routed.rpt" | cut -d "|" -f6 | cut -d "." -f1)
 
-TTVlut=$(grep -m 1 "LUTs" "$project_directory/build/syfala_project/syfala_project.runs/impl_1/main_wrapper_utilization_placed.rpt" | cut -d "|" -f3)
-TTVreg=$(grep -m 1 "Register" "$project_directory/build/syfala_project/syfala_project.runs/impl_1/main_wrapper_power_routed.rpt" | cut -d "|" -f4)
-TTVbram=$(grep -m 1 "Block RAM" "$project_directory/build/syfala_project/syfala_project.runs/impl_1/main_wrapper_power_routed.rpt" | cut -d "|" -f4 | cut -d "." -f1)
-TTVdsp=$(grep -m 1 "DSPs" "$project_directory/build/syfala_project/syfala_project.runs/impl_1/main_wrapper_power_routed.rpt" | cut -d "|" -f4)
+TTVlut=$(grep -m 1 "Slice LUTs" "$project_directory/build/syfala_project/syfala_project.runs/impl_1/main_wrapper_utilization_placed.rpt" | cut -d "|" -f3)
+TTVreg=$(grep -m 1 "Register" "$project_directory//build/syfala_project/syfala_project.runs/impl_1/main_wrapper_power_routed.rpt" | cut -d "|" -f4)
+TTVbram=$(grep -m 1 "Block RAM" "$project_directory//build/syfala_project/syfala_project.runs/impl_1/main_wrapper_power_routed.rpt" | cut -d "|" -f4 | cut -d "." -f1)
+TTVdsp=$(grep -m 1 "DSPs" "$project_directory//build/syfala_project/syfala_project.runs/impl_1/main_wrapper_power_routed.rpt" | cut -d "|" -f4)
 fi
 
-if [[ $gui_exist == "0" ]]
-then
-GUIslider=$(grep -o "addHorizontalSlider" $project_directory/build/gui/faust-gui.cpp  | wc -l)
-GUIbutton=$(grep -o "addButton" $project_directory/build/gui/faust-gui.cpp  | wc -l)
-fi
 
 move_cursor_abs () {
     #move cursor in absolute coordinate, with the 0,0 point bellow the line from where the commande is launched
@@ -117,14 +98,8 @@ move_cursor_abs () {
 print_bargraph () {
     tput setaf $3 ;\
     size=$4
-    overflow=0
-    if [[ $2 -gt 100 ]]
-    then
-        ((overflow=1+($2/100)*$size/20)) #arbitrary: each +100% overflow is a step of 5% of size +1%
-       (( percent=$size))
-    else
-        ((percent=$2*$size/100))
-    fi
+    ((percent=$2*$size/100))
+
     lineReturn=$(printf "\033[1B\033[%dD" $(($size+12))) #12=6 text box + 6 percent box
     printf "\e[1m%5s\e[0m " "$1"
     tput setaf $3 ;\
@@ -137,33 +112,17 @@ print_bargraph () {
     done
 
     i=$percent
-    if [[ -z "$6" ]] #NO background color
-    then
-        tput setaf 0 ;\
-    fi
+    tput setaf 0 ;\
     while [[ $i -lt $size ]]
-    do
-        ((i = i + 1))
-        printf '░%.0s' ; \
-    done
-
-    if [[ $overflow -gt 0 ]]
-    then
-    tput setaf 1 ;\
-    printf '░%.0s' ; \
-    i=1
-    while [[ $i -lt $overflow ]]
     do
         ((i = i + 1))
         printf '█%.0s' ; \
     done
-    else
     tput setaf $3 ;\
-    fi
     printf " %3s%% " $2
-    if  [ ! -z "$5" ]
+    if [[ $5 -ne " " ]]
     then
-        printf "($5)"
+        printf "(%s)" $5
     fi
     printf $lineReturn
    echo -en '\033[0m' # [0m - resets all attributes, colors, formatting, etc.
@@ -275,7 +234,7 @@ printf "\
 "
 if [[ $width -gt 90 ]]
 then
-   move_cursor_abs 3 $((($normWidth/6)))
+   move_cursor_abs 3 $((($normWidth/6)+2))
 else
    move_cursor_abs 5 2
 fi
@@ -321,8 +280,6 @@ move_cursor_abs $(($thisCaseHeight-1)) 0
 print_HLS () {
 thisCaseHeight=11
 init_height $(($thisCaseHeight+2))
-move_cursor_abs 0 0
-print_frame $thisCaseHeight $(($normWidth-1))
 
 move_cursor_abs 2 $((($normWidth/4)+4))
 print_bargraph DSP $dsp 5 $bargraphWidth $TTdsp
@@ -339,18 +296,19 @@ move_cursor_abs 3 $((($normWidth*5/6)-6))
 printf "%s Cycles" $latency
 move_cursor_abs 4 $((($normWidth*5/6)-6))
 printf "%s" $latencyUs
-if [[ $width -gt 110 ]]
+move_cursor_abs 6  $((($normWidth*5/6)-6))
+printf "Sample Time Use:"
+if [[ $width -gt 90 ]]
 then
-move_cursor_abs 5 $((($normWidth*4/6)+($normWidth/20)-6))
-print_bargraph "" $(($latencyNs/$periodeRef)) 7 $(($bargraphWidth/2)) "of 1 sample" true
+move_cursor_abs 7 $((($normWidth*5/6)-($bargraphWidth/4)-8))
+print_bargraph "" $(($latency*100/$maxCycle)) 7 $(($bargraphWidth/2)) " "
 else
-move_cursor_abs 5  $((($normWidth*5/6)-6))
-printf "%d%% of 1 sample" $(($latencyNs/$periodeRef))
+move_cursor_abs 7 $((($normWidth*5/6)-2))
+printf "%d%%" $(($latency*100/$maxCycle))
 fi
-move_cursor_abs 7  $((($normWidth*5/6)-5))
-printf "\e[1mMem. Access:\e[0m"
-move_cursor_abs 8  $((($normWidth*5/6)-6))
-printf "R=$mem_r, W=$mem_w"
+
+move_cursor_abs 0 0
+print_frame $thisCaseHeight $(($normWidth-1))
 
 move_cursor_abs 3  $((($normWidth/8)-2))
 printf "\
@@ -368,8 +326,6 @@ move_cursor_abs $(($thisCaseHeight-1)) 0
 print_vivado () {
 thisCaseHeight=11
 init_height $thisCaseHeight
-move_cursor_abs 0 0
-print_frame $thisCaseHeight $(($normWidth-1))
 
 move_cursor_abs 2 $((($normWidth/8)-2))
 print_bargraph DSP $Vdsp 5 $bargraphWidth $TTVdsp
@@ -379,6 +335,12 @@ move_cursor_abs 6 $((($normWidth/8)-2))
 print_bargraph LUT $Vlut 4 $bargraphWidth $TTVlut
 move_cursor_abs 8 $((($normWidth/8)-2))
 print_bargraph BRAM $Vbram 3 $bargraphWidth $TTVbram
+
+
+
+move_cursor_abs 0 0
+print_frame $thisCaseHeight $(($normWidth-1))
+
 move_cursor_abs 3 $((($normWidth-24)-(($normWidth/8)-4)))
 printf "\
 ░█░█░▀█▀░█░█░█▀█░█▀▄░█▀█░\033[1B\033[25D\
@@ -387,35 +349,8 @@ printf "\
 "
 move_cursor_abs 7 $((($normWidth-24)-(($normWidth/8)-4)))
 echo "Project:" $project_date
-
-move_cursor_abs $(($thisCaseHeight-1)) 0
-
-}
-
-print_app () {
-
-thisCaseHeight=5
-init_height $thisCaseHeight
-move_cursor_abs 0 0
-print_frame $thisCaseHeight $(($normWidth-1))
-move_cursor_abs 2 4
-printf "\33[1m APPLICATION\33[0m"
-move_cursor_abs 3 4
-echo  $app_date
-move_cursor_abs $(($thisCaseHeight-1)) 0
-
-}
-print_gui () {
-
-
-move_cursor_abs 0 $((($normWidth*2/3)-1))
-print_frame $thisCaseHeight $(($normWidth/3))
-move_cursor_abs 1 $((2+$normWidth*5/6))
-printf "\33[1m GUI\33[0m"
-move_cursor_abs 2 $(($normWidth*5/6))
-printf "Sliders: %s" $GUIslider
-move_cursor_abs 3 $(($normWidth*5/6))
-printf "Buttons: %s" $GUIbutton
+move_cursor_abs 8 $((($normWidth-24)-(($normWidth/8)-4)))
+echo "App:" $app_date
 move_cursor_abs $(($thisCaseHeight-1)) 0
 
 }
@@ -455,8 +390,7 @@ then
 elif  [[ $ip_exist == "1" ]]
 then
     print_error "HLS Failed! See syfala.log for more informations." 1
-elif [[ $arch_exist == "1" ]] #only print this if the Arch is done to avoid multiple messages
-then
+else
     print_error "HLS not synthesized, please use the --ip option to build it." 3
 fi
 
@@ -466,32 +400,8 @@ print_vivado
 elif  [[ $project_exist == "1" ]]
 then
     print_error "Vivado synthesis Failed! See syfala.log for more informations." 1
-elif [[ $ip_exist == "0" ]] #only print this if the HLS is done to avoid multiple messages
-then
+else
     print_error "Vivado not synthesized, please use the --project and --synth options to build it." 3
-fi
-
-
-if [[ $app_exist == "0" ]]
-then
-print_app
-elif  [[ $app_exist == "1" ]]
-then
-    print_error "Application build Failed! See syfala.log for more informations." 1
-elif [[ $project_exist == "0" ]] #only print this if vivado is done to avoid multiple messages
-then
-    print_error "Application not builded, please use the --app option to build it." 3
-fi
-
-if [[ $gui_exist == "0" ]]
-then
-print_gui
-elif  [[ $gui_exist == "1" ]]
-then
-    print_error "GUI build Failed! See syfala.log for more informations." 1
-elif [[ $app_exist == "0" ]] #only print this if the App is done to avoid multiple messages
-then
-    print_error "GUI not builded, please use the --gui option to build it." 3
 fi
 move_cursor_abs $thisCaseHeight 0
 

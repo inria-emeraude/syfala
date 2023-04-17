@@ -13,7 +13,6 @@ namespace import Syfala::*
 set BOARD [lindex $argv 0]
 set XILINX_ROOT [lindex $argv 1]  ;#Don't know how to fetch the path directrly
 
-
 if { $BOARD == "Z10" || $BOARD == "Z20" } {
 	set targetName "*A9*#0"
 	set address "0x40000000 0xbfffffff"

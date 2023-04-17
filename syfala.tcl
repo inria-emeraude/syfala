@@ -18,45 +18,14 @@ if {[string match "l*" $sym]} {
 source $sroot/scripts/sylib.tcl
 namespace import Syfala::*
 
-set OS $tcl_platform(os)
-set OS_VERSION $tcl_platform(osVersion)
-
 namespace eval Xilinx {
     variable ROOT
-    variable VERSION 2020.2
+    variable VERSION 2022.2
 }
 
 # -----------------------------------------------------------------------------
-# runtime steps
+# add runtime steps
 # -----------------------------------------------------------------------------
-
-namespace eval runsteps {
-
-variable data [list]
-
-proc add_runstep { name targets } {
-    lappend runsteps::data [list $name $targets]
-}
-
-proc get_next { } {
-    set next [lindex [lindex $::runsteps::data 0] 0]
-    set index 0
-    foreach runstep $::runsteps::data {
-        set name    [lindex $runstep 0]
-        set targets [lindex $runstep 1]
-        foreach target $targets {
-            if {![file exists $target]} {
-                return $next
-            }
-        }
-        incr index
-        if {$index > [llength $::runsteps::data]} {
-            return "--flash"
-        }
-        set next [lindex [lindex $::runsteps::data $index] 0]
-    }
-    return $next
-}
 
 add_runstep "--arch" [list                      \
     $::Syfala::BUILD_APPLICATION_FILE           \
@@ -69,7 +38,7 @@ add_runstep "--project" [list                   \
     $::Syfala::BUILD_XPR_FILE                   \
 ]
 add_runstep "--synth" [list                     \
-    $::Syfala::BUILD_BITSTREAM_FILE             \
+    $::Syfala::BUILD_XSA_TARGET                 \
 ]
 add_runstep "--host" [list                      \
     $::Syfala::BUILD_APPLICATION_TARGET         \
@@ -77,153 +46,70 @@ add_runstep "--host" [list                      \
 add_runstep "--gui" [list                       \
     $::Syfala::BUILD_GUI_TARGET                 \
 ]
-}
 
 # -----------------------------------------------------------------------------
 # runtime variable declarations
 # -----------------------------------------------------------------------------
 
-proc p_runtime { v a } {
+proc runtime_parameter {v a} {
     return [dict create value $v accepted $a]
 }
 
-proc get_value { a } {
+proc get_rt_value {a} {
     return [dict get $a value]
 }
 
-proc set_value { p v } {
+proc set_rt_value {p v} {
     dict set $p value $v
 }
 
 namespace eval runtime {
+    variable compiler           [runtime_parameter "HLS" { HLS VHDL }]
+    variable xversion           [runtime_parameter "2020.2" { 2020.2 2022.2 }]
+    variable board              [runtime_parameter "Z10" { Z10 Z20 GENESYS }]
+    variable memory             [runtime_parameter 1 { DDR STATIC }]
+    variable sample_rate        [runtime_parameter 48000 { 48000 96000 192000 384000 768000 }]
+    variable sample_width       [runtime_parameter 24 { 16 24 32 }]
+    variable controller_type    [runtime_parameter "PCB1" { DEMO PCB1 PCB2 PCB3 PCB4 }]
+    variable ssm_volume         [runtime_parameter "HEADPHONE" { FULL HEADPHONE DEFAULT }]
+    variable ssm_speed          [runtime_parameter "DEFAULT" { FAST DEFAULT }]
+    variable bd_target          $::Syfala::BD_STD
+    variable rtl_files          [list]
     variable steps              ""
     variable post_steps         ""
     variable dsp_target         ""
     variable board_cpp_id       10
     variable app_config         0
     variable export_id          ""
-    variable external_bd        0
+    variable arm_benchmark      0
+    variable audio_debug_uart   0
+    variable fixed_point        0
+    variable verbose            0
+    variable nchannels_i        0
+    variable nchannels_o        0
+    variable ncontrols_i        0
+    variable ncontrols_f        0
+    variable ncontrols_p        0
     variable mcd                16
-    variable compiler           [p_runtime "HLS" { HLS VHDL }]
-    variable xversion           [p_runtime "2020.2" { 2020.2 2022.2 }]
-    variable board              [p_runtime "Z10" { Z10 Z20 GENESYS }]
-    variable memory             [p_runtime 1 { DDR STATIC }]
-    variable sample_rate        [p_runtime 48000 { 24000 48000 96000 192000 384000 768000 }]
-    variable sample_width       [p_runtime 24 { 16 24 32 }]
-    variable controller_type    [p_runtime "PCB1" { DEMO PCB1 PCB2 PCB3 PCB4 }]
-    variable ssm_volume         [p_runtime "HEADPHONE" { FULL HEADPHONE DEFAULT }]
-    variable ssm_speed          [p_runtime "DEFAULT" { FAST DEFAULT }]
-    variable vhdl_type          [p_runtime 0 {0 1}]
+    variable linux              0
+}
+
+proc add_rtl_file {f} {
+    lappend ::runtime::rtl_files $f
 }
 
 proc check_runtime_parameters {} {
-    set sr [get_value $::runtime::sample_rate]
-    set sw [get_value $::runtime::sample_width]
+    set sr [get_rt_value $::runtime::sample_rate]
+    set sw [get_rt_value $::runtime::sample_width]
     if {$sr == 768000 && $sw > 16} {
-         set_value ::runtime::sample_width 16
+         set_rt_value ::runtime::sample_width 16
          print_info "Note: a sample-rate of 768kHz requires a 16-bit sample-width"
          print_info "SYFALA_SAMPLE_WIDTH changed to value: 16"
     }
 }
 
-# -----------------------------------------------------------------------------
-# utility procedures
-# -----------------------------------------------------------------------------
-
-proc print_usage {} {
-    print_info "
--------------------
-Usage:
--------------------
-\$ syfala <command>
-\$ syfala <myfaustprogram.dsp> \[options steps parameters\]
--------------------------------------------------------------------------------
-Commands
--------------------------------------------------------------------------------
-      install: installs this script as a symlink in /usr/bin/
-        clean: deletes current build directory
-       import: <buildname> sets previously exported .zip build as the current build
-       export: <buildname> exports current build as a .zip in the export/ directory
-       report: <HLS|any> displays HLS or global report
-         demo: fully builds demo based on default example (virtualAnalog)
-        flash: flashes current build onto target device
-          gui: executes Faust-generated gui application
- open-project: opens the generated .xpr project with Vivado
-          log: displays log for the current build
-
--------------------------------------------------------------------------------
-General Options
--------------------------------------------------------------------------------
-   --xversion: \[ 2020.2 | 2022.2 \] chooses Xilinx toolchain version
-                (2020.2 and 2022.2 only supported for now)
-      --reset: resets current build directory before building
-               (careful! all files from previous build will be lost)
-        --mcd: <power of 2 value> (defaults to 16)
--------------------------------------------------------------------------------
-Run steps
--------------------------------------------------------------------------------
-        --all: runs all toolchain build steps (from --arch to --gui) (DEFAULT)
-       --arch: uses Faust to generate ip/host .cpp files for HLS and
-               Host application compilation
-        --hls: runs Vitis HLS on generated ip cpp file
-    --project: generates Vivado project
-      --synth: synthesizes full Vivado project
-       --host: compiles Host Control Application (ARM)
-        --gui: compiles Faust GUI controller
-      --flash: flashes boot files on device
-     --report: prints HLS report at the end of the run
-     --export: <id> exports build to export/ directory at the end of the run
-
--------------------------------------------------------------------------------
-Run parameters
--------------------------------------------------------------------------------
-      --memory, -m: \[ DDR*|STATIC \]
-       --board, -b: \[ Z10*|Z20|GENESYS \]
-     --sample-rate: \[ 48000*|96000|192000|384000|768000 \]
-    --sample-width: \[ 16|24*|32 \]
- --controller-type: \[ DEMO|PCB1*|PCB2|PCB3|PCB4 \]
-      --ssm-volume: \[ FULL|HEADPHONE|DEFAULT* \]
-       --ssm-speed: \[ FAST|DEFAULT* \]
-
-'*' means default parameter value
-" 0
-}
-
-proc print_version {} {
-    upvar OS os
-    upvar OS_VERSION osv
-    print_info "Running syfala toolchain script (v$::Syfala::VERSION) on $os ($osv)"    
-}
-
-# Tries to parse Xilinx Toolchain root installation directory
-proc parse_xroot {} {
-    if {![info exists ::Xilinx::ROOT]} {
-        # if already defined in environment as 'XILINX_ROOT_DIR'
-        if {[info exists ::env(XILINX_ROOT_DIR)]} {
-             set ::Xilinx::ROOT $::env(XILINX_ROOT_DIR)
-             print_ok "XILINX_ROOT_DIR defined in env as: $Xilinx::ROOT"
-        } else {
-            print_error "XILINX_ROOT_DIR is undefined, aborting"
-            print_usage
-            exit 1
-        }
-    } else {
-        print_info "Checking XILINX_ROOT_DIR from command-line arguments...
-             Please set XILINX_ROOT_DIR environment variable in your current shell configuration
-             file in order to avoid this in future uses..."
-    }
-    # then, check if installation is valid
-    # and add Vitis/Vivado/HLS environments to exec path
-    # (we don't require the 'use_vitis' function anymore)
-    check_xroot $Xilinx::ROOT $Xilinx::VERSION
-    set_xenv $Xilinx::ROOT $Xilinx::VERSION "Vitis_HLS"
-    set_xenv $Xilinx::ROOT $Xilinx::VERSION "Vivado"
-    set_xenv $Xilinx::ROOT $Xilinx::VERSION "Vitis"
-    print_ok "Xilinx toolchain environment added to script's PATH"
-}
-
 # gets command line argument value at next 'argv' index
-proc get_argument_value { index } {
+proc get_argument_value {index} {
     upvar $index idx
     return [lindex $::argv [incr idx]]
 }
@@ -231,10 +117,10 @@ proc get_argument_value { index } {
 # checks argument value validity
 # by comparing to the 'accepted' values set for the argument
 # (see the runtime variables above)
-proc parse_argument_value { argument value } {
+proc parse_argument_value {argument value} {
     upvar $argument rparameter
     set accept [dict get $rparameter "accepted"]
-    if {[lsearch -exact $accept $value] >= 0 || $accept == {}} {
+    if {[lcontains $value $accept] || $accept == {}} {
          dict set rparameter value "$value"
     } else {
         print_error "Value ($value) for argument not accepted"
@@ -264,52 +150,24 @@ proc check_dsp_target {} {
             # pick the first one
             set ::runtime::dsp_target [file normalize $f]
             print_ok "Setting [file tail $f] as dsp target"
+            break
          }
     } else {
+        # Look for previous .dsp files and remove them
+        catch {
+            foreach f [glob -directory $::Syfala::BUILD_DIR *.dsp] {
+                file delete -force $f
+            }
+        }
+        # Copy current .dsp file into build directory
         file copy -force $::runtime::dsp_target $::Syfala::BUILD_DIR
     }
-}
-
-proc display_report {} {
-    set dsp [get_dsp_name]
-    set board_cpp_id [get_syconfig_define "SYFALA_BOARD"]
-    set sample_rate  [get_syconfig_define "SYFALA_SAMPLE_RATE"]
-    set sample_width [get_syconfig_define "SYFALA_SAMPLE_WIDTH"]
-    set volume [get_syconfig_define "SYFALA_SSM_VOLUME"]
-    set controller [get_syconfig_define "SYFALA_CONTROLLER_TYPE"]
-    set version $::Syfala::VERSION
-    set path $::Syfala::ROOT
-    set num_io [get_num_io]
-    set mem_access [Faust::mem_access_count]
-    switch $board_cpp_id {
-        10 { set board "Z10" }
-        20 { set board "Z20" }
-        30 { set board "GENESYS" }
-        default {
-            print_error "Incorrect board model, aborting..."
-            exit 1
-        }
-    }
-    exec $::Syfala::ROOT/tools/print_reports.sh     \
-            $path                                   \
-            $version                                \
-            $dsp                                    \
-            $board                                  \
-            $sample_rate                            \
-            $sample_width                           \
-            $controller                             \
-            $volume                                 \
-            [lindex $num_io 0]                      \
-            [lindex $num_io 1]                      \
-            [lindex $mem_access 0]                  \
-            [lindex $mem_access 1]                  \
-        >&@stdout
-    exit 0
 }
 
 # -----------------------------------------------------------------------------------------
 # SCRIPT START
 # -----------------------------------------------------------------------------------------
+
 if ![lcontains "log" $::argv] {
     print_version
     print_info "Running from: $spath"
@@ -330,7 +188,7 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
         # -----------------------------------------------------------------------------------------
         }
         -h - --help - help {
-            print_usage
+            source $::Syfala::SCRIPTS_DIR/misc/help.tcl
             exit 0
         }
         -v - --version - version {
@@ -354,7 +212,7 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
             exit 0
         }
         next {
-            set ::runtime::steps [runsteps::get_next]
+            set ::runtime::steps [get_next_runstep]
         }
         demo {
             set ::runtime::dsp_target [file normalize examples/virtualAnalog.dsp]
@@ -364,7 +222,7 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
         }
         open-project {
             parse_xroot
-            exec [Xilinx::vivado] $::Syfala::BUILD_XPR_FILE
+            exec [Xilinx::vivado] $::Syfala::BUILD_PROJECT_DIR/syfala_project.xpr
             exit 0
         }
         report - rpt {
@@ -405,25 +263,7 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
         }
         gui {
             print_info "Now executing Faust-generated GUI application"
-            exec $::Syfala::BUILD_GUI_DIR/faust-gui
-            exit 0
-        }
-        get-board-version {
-            parse_xroot
-            ::Xilinx::get_board_part_full [get_value $::runtime::board]
-            exit 0
-        }
-        set-default-board {
-            set old [get_value $::runtime::board]
-            parse_argument_value ::runtime::board [get_argument_value index]
-            set new [get_value $::runtime::board]
-            set args [list $old $new]
-            freplacelfn $spath "{ Z10 Z20 GENESYS }" $args {{line args} {
-                set flat [lindex $args 0]
-                set A "\"[lindex $flat 0]\""
-                set B "\"[lindex $flat 1]\""
-                return [string map [list $A $B] $line]
-            }}
+            exec $::Syfala::BUILD_GUI_DIR/faust-gui >&@stdout
             exit 0
         }
         test {
@@ -432,11 +272,128 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
             source $::Syfala::TESTS_DIR/tests.tcl
             exit 0
         }
+        build-linux {
+            set target [get_argument_value index]
+            parse_xroot
+            switch $target {
+                boot {
+                    Linux::build_boot
+                }
+                uboot {
+                    Linux::set_env
+                    Linux::build_uboot
+                }
+                kernel {
+                    Linux::set_env
+                    Linux::build_kernel
+                }
+                device-tree {
+                    Linux::build_device_tree_static
+                }
+                root {
+                    Linux::build_root
+                }
+                dsp {
+                    Linux::update_dsp
+                }
+                app {
+                    Linux::build_app
+                }
+                default {
+                    Linux::build_boot
+                    Linux::build_root
+                }
+            }
+            exit 0
+        }
+
+        format-linux {
+        print_info                                                          \
+        "Please use the following commands in order to properly format your sd-card:"
+        puts                                                                \
+        "
+        - sudo parted </dev/...> --script -- mklabel msdos
+        - sudo parted </dev/...> --script -- mkpart primary fat32 1MiB 128MiB
+        - sudo parted </dev/...> --script -- mkpart primary ext4 128MiB 100%
+        - sudo parted </dev/...> --script -- set 1 boot on
+        - sudo parted </dev/...> --script -- set 1 lba on
+        - sudo mkfs.vfat <device-partition-1>
+        - sudo mkfs.ext4 <device-partition-2>
+        - sudo parted </dev/...> --script print
+        "
+            exit 0
+        }
+        format-linux-unsafe {
+            set device [get_argument_value index]
+            Linux::format_sd_card $device
+            exit 0
+        }
+        flash-linux {
+            # i.e. /dev/sda or /dev/mmcblk0
+            set target [get_argument_value index]
+            set device [get_argument_value index]
+            switch $target {
+                boot { Linux::flash_boot $device }
+                root { Linux::flash_root $device }
+                dsp  { Linux::flash_dsp $device }
+                all  {
+                    Linux::flash_boot $device
+                    Linux::flash_root $device
+                }
+            }
+            exit 0
+        }
+        chroot {
+            exec sudo chroot $::Linux::BUILD_OUTPUT_ROOT_DIR "/bin/sh" >&@stdout
+            exit 0
+        }
         log {
             exec cat syfala_log.txt >&@stdout
             display_report
             exit 0
         }
+        build-container-image {
+            set path $::Syfala::ROOT/tools/containers/
+            set name [get_argument_value index]
+            append path $name
+            cd $path
+            if [file exists $path] {
+                print_info "Building container $name"
+                exec buildah build -f Containerfile -t $name >&@stdout
+                exec buildah from --name "$name-container" $name >&@stdout
+                print_ok "Container $name successfully built"
+                print_info "Running container, you can now install the Xilinx toolchain"
+            } else {
+                print_error "Invalid target, aborting"
+            }
+            exit 0
+        }
+        import-container {
+            set path [get_argument_value index]
+            set name [file tail $path]
+            if [file exists $path] {
+                print_info "Loading image $path"
+                exec podman pull oci:$path
+                exec podman from --name "$name" $name >&@stdout
+                print_ok "Container $name successfully imported!"
+            } else {
+                print_error "Invalid target, aborting"
+            }
+        }
+        run-container {
+            set name [get_argument_value index]
+            exec xhost +local:
+            exec podman run --user=syfala                       \
+                            --network=host                      \
+                            --env DISPLAY=\$DISPLAY             \
+                            -v /tmp/.X11-unix:/tmp/.X11-unix:z  \
+                            -v /dev/dri:/dev/dri:z              \
+                            -v /dev/bus/usb:/dev/bus/usb        \
+                            -v /dev/ttyUSB1:/dev/ttyUSB1        \
+                            $name                               \
+                            bash
+        }
+
         COMMENT {
         # -----------------------------------------------------------------------------------------
         # OPTIONS
@@ -444,6 +401,7 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
         }
         -c - --compiler {
             parse_argument_value ::runtime::compiler [get_argument_value index]
+
         }
         -x - --xilinx-root {
             # note: it has to be before any other options or flags
@@ -453,44 +411,51 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
 
         --xversion {
             parse_argument_value ::runtime::xversion [get_argument_value index]
-            set ::Xilinx::VERSION [get_value $::runtime::xversion]
+            set ::Xilinx::VERSION [get_rt_value $::runtime::xversion]
             print_info "Setting XILINX_VERSION to $::Xilinx::VERSION"
+        }
+
+        -f - --hls-flags {
+            set flag [get_argument_value index]
+            #note: TODO
         }
         --reset {
             # resets current build directory (careful, all files from previous build will be lost)
             rstbuild
             file mkdir $::Syfala::BUILD_DIR
         }
+        --benchmark {
+            set ::runtime::arm_benchmark 1
+        }
+        --audio-debug-uart {
+            set ::runtime::audio_debug_uart 1
+        }
+        --verbose {
+            set ::runtime::verbose [get_argument_value index]
+        }
         -sd - --sigma-delta {
-            set ::runtime::external_bd 1
-            set_value ::runtime::sample_rate 5000000
-            set_value ::runtime::sample_width 16
-            file mkdir $::Syfala::BUILD_DIR
-            file mkdir $::Syfala::BUILD_SOURCES_DIR
-            file copy -force $::Syfala::EXTERNAL_BD_SIGMA_DELTA     \
-                             $::Syfala::BUILD_EXTERNAL_BD
-            file copy -force $::Syfala::VHDL_DIR/sd_dac_first.vhd   \
-                             $::Syfala::BUILD_SOURCES_DIR/sd_dac_first.vhd
-             file copy -force $::Syfala::PROJECT_SCRIPT_TEMPLATE \
-                              $::Syfala::PROJECT_SCRIPT
+            set_rt_value ::runtime::sample_rate 5000000
+            set_rt_value ::runtime::sample_width 16
+            set ::runtime::bd_target $::Syfala::BD_SIGMA_DELTA
+            add_rtl_file $::Syfala::RTL_DIR/sd_dac_first.vhd
         }
         --tdm {
-            set ::runtime::external_bd 1
-            set_value ::runtime::sample_rate 48825
-            set_value ::runtime::sample_width 16
-            file mkdir $::Syfala::BUILD_DIR
-            file mkdir $::Syfala::BUILD_SOURCES_DIR
-            file copy -force $::Syfala::EXTERNAL_BD_TDM                     \
-                             $::Syfala::BUILD_EXTERNAL_BD
-            file copy -force $::Syfala::VHDL_DIR/i2s_transceiver_tdm.vhd    \
-                             $::Syfala::BUILD_SOURCES_DIR/i2s_transceiver_tdm.vhd
-            file copy -force $::Syfala::PROJECT_SCRIPT_TEMPLATE \
-                             $::Syfala::PROJECT_SCRIPT
+            set_rt_value ::runtime::sample_rate 48825
+            set_rt_value ::runtime::sample_width 16
+            set ::runtime::bd_target $::Syfala::BD_TDM
+            add_rtl_file $::Syfala::I2S_DIR/i2s_transceiver_tdm.vhd
+        }
+        --linux {
+            set ::runtime::linux 1
+        }
+        --fixed-point {
+            set ::runtime::fixed_point 1
         }
         --mcd {
             set ::runtime::mcd [get_argument_value index]
             print_info "Set Faust -mcd option to $::runtime::mcd"
         }
+
         COMMENT {
         # -----------------------------------------------------------------------------------------
         # RUNTIME STEPS
@@ -498,13 +463,13 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
         }
         -a - --all {
             # runs all toolchain build steps (from --arch to --gui) (DEFAULT)
-            set ::runtime::steps "$::runtime::steps --arch --hls --project --synth --host --gui"
+            append ::runtime::steps "--arch --hls --project --synth --host --gui"
         }
         --arch           { append ::runtime::steps "--arch"    }
         --hls - --ip     { append ::runtime::steps "--hls"     }
         --project        { append ::runtime::steps "--project" }
         --syn - --synth  { append ::runtime::steps "--synth"   }
-        --app - --host - --app-rebuild - --rebuild-app - rebuild-app - app-rebuild  {
+        --app - --host   {
             if {[file exists build/syfala_application/application] ||
                 [file exists build/syfala_application/platform]} {
                 print_info "Resetting Host Application build"
@@ -533,7 +498,7 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
         }
         -b - --board {
             parse_argument_value ::runtime::board [get_argument_value index]
-            switch [get_value $::runtime::board] {
+            switch [get_rt_value $::runtime::board] {
                 Z10      { set ::runtime::board_cpp_id 10 }
                 Z20      { set ::runtime::board_cpp_id 20 }
                 GENESYS  { set ::runtime::board_cpp_id 30 }
@@ -541,7 +506,7 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
         }
         -m - --memory {
             parse_argument_value ::runtime::memory [get_argument_value index]
-            switch [get_value $::runtime::memory] {
+            switch [get_rt_value $::runtime::memory] {
                 "DDR"     { dict set ::runtime::memory value 1 }
                 "STATIC"  { dict set ::runtime::memory value 0 }
             }
@@ -560,9 +525,6 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
         }
         --ssm-speed {
             parse_argument_value ::runtime::ssm_speed [get_argument_value index]
-        }
-        --vhdl-type {
-            parse_argument_value ::runtime::vhdl_type [get_argument_value index]
         }
         COMMENT {
         # -----------------------------------------------------------------------------------------
@@ -603,16 +565,20 @@ cd $::Syfala::BUILD_DIR
 if [file exists $::Syfala::BUILD_INCLUDE_DIR] {
     # If build already exists, retrieve board value
     set ::runtime::board_cpp_id [get_syconfig_define "SYFALA_BOARD"]
+    # TODO: something cleaner than this
+    if {[get_rt_value $::runtime::compiler] == "HLS"} {
+        set ::runtime::app_config 1
+    }
     switch $::runtime::board_cpp_id {
-        10 { set_value ::runtime::board "Z10" }
-        20 { set_value ::runtime::board "Z20" }
-        30 { set_value ::runtime::board "GENESYS" }
+        10 {set_rt_value ::runtime::board "Z10"}
+        20 {set_rt_value ::runtime::board "Z20"}
+        30 {set_rt_value ::runtime::board "GENESYS"}
         default {
             print_error "Incorrect board model, aborting..."
             exit 1
         }
     }
-    print_info "Retrieved previously used board model: [get_value $::runtime::board]"
+    print_info "Retrieved previously used board model: [get_rt_value $::runtime::board]"
 }
 
 print_info "Running build steps: $::runtime::steps"
@@ -623,70 +589,73 @@ check_dsp_target
 if [is_run_step "--arch"] {
      # Overwrite #define values in syconfig.hpp from command-line arguments
      # Note: this is common to both configurations (HLS/FAUST2VHDL)
-    initialize_build
+    initialize_build    
     check_runtime_parameters
-    set_syconfig_define  "SYFALA_BOARD" $::runtime::board_cpp_id [get_value $::runtime::board]
-    set_syconfig_define  "SYFALA_SAMPLE_RATE"      [get_value $::runtime::sample_rate]
-    set_syconfig_define  "SYFALA_SAMPLE_WIDTH"     [get_value $::runtime::sample_width]
-    set_syconfig_define  "SYFALA_CONTROLLER_TYPE"  [get_value $::runtime::controller_type]
-    set_syconfig_define  "SYFALA_SSM_VOLUME"       [get_value $::runtime::ssm_volume]
-    set_syconfig_define  "SYFALA_SSM_SPEED"        [get_value $::runtime::ssm_speed]
-    set_syconfig_define  "SYFALA_MEMORY_USE_DDR"   [get_value $::runtime::memory]
+    set_syconfig_define "SYFALA_BOARD"            $::runtime::board_cpp_id      \
+                                                  [get_rt_value $::runtime::board]
+    set_syconfig_define "SYFALA_SAMPLE_RATE"      [get_rt_value $::runtime::sample_rate]
+    set_syconfig_define "SYFALA_SAMPLE_WIDTH"     [get_rt_value $::runtime::sample_width]
+    set_syconfig_define "SYFALA_CONTROLLER_TYPE"  [get_rt_value $::runtime::controller_type]
+    set_syconfig_define "SYFALA_SSM_VOLUME"       [get_rt_value $::runtime::ssm_volume]
+    set_syconfig_define "SYFALA_SSM_SPEED"        [get_rt_value $::runtime::ssm_speed]
+    set_syconfig_define "SYFALA_MEMORY_USE_DDR"   [get_rt_value $::runtime::memory]
+    set_syconfig_define "SYFALA_AUDIO_DEBUG_UART" $::runtime::audio_debug_uart
+    set_syconfig_define "SYFALA_HOST_BENCHMARK"   $::runtime::arm_benchmark
+    set_syconfig_define "SYFALA_VERBOSE"          $::runtime::verbose
+    set_syconfig_define "SYFALA_REAL_FIXED_POINT" $::runtime::fixed_point
 }
-
 # This is where the toolchain's steps diverge,
 # depending on the chosen IP 'compiler' (HLS | faust2vhdl)
 # this includes the following steps:
 # --arch     (IP file generation)
 # --hls      (not needed for faust2vhdl)
 # --project  (project script files are different)
-
-switch [get_value $::runtime::compiler] {
+switch [get_rt_value $::runtime::compiler] {
     HLS {
     # -------------------------------------------------------------------------
-        print_ok "Selected HLS configuration (with Vitis)"
+        print_ok "Selected [emph HLS] configuration (with Vitis)"
     # -------------------------------------------------------------------------
-        set ::runtime::app_config 1
+        set ::runtime::app_config 0
         # 1. Generate Faust IP and Host Application cpp files
         if [is_run_step "--arch"] {
             Faust::generate_ip_hls $::runtime::dsp_target
             # Generate sources with set number of channels
-            source $::Syfala::SCRIPTS_DIR/prebuild.tcl
-            # new: count izone/fzone accesses immediately after
+            parse_build_io
+            source $::Syfala::SCRIPTS_DIR/preprocessor.tcl
+            preprocessor::run_hls_preprocessor
+            # count izone/fzone accesses immediately after
             # ip cpp file is generated.
             Faust::mem_access_count
-            Faust::generate_host $::runtime::dsp_target                 \
-                                 $::Syfala::ARCH_ARM_FILE_HLS
+            Faust::generate_host $::runtime::dsp_target     \
+                                 $::Syfala::ARCH_ARM_TARGET
         }
         # 2. Synthesize IP with Vitis HLS
         if [is_run_step "--hls"] {
-            Xilinx::Vitis_HLS::run $::Syfala::HLS_SCRIPT                \
-                                   [get_value $::runtime::board]
-        }
-
-        # 3. Run Vivado to generate the full project
-        if [is_run_step "--project"] {
-            Xilinx::Vivado::run $::Syfala::PROJECT_SCRIPT               \
-                                [get_value $::runtime::board]           \
-                                $::runtime::external_bd                 \
-                                $::Xilinx::ROOT                         \
-                                $::Xilinx::VERSION
+            Xilinx::Vitis_HLS::run $::Syfala::HLS_SCRIPT    \
+                                   [get_rt_value $::runtime::board]
         }
     }
     VHDL {
     # -------------------------------------------------------------------------
-        print_ok "Selected faust2vhdl configuration"
+        print_ok "Selected [emph faust2vhdl] configuration"
     # -------------------------------------------------------------------------
-        set ::runtime::app_config 0
+        set ::runtime::app_config 1
+        set ::runtime::bd_target $::Syfala::BD_FAUST2VHDL
+        add_rtl_file $::Syfala::FIXED_FLOAT_TYPES_C
+        add_rtl_file $::Syfala::FIXED_PKG_C
+        add_rtl_file $::Syfala::FLOAT_PKG_C
+        add_rtl_file $::Syfala::SINCOS_24
         if [is_run_step "--arch"] {
+            # Note: we generate the HLS IP just to parse number of i/o there
+            # TODO: fix that..., there's gotta be a better way to do this
+            Faust::generate_ip_hls $::runtime::dsp_target
+            parse_build_io
+            source $::Syfala::SCRIPTS_DIR/preprocessor.tcl
+            preprocessor::run_hls_preprocessor
             Faust::generate_ip_vhdl $::runtime::dsp_target             \
-                                    [get_value $::runtime::vhdl_type]
+                                    $::runtime::fixed_point
             Faust::generate_host    $::runtime::dsp_target             \
                                     $::Syfala::ARCH_ARM_FILE_VHDL
-        }
-        if [is_run_step "--project"] {
-            Xilinx::Vivado::run $Syfala::FAUST2VHDL_SCRIPT             \
-                                [get_value $::runtime::board]
         }
     }
 }
@@ -695,13 +664,64 @@ switch [get_value $::runtime::compiler] {
 # common steps
 # -------------------------------------------------------------------------
 
+# 3. Run Vivado to generate the full project
+if [is_run_step "--project"] {
+    # add multiplexer common rtl file
+    add_rtl_file $::Syfala::RTL_DIR/mux_2to1.vhd
+    # run preprocessor on the i2s template
+    if {$::runtime::bd_target == $::Syfala::BD_FAUST2VHDL
+    ||  $::runtime::bd_target == $::Syfala::BD_STD} {
+            parse_build_io
+            source $::Syfala::SCRIPTS_DIR/preprocessor.tcl
+            preprocessor::run_i2s_preprocessor
+    } else {
+            print_info "Skipping i2s preprocessor"
+            print_info $::runtime::bd_target
+            print_info $::Syfala::BD_FAUST2VHDL
+    }
+    # Copy all required RTL files in build/sources
+    foreach f $::runtime::rtl_files {
+        print_info "Adding [file tail $f] RTL source file to project"
+        file copy -force $f $::Syfala::BUILD_SOURCES_DIR/[file tail $f]
+    }
+    set arguments [list                             \
+        [get_rt_value $::runtime::board]            \
+        [get_rt_value $::runtime::sample_rate]      \
+        [get_rt_value $::runtime::sample_width]     \
+        $::runtime::nchannels_i                     \
+        $::runtime::nchannels_o                     \
+        $::runtime::bd_target                       \
+        $::Xilinx::ROOT                             \
+        $::Xilinx::VERSION                          \
+    ]
+    Xilinx::Vivado::run $::Syfala::PROJECT_SCRIPT $arguments
+}
+
 # 4. Synthesize the whole design
 if [is_run_step "--synth"] {
      Xilinx::Vivado::run $::Syfala::SYNTHESIS_SCRIPT
 }
 # 5. Compile Host Control Application
 if [is_run_step "--host"] {
-     Xilinx::compile_host $::runtime::app_config [get_value $::runtime::board]
+    if $::runtime::linux {
+        if [file exists $::Linux::BUILD_OUTPUT_DIR] {
+#            Linux::update_dsp
+            Linux::build_app
+        } else {
+            print_info "No Linux build could be found, would you like to create one? [y/N]"
+            gets stdin lbuild
+            switch $lbuild {
+                y - Y - yes - YES {
+                    Linux::build_boot
+                    Linux::build_root
+                }
+            }
+        }
+        exit 0
+    } else {
+        set board [get_rt_value $::runtime::board]
+        Xilinx::compile_host $::runtime::app_config $board
+    }
 }
 if [is_run_step "--gui"] {
     Faust::generate_gui_app $::runtime::dsp_target
@@ -713,7 +733,7 @@ if [is_post_run_step "--report"] {
     Xilinx::Vitis_HLS::report
 }
 if [is_post_run_step "--flash"] {
-    Xilinx::flash_jtag [get_value $::runtime::board]
+    Xilinx::flash_jtag [get_rt_value $::runtime::board]
 }
 
 print_elapsed_time $tstart

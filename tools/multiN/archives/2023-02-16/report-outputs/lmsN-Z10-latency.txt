@@ -1,0 +1,77 @@
++ With N = 30 (board: Z10)
+    - Memory accesses: 0 read(s), 0 write(s)
+    - IP & application files generated in 279 milliseconds
+    - High-level synthesis done in 01 minutes and 09 seconds
+    +---------+---------+-----------+----------+-----+-----+---------+
+    |  Latency (cycles) |  Latency (absolute)  |  Interval | Pipeline|
+    |   min   |   max   |    min    |    max   | min | max |   Type  |
+    +---------+---------+-----------+----------+-----+-----+---------+
+    |        3|      328|  24.414 ns|  2.669 us|    4|  329|       no|
+    +---------+---------+-----------+----------+-----+-----+---------+
+
++ With N = 60 (board: Z10)
+    - Memory accesses: 0 read(s), 0 write(s)
+    - IP & application files generated in 343 milliseconds
+    - High-level synthesis done in 01 minutes and 22 seconds
+    +---------+---------+-----------+----------+-----+-----+---------+
+    |  Latency (cycles) |  Latency (absolute)  |  Interval | Pipeline|
+    |   min   |   max   |    min    |    max   | min | max |   Type  |
+    +---------+---------+-----------+----------+-----+-----+---------+
+    |        3|      537|  24.414 ns|  4.370 us|    4|  538|       no|
+    +---------+---------+-----------+----------+-----+-----+---------+
+
++ With N = 90 (board: Z10)
+    - Memory accesses: 0 read(s), 0 write(s)
+    - IP & application files generated in 436 milliseconds
+    - High-level synthesis done in 01 minutes and 34 seconds
+    +---------+---------+-----------+----------+-----+-----+---------+
+    |  Latency (cycles) |  Latency (absolute)  |  Interval | Pipeline|
+    |   min   |   max   |    min    |    max   | min | max |   Type  |
+    +---------+---------+-----------+----------+-----+-----+---------+
+    |        3|      777|  24.905 ns|  6.450 us|    4|  778|       no|
+    +---------+---------+-----------+----------+-----+-----+---------+
+
++ With N = 120 (board: Z10)
+    - Memory accesses: 0 read(s), 0 write(s)
+    - IP & application files generated in 1072 milliseconds
+    - High-level synthesis done in 01 minutes and 39 seconds
+    +---------+---------+-----------+----------+-----+------+---------+
+    |  Latency (cycles) |  Latency (absolute)  |  Interval  | Pipeline|
+    |   min   |   max   |    min    |    max   | min |  max |   Type  |
+    +---------+---------+-----------+----------+-----+------+---------+
+    |        3|     1017|  24.861 ns|  8.428 us|    4|  1018|       no|
+    +---------+---------+-----------+----------+-----+------+---------+
+
++ With N = 130 (board: Z10)
+    - Memory accesses: 0 read(s), 0 write(s)
+    - IP & application files generated in 718 milliseconds
+    - High-level synthesis done in 01 minutes and 50 seconds
+    +---------+---------+-----------+----------+-----+------+---------+
+    |  Latency (cycles) |  Latency (absolute)  |  Interval  | Pipeline|
+    |   min   |   max   |    min    |    max   | min |  max |   Type  |
+    +---------+---------+-----------+----------+-----+------+---------+
+    |        3|     1097|  24.414 ns|  8.927 us|    4|  1098|       no|
+    +---------+---------+-----------+----------+-----+------+---------+
+
++ With N = 150 (board: Z10)
+    - Memory accesses: 0 read(s), 0 write(s)
+    - IP & application files generated in 1091 milliseconds
+    - High-level synthesis done in 01 minutes and 50 seconds
+    +---------+---------+-----------+-----------+-----+------+---------+
+    |  Latency (cycles) |   Latency (absolute)  |  Interval  | Pipeline|
+    |   min   |   max   |    min    |    max    | min |  max |   Type  |
+    +---------+---------+-----------+-----------+-----+------+---------+
+    |        3|     1257|  25.669 ns|  10.755 us|    4|  1258|       no|
+    +---------+---------+-----------+-----------+-----+------+---------+
+
++ With N = 175 (board: Z10)
+    - Memory accesses: 0 read(s), 0 write(s)
+    - IP & application files generated in 1288 milliseconds
+    - High-level synthesis done in 01 minutes and 57 seconds
+    +---------+---------+-----------+-----------+-----+------+---------+
+    |  Latency (cycles) |   Latency (absolute)  |  Interval  | Pipeline|
+    |   min   |   max   |    min    |    max    | min |  max |   Type  |
+    +---------+---------+-----------+-----------+-----+------+---------+
+    |        3|     1457|  26.367 ns|  12.805 us|    4|  1458|       no|
+    +---------+---------+-----------+-----------+-----+------+---------+
+
