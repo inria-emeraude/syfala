@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="A guide to the Faust Programming Language.">
+        
+        
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <title>Faust Documentation</title>
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/font-awesome.min.css" rel="stylesheet">
+        <link href="css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+
+        <!--<script src="js/jquery-1.10.2.min.js" defer></script>-->
+        <script src="js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body class="homepage">
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="."><img src="./img/faustText.svg" width="150px"> </a>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        
+
+        <div class="container">
+            <div class="row"><div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#faust-language-documentation" class="nav-link">Faust Language Documentation</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#what-is-faust" class="nav-link">What is Faust?</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#getting-started" class="nav-link">Getting Started</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="3"><a href="#if-youre-in-a-hurry" class="nav-link">If You're In a Hurry</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="3"><a href="#if-you-wanna-get-started-with-faust" class="nav-link">If You Wanna Get Started With Faust</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="3"><a href="#if-youre-looking-for-the-manual" class="nav-link">If You’re Looking For the "Manual"</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="3"><a href="#if-youre-looking-for-the-documentation-of-a-function-in-the-faust-libraries" class="nav-link">If You’re Looking For the Documentation of a Function In the Faust Libraries</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="3"><a href="#if-you-prefer-video-tutorials" class="nav-link">If You Prefer Video Tutorials</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="3"><a href="#if-youre-looking-for-something-in-particular" class="nav-link">If You're Looking For Something in Particular</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="3"><a href="#other-resources-to-learn-faust" class="nav-link">Other Resources to learn Faust</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9 main-container" role="main">
+
+<h1 id="faust-language-documentation">Faust Language Documentation</h1>
+<p>This website centralizes all the documentation of the <a href="https://faust.grame.fr">Faust programming language</a>. It contains tutorials, the Faust manual, various examples, etc. It is meant to be used in tandem with the <a href="https://faustide.grame.fr">Faust Web IDE</a>. </p>
+<p>The main Faust website can be found at the following URL:</p>
+<p><center>
+<a href="https://faust.grame.fr" style="font-size:16pt; font-weight:bold;">https://faust.grame.fr</a>
+</center></p>
+<hr />
+<h2 id="what-is-faust">What is Faust?</h2>
+<p><a href="https://faust.grame.fr">Faust</a> (Functional Audio Stream) is a functional programming language for sound synthesis and audio processing with a strong focus on the design of synthesizers, musical instruments, audio effects, etc. Faust targets high-performance signal processing applications and audio plug-ins for a variety of platforms and standards. It is used on stage for concerts and artistic productions, in education and research, in open source projects as well as in commercial applications.</p>
+<p>The core component of Faust is its compiler. It allows us to "translate" any Faust digital signal processing (DSP) specification to a wide range of non-domain specific languages such as C++, C, JAVA, LLVM IR, WebAssembly, etc. In this regard, Faust can be seen as an alternative to C++ but is much simpler and intuitive to learn.</p>
+<p>Thanks to a wrapping system called "architectures," codes generated by Faust can be easily compiled into a wide variety of objects ranging from audio plug-ins to standalone applications or smartphone and web apps, etc.</p>
+<hr />
+<h2 id="getting-started">Getting Started</h2>
+<h3 id="if-youre-in-a-hurry">If You're In a Hurry</h3>
+<p>If you’re in a hurry and just wanna have a look at how Faust programs look like, you can simply check the <a href="examples/ambisonics.md"><strong>Faust Examples</strong></a>. </p>
+<h3 id="if-you-wanna-get-started-with-faust">If You Wanna Get Started With Faust</h3>
+<p>If you’re looking for a step by step tutorial of approximately 2 hours that will walk you through writing simple Faust programs and give you an overview of what Faust can do, have a look at our <a href="manual/quick-start.md"><strong>Quick Start Tutorial</strong></a>.</p>
+<h3 id="if-youre-looking-for-the-manual">If You’re Looking For the "Manual"</h3>
+<p>Faust’s syntax and features are thoroughly documented in the <a href="manual/introduction.md"><strong>Faust Manual</strong></a>. This resource contains hundreds of code examples and many short tutorials.</p>
+<h3 id="if-youre-looking-for-the-documentation-of-a-function-in-the-faust-libraries">If You’re Looking For the Documentation of a Function In the Faust Libraries</h3>
+<p>The <a href="https://faustlibraries.grame.fr/"><strong>documentation of Faust's standard libraries</strong></a> is automatically generated directly from the libraries' source code.</p>
+<h3 id="if-you-prefer-video-tutorials">If You Prefer Video Tutorials</h3>
+<p>Check out <a href="https://www.kadenze.com/courses/real-time-audio-signal-processing-in-faust/info"><strong>the Faust Kadenze course</strong></a>.</p>
+<h3 id="if-youre-looking-for-something-in-particular">If You're Looking For Something in Particular</h3>
+<p>You can use the <strong>Search</strong> function of this website if you're looking for something specific.</p>
+<h3 id="other-resources-to-learn-faust"><a href="https://faust.grame.fr/community/learning/">Other Resources to learn Faust</a></h3></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+                <p>Copyright &copy; 2020-2023 <a href="https://www.grame.fr">Grame-CNCM</a></p>
+        </footer>
+        <script>
+            var base_url = ".",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="js/base.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML" defer></script>
+        <script src="search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
+
+<!--
+MkDocs version : 1.5.2
+Build Date UTC : 2023-09-25 11:12:30.341836+00:00
+-->
