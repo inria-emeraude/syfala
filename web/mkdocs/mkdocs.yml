@@ -1,8 +1,12 @@
-site_name: Faust Documentation
-site_description: A guide to the Faust Programming Language.
-copyright: Copyright &copy; 2020-2023 <a href="https://www.grame.fr">Grame-CNCM</a>
+site_name: Syfala Documentation
+site_description: A guide to the Syfala toolchain.
+copyright: Copyright &copy; 2023 <a href="https://team.inria.fr/emeraude/">Emeraude</a>
 nav:
-    - Home: index.md 
+    - Home: index.md
+    - Manual:
+        - 'Overview': manual/manual.md
+        - 'Dependencies': manual/dependencies.md
+        - 'Reference': manual/reference.md
 
 theme: 
   name: mkdocs
@@ -14,11 +18,11 @@ site_dir: ../../docs
 extra:
     social:
         - type: github
-          link: https://github.com/grame-cncm/faustdoc
+          link: https://github.com/inria-emeraude/syfala
         - type: home
-          link: https://faust.grame.fr
+          link: https://inria-emeraude.github.io/syfala/
         - type: envelope
-          link: mailto:research@grame.fr
+          link: mailto:romain.michon@inria.fr
 
 plugins:
     - search
