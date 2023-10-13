@@ -102,7 +102,6 @@ Please report to the [reference](doc/syfala-reference.md) for more information o
 Here is a list of person that have contributed to the Syfala project :
 
 - Tanguy Risset
-
 - Yann Orlarey 
 - Romain Michon
 - Stephane Letz
@@ -119,4 +118,6 @@ Here is a list of person that have contributed to the Syfala project :
 - Oussama Bouksim
 - Pierre Cochard
 - Joseph Bizien
-- Agathe Herrou
+- Agathe Herrou,
+- Jurek Weber,
+- Aloïs Rautureau
