@@ -23,7 +23,7 @@ set OS_VERSION $tcl_platform(osVersion)
 
 namespace eval Xilinx {
     variable ROOT
-    variable VERSION 2020.2
+    variable VERSION 2022.2
 }
 
 # -----------------------------------------------------------------------------
