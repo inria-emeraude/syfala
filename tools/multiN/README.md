@@ -19,7 +19,7 @@ $ ./multiN.tcl lmsN Z10 30 60 120
 
 The script will also insert the collected results in the *output.csv* file, with the following format:
 
-| File  | Board   | N    | Max cycles | Max latency (usec) | Memory reads | Memory writes | IP/App file generation time (in milliseconds) | High-level synthesis time (in seconds) | BRAM (%) | DSP (%) | FF (%) | LUT (%) | LUT (N) |
-| ----- | ------- | ---- | ---------- | ------------------ | ------------ | ------------- | --------------------------------------------- | -------------------------------------- | -------- | ------- | ------ | ------- | ------- |
-| echoN | Z10     | 2    | 302        | 2.458              | 4            | 2             | 108                                           | 31                                     | 6        | 10      | 7      | 31      | 6109    |
-| echoN | GENESYS | 2    | 270        | 2.197              | 4            | 2             | 104                                           | 27                                     | 1        | 2       | 1      | 6       | 5022    |
+| File  | Board   | N    | Max cycles | Max latency (usec) | Memory reads | Memory writes | IP/App file generation time (in milliseconds) | High-level synthesis time (in seconds) | BRAM (%) | DSP (%) | FF (%) | LUT (%) | BRAM (N) | DSP (N) | FF (N) | LUT (N) |
+| ----- | ------- | ---- | ---------- | ------------------ | ------------ | ------------- | --------------------------------------------- | -------------------------------------- | -------- | ------- | ------ | ------- | -------- | ------- | ------ | ------- |
+| echoN | Z10     | 2    | 302        | 2.458              | 4            | 2             | 108                                           | 31                                     | 6        | 10      | 7      | 31      | 8        | 6       | 4438   | 6109    |
+| echoN | GENESYS | 2    | 270        | 2.197              | 4            | 2             | 104                                           | 27                                     | 1        | 2       | 1      | 6       | 8        | 8       | 2864   | 5022    |

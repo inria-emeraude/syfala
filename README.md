@@ -16,7 +16,7 @@ Please follow the instructions in the file [doc/dependencies.md](doc/dependencie
 
 ## Installing
 
-the command `$ ./syfala.tcl install` will install a **symlink** in **/usr/bin**. After this you'll be able to just run: 
+the command `make install` will install a **symlink** in **/usr/bin**. After this you'll be able to just run: 
 
 `$ syfala myfaustprogram.dsp` 
 
@@ -40,29 +40,40 @@ export XILINX_ROOT_DIR=/my/path/to/Xilinx/root/directory
 
 ### Software
 
+#### Faust targets
+
 Building a simple example for the **default board** (Digilent Zybo **Z7-10)**:
 
 ```shell
-$ syfala examples/virtualAnalog.dsp
+syfala examples/faust/virtualAnalog.dsp
 ```
 
 This will run the **full syfala toolchain** on the virtualAnalog.dsp **Faust** file, which will then be ready to be flashed on the board. Y**ou can specify the targeted board** using the `-b (--board)` option:
 
 ```shell
-$ syfala examples/virtualAnalog.dsp --board Z20
-$ syfala examples/virtualAnalog.dsp --board GENESYS
+syfala examples/faust/virtualAnalog.dsp --board Z20
+syfala examples/faust/virtualAnalog.dsp --board GENESYS
 ```
 
 You can now **connect the board** to your computer with the proper **USB/Serial port cable** and run the `flash` command:
 
 ```shell
-$ syfala flash
+syfala flash
 ```
 
-The board's **RGB LED** should then become **green** after a few seconds, indicating that your program is running. You can now **start the Faust GUI application**, which will display a set of sliders/knobs/buttons and **update the DSP parameters in real-time through USB-UART**:
+The board's **RGB LED** should then flash **green** after a few seconds, indicating that your program is running. You can now **start the Faust GUI application**, which will display a set of sliders/knobs/buttons and **update the DSP parameters in real-time through USB-UART**:
 
 ```shell
-$ syfala gui
+syfala start-gui
+```
+
+#### C++ targets
+
+For C++ targets, the process is exactly the same (excepted for the GUI part, which is not available):
+
+```shell
+syfala examples/cpp/templates/bypass.cpp --board Z20
+syfala flash
 ```
 
 ### Exporting and re-importing your builds
@@ -70,38 +81,52 @@ $ syfala gui
 When you're done playing with your program, you can **save and export it** as a `.zip` file with the following command:
 
 ```shell
-$ syfala export my-virtual-analog-build
-# the exported .zip file is tagged with date & time, e.g.:
->> "export/2022-02-17-my-virtual-analog-build.zip"
+syfala export my-faust-virtual-analog-build
+# output in 'export/my-faust-virtual-analog-build.zip'
 ```
 
 The resulting `.zip` file is now available in the repository's `export` directory, you can **re-import** it by typing:
 
 ```shell
-$ syfala import export/2022-02-17-my-virtual-analog-build.zip
+syfala import export/my-faust-virtual-analog-build.zip
 ```
 
-### Making another build
+### Building another DSP target
 
 Before building another DSP program, please **make sure you have saved and exported your previous build** beforehand, otherwise **it will be overwritten** whenever you start a new build. 
 
 ```shell
-# Clean build directory & start another build:
-$ syfala clean
-$ syfala examples/my-new-dsp-build.dsp
-# Both commands can also be combined by adding the '--reset' flag 
-$ syfala examples/my-new-dsp-build.dsp --reset
+syfala examples/my-new-dsp-build.dsp
 ```
+
+## Tutorials
+
+### Getting started with syfala and Faust
+
+[tutorials/getting-started-faust.md](doc/tutorials/getting-started-faust.md)
+
+In this tutorial, we will cover the essential topics to get you started with the **Faust programming language**, **syfala**, and audio programming on **FPGAs**. 
+
+### Embedded Linux
+
+Please report to the [linux/getting-started.md](doc/linux/getting-started.md) document in order to get you started with the Embedded Linux for Syfala
+
+### Using syfala with C++ (advanced)
+
+[tutorials/cpp-tutorial-advanced.md](doc/tutorials/cpp-tutorial-advanced.md)
+
+This tutorial will show you how to program a syfala DSP *kernel* using C++. It is intended for advanced users.
 
 ## Going further
 
-Please report to the [reference](doc/syfala-reference.md) for more information on available **commands**, **options** and documentation.
+Please report to the [reference](doc/reference.md) for more information on available **commands**, **options** and documentation.
 
 ## The syfala team
 
 Here is a list of person that have contributed to the Syfala project :
 
 - Tanguy Risset
+
 - Yann Orlarey 
 - Romain Michon
 - Stephane Letz
@@ -118,6 +143,6 @@ Here is a list of person that have contributed to the Syfala project :
 - Oussama Bouksim
 - Pierre Cochard
 - Joseph Bizien
-- Agathe Herrou,
-- Jurek Weber,
+- Agathe Herrou
+- Jurek Weber
 - Aloïs Rautureau

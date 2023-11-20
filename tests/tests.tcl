@@ -17,7 +17,7 @@ proc add_test {arguments description} {
     print_ok "Added test [expr $testno+1] ($description)"
 }
 
-proc clean {} {
+proc clean { } {
     exec $::rt::mainscript clean
 }
 
@@ -50,11 +50,14 @@ add_test {demo --board Z10 --reset} "full demo build (Z710 board)"
 add_test rebuild-app "rebuilding-app"
 add_test {export demo-z710-test} "exporting demo build"
 add_test {demo --board Z20 --reset} "Zybo Z20 build"
+
+if [file exists $::Xilinx::ROOT/Vivado/2022.2/settings64.sh] {
+    add_test {demo --xversion 2022.2 --reset} "Xilinx 2022.2 build"
+}
+
 add_test {demo --board GENESYS --reset} "Genesys board"
 add_test {demo --memory STATIC --reset} "static memory test"
 
-# TODO: test import function, this doesn't work:
-# ----------------------------------------------
 #foreach f [glob -directory $::Syfala::EXPORT_DIR *.zip] {
 #    if [contains "demo-z710-test" $f] {
 #        set a [list "import" [file normalize $f]]

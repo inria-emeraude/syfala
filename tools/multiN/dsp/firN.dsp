@@ -1,4 +1,4 @@
 import("stdfaust.lib");
 
-N = 350;
+N = 3;
 process  = fi.fir(par(i,N,i/N));

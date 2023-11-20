@@ -1,0 +1,8 @@
+vhdl xil_defaultlib  \
+"./fixed_float_types_c.vhd" \
+"./fixed_pkg_c.vhd" \
+"./float_pkg_c.vhd" \
+"./faust.vhd" \
+"./test_bench_faust.vhd" \
+
+nosort
