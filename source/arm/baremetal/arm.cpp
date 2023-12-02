@@ -76,11 +76,13 @@ static inline void write(Control::data& d, XSyfala& x) {
     #endif
 }
 
+#if FAUST_PASSIVES // --------------------------
 static inline void read(Control::data& d, XSyfala& x) {
     int field = 0;
     IP::read_control_p(&x, 0, reinterpret_cast<u32*>(d.control.p), FAUST_PASSIVES);
     FAUST_LIST_PASSIVES(ACTIVE_ELEMENT_IN);
 }
+#endif
 
 static void send(Control::data& d, UART::data& u) {
     switch (Control::get_current_controller_type()) {
@@ -195,14 +197,6 @@ int main(int argc, char* argv[])
         }
     #if SYFALA_HOST_BENCHMARK // -----------------------------------------
         print_elapsed_time();
-    #endif // ------------------------------------------------------------
-    #if SYFALA_AUDIO_DEBUG_UART // ---------------------------------------
-        float debug[FAUST_OUTPUTS];
-        memset(debug, 0, sizeof(debug));
-        IP::read_audio_out_arm(&x, 0, (u32*)debug, FAUST_OUTPUTS);
-        for (int n = 0; n < FAUST_OUTPUTS; ++n) {
-             printf("fpga float output: (%d): %f\r\n", n, debug[n]);
-        }
     #endif // ------------------------------------------------------------
     }
     return 0;

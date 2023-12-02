@@ -5,8 +5,9 @@
 #include <syfala/arm/codecs/SSM2603.hpp>
 #include <syfala/utilities.hpp>
 
-#include "config.hpp"
 #include <fcntl.h>
+#include <sys/ioctl.h>
+#include <cstdio>
 
 #define IIC_CODEC_INTERNAL  "/dev/i2c-0"
 #define IIC_CODEC_EXTERNAL  "/dev/i2c-1"

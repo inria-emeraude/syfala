@@ -275,6 +275,7 @@
             interrupts = <0 22 4>;
             clocks = <&clkc 30>, <&clkc 30>, <&clkc 13>;
             clock-names = "pclk", "hclk", "tx_clk";
+  //          local-mac-address = [da 6f 4c fe 7b 3f];
             #address-cells = <1>;
             #size-cells = <0>;
             phy-mode = "rgmii-id";
@@ -625,5 +626,14 @@
             xlnx,s-axi-control-addr-width = <0x7>;
             xlnx,s-axi-control-data-width = <0x20>;
         };
+		eth_audio: eth_audio@40030000 {
+            clock-names = "ap_clk";
+            clocks = <&misc_clk_0>;
+            compatible = "generic-uio";
+            status = "okay";
+            reg = <0x40030000 0x10000>;
+            xlnx,s-axi-control-addr-width = <0x7>;
+            xlnx,s-axi-control-data-width = <0x20>;
+		};
     };
 };

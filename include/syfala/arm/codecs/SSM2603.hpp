@@ -1,12 +1,12 @@
 #pragma once
 
+#include <syfala/config.hpp>
+
 #ifdef __linux__
     #include <unistd.h>
 #else
     #include <sleep.h>
 #endif
-
-#include <syfala/config.hpp>
 
 namespace SSM2603 {
 

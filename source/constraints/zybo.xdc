@@ -14,18 +14,18 @@ set_property -dict { PACKAGE_PIN T16   IOSTANDARD LVCMOS33 } [get_ports { switch
 #set_property -dict { PACKAGE_PIN K19   IOSTANDARD LVCMOS33 } [get_ports { reset_clk }]; #IO_L24N_T3_34 Sch=btn[1]
 set_property -dict { PACKAGE_PIN Y16   IOSTANDARD LVCMOS33 } [get_ports { debug_btn }]; #IO_L24N_T3_34 Sch=btn[1]
 
-#RGB LED 6
+# RGB LED 6
 #set_property -dict { PACKAGE_PIN V16   IOSTANDARD LVCMOS33 } [get_ports { led6_r }]; #IO_L18P_T2_34 Sch=led6_r
 #set_property -dict { PACKAGE_PIN F17   IOSTANDARD LVCMOS33 } [get_ports { led6_g }]; #IO_L6N_T0_VREF_35 Sch=led6_g
 #set_property -dict { PACKAGE_PIN M17   IOSTANDARD LVCMOS33 } [get_ports { led6_b }]; #IO_L8P_T1_AD10P_35 Sch=led6_b
 
-##LEDs
+## LEDs
 #set_property -dict { PACKAGE_PIN M14   IOSTANDARD LVCMOS33 } [get_ports { i2c_done  }]; #IO_L23P_T3_35 Sch=led[0]
 #set_property -dict { PACKAGE_PIN M15   IOSTANDARD LVCMOS33 } [get_ports { ack_error }]; #IO_L23N_T3_35 Sch=led[1]
 #set_property -dict { PACKAGE_PIN G14   IOSTANDARD LVCMOS33 } [get_ports { readout[1] }]; #IO_0_35 Sch=led[2]
 #set_property -dict { PACKAGE_PIN D18   IOSTANDARD LVCMOS33 } [get_ports { readout[2] }]; #IO_L3N_T0_DQS_AD1N_35 Sch=led[3]
 
-##Audio Codec
+## Audio Codec
 set_property -dict { PACKAGE_PIN R19   IOSTANDARD LVCMOS33 } [get_ports { internal_codec_bclk }]; #IO_0_34 Sch=ac_bclk
 set_property -dict { PACKAGE_PIN R17   IOSTANDARD LVCMOS33 } [get_ports { internal_codec_mclk }]; #IO_L19N_T3_VREF_34 Sch=ac_mclk
 set_property -dict { PACKAGE_PIN P18   IOSTANDARD LVCMOS33 } [get_ports { internal_codec_out_mute }]; #IO_L23N_T3_34 Sch=ac_muten

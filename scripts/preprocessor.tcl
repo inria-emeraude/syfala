@@ -1,135 +1,149 @@
 #!/usr/bin/tclsh
 
-source ../scripts/sylib.tcl
+source scripts/sylib.tcl
 namespace import Syfala::*
 
-proc replace {A N fn {offset 0}} {
-    set B ""
-    for {set i $offset} {$i < $N} {incr i} {
-        if [is_empty $B] {
-            set B "[apply $fn $i]"
-        } else {
-            set B "$B\n[apply $fn $i]"
+set target [lindex $::argv 0]
+
+proc freplacep {F A B {start ""} {end ""}} {
+    set fr     [open $F r]
+    set data   [read $fr]
+    close      $fr
+    set fw     [open $F w]
+    foreach line [split $data "\n"] {
+        set pattern [regexp -inline $A $line]
+        if [not_empty $pattern] {
+            set map [list $A $B]
+            set line [string map $map $line]
         }
+        puts $fw $line
     }
-    return $B
-}
-proc overwrite {F A N fn} {
-    set B [replace $A $N $fn]
-    freplacel $F $A $B
+    close $fw
 }
 
-namespace eval preprocessor {
+proc freplacepl {F A fn} {
+    set fr     [open $F r]
+    set data   [read $fr]
+    close      $fr
+    set fw     [open $F w]
+    foreach line [split $data "\n"] {
+        if [regexp $A $line] {
+            set line [apply $fn $line]
+        }
+        puts $fw $line
+    }
+    close $fw
+}
 
-proc run_hls_preprocessor {} {
-    set nchannels_min [expr min($::runtime::nchannels_i, $::runtime::nchannels_o)]
-    set nchannels_max [expr max($::runtime::nchannels_i, $::runtime::nchannels_o)]
-    set N0 [expr $nchannels_max - $nchannels_min]
-    set f $::Syfala::BUILD_IP_FILE
-    print_info "Running [emph preprocessor] on [emph HLS] file $f"
+proc run_hls_preprocessor {f nchannels_i nchannels_o ncontrols_f ncontrols_i ncontrols_p multisample} {
+    namespace eval rt {
+        set nchn_i $nchannels_i
+        set nchn_o $nchannels_o
+        set nctl_f $ncontrols_f
+        set nctl_i $ncontrols_i
+        set nctl_p $ncontrols_p
+        set nchn_min [expr min($nchannels_i, $nchannels_o)]
+        set nchn_max [expr max($nchannels_i, $nchannels_o)]
+        set N0 [expr $nchn_max - $nchn_min]
+        set nsamples $multisample
+    }
     # -----------------------------------------------------------------------------
     # Top-level arguments (no input arguments if no inputs etc.)
     # -----------------------------------------------------------------------------
-    overwrite $f "sy_ap_int audio_in" $::runtime::nchannels_i {{n} {
-        return [indent "sy_ap_int audio_in_$n,"]
+    freplacepl $f {#ETH_I} {{line} {
+        # Note: nchannels_i & nchannels_o are from/to faust
+        # we have to invert it for the ethernet IP
+        set m [list "#ETH_I" $::rt::nchn_i]
+        set l [string map $m $line]
     }}
-    overwrite $f "sy_ap_int* audio_out" $::runtime::nchannels_o {{n} {
-        return [indent "sy_ap_int* audio_out_$n,"]
+    freplacepl $f {#ETH_O} {{line} {
+        set m [list "#ETH_O" $::rt::nchn_o]
+        set l [string map $m $line]
     }}
-    # -----------------------------------------------------------------------------
-    # Static i/o local arrays
-    # -----------------------------------------------------------------------------
-    set A "static sy_real_t inputs"
-    if {$::runtime::nchannels_i > 0} {
-        set i $::runtime::nchannels_i
-        set o $::runtime::nchannels_o
-        set B "sy_real_t inputs\[$i\], outputs\[$o\];
-        // Prepare inputs for 'compute' method"
-        for {set n 0} {$n < $i} {incr n} {
-          set B "$B
-          inputs\[$n\] = audio_in_$n.to_float() / SCALE_FACTOR;"
+    freplacepl $f {#ETH_N} {{line} {
+        set r ""
+        if [regexp {audio_in_#ETH_N} $line] {
+            # Same here, inverted
+            set N $::rt::nchn_o
+        } else {
+            set N $::rt::nchn_i
         }
-    } else {
-        set B "static sy_real_t outputs\[$::runtime::nchannels_o\];"
-    }
-
-    freplacel $f $A [indent $B]
-    # -----------------------------------------------------------------------------
-    # computemydsp function call
-    # -----------------------------------------------------------------------------
-    set A "computemydsp(&DSP"
-    set B ""
-    if {$::runtime::nchannels_i == 0} {
-        set B "computemydsp(&DSP, 0, outputs, control_i, control_f, mem_zone_i, ffp);"
-    } else {
-        set B "computemydsp(&DSP, inputs, outputs, control_i, control_f, mem_zone_i, ffp);"
-    }
-    freplacel $f $A [indent $B 2]
-    # -----------------------------------------------------------------------------
-    # Adapt the 'ram-not-ready' bypass check
-    # -----------------------------------------------------------------------------
-
-    # matching channels will have 'input[n] = output[n]'
-    # others will have 'outputs[n] = 0'
-    set A "outputs\[X\] = inputs\[X\]"
-    set B [replace $A $nchannels_min {{n} {
-           return [indent "outputs\[$n\] = inputs\[$n\];" 2]
-    }}]
-    set C [replace $A $N0 {{n} {
-          return [indent "outputs\[$n\] = 0;" 2]
-    }} $nchannels_min]
-
-    freplacel $f $A "$B\n$C"
-    # -----------------------------------------------------------------------------
-    # Adapt the bypass subfunction
-    # -----------------------------------------------------------------------------
-    set A "*audio_out = audio_in;"
-    set B [replace $A $nchannels_min {{n} {
-           return [indent "*audio_out_$n = audio_in_$n;" 2]
-    }}]
-    set C [replace $A $N0 {{n} {
-           return [indent "*audio_out_$n = 0;" 2]
-    }} $nchannels_min]
-    freplacel $f $A "$B\n$C"
-    # -----------------------------------------------------------------------------
-    # Adapt the mute subfunction
-    # -----------------------------------------------------------------------------
-    overwrite $f "*audio_out = 0;" $::runtime::nchannels_o {{n} {
-        return [indent "*audio_out_$n = 0;" 2]
+        for {set n 0} {$n < $N} {incr n} {
+             set m [list "#ETH_N" $n]
+             set l [string map $m $line]
+             if {$n < [expr $N-1]} {
+                append l "\n"
+             }
+             append r $l
+        }
+        return $r
     }}
-    # -----------------------------------------------------------------------------
-    # Adapt the output writes
-    # -----------------------------------------------------------------------------
-    overwrite $f "*audio_out = sy_ap_int" $::runtime::nchannels_o {{n} {
-        return [indent "*audio_out_$n = sy_ap_int(outputs\[$n\] * SCALE_FACTOR);" 2]
+    freplacepl $f {#IN} {{line} {
+        set r ""
+        if [regexp {audio_in} $line] {
+            set N $::rt::nchn_min
+        } else {
+            set N $::rt::nchn_max
+        }
+        for {set n 0} {$n < $::rt::nchn_i} {incr n} {
+            set m [list "#IN" $n]
+            set l [string map $m $line]
+            if {$n < [expr $::rt::nchn_i-1]} {
+                append l "\n"
+            }
+            append r $l
+        }
+        return $r
+    }}
+    freplacepl $f {#ON} {{line} {
+        set r ""
+        for {set n 0} {$n < $::rt::nchn_o} {incr n} {
+            set m [list "#ON" $n]
+            set l [string map $m $line]
+            if {$n < [expr $::rt::nchn_o-1]} {
+                append l "\n"
+            }
+            append r $l
+        }
+        return $r
+    }}
+    freplacepl $f {#I} {{line} {
+        set m [list "#I" $::rt::nchn_i]
+        set l [string map $m $line]
+        return $l
+    }}
+    freplacepl $f {#O} {{line} {
+        set m [list "#O" $::rt::nchn_o]
+        set l [string map $m $line]
+        return $l
+    }}
+    # Multisample
+    freplacepl $f {#V} {{line} {
+        set m [list "#V" $::rt::nsamples]
+        set l [string map $m $line]
+        return $l
     }}
     # -----------------------------------------------------------------------------
     # Hardcode control arrays for top-level arguments
     # -----------------------------------------------------------------------------
     # The reason we limit controller numbers to 2 is that:
-    # - ARM_fControl[0] doesn't compile (obviously)
-    # - ARM_fControl[1] generates a different driver function in xsyfala.h
+    # - arm_control_f[0] doesn't compile (obviously)
+    # - arm_control_f[1] generates a different driver function in xsyfala.h
     # so this is a temporary workaround until we get the arm.cpp modifications
     # in which we'll be able to determine the right function to call (or none)
     # at compilation time
-    set nf [expr max($::runtime::ncontrols_f, 2)]
-    set ni [expr max($::runtime::ncontrols_i, 2)]
-    set np [expr max($::runtime::ncontrols_p, 2)]
-
-    freplacel $f "float arm_control_f"                  \
-         [indent "float arm_control_f\[$nf\]," 2]
-
-    freplacel $f "int arm_control_i"                    \
-         [indent "int arm_control_i\[$ni\]," 2]
-
-    freplacel $f "float arm_control_p"                    \
-         [indent "float arm_control_p\[$np\]," 2]
-
-    freplacel $f "control_i\[FAUST_INT_CONTROLS\]"      \
-                 "control_i\[$ni\];"
-
-    freplacel $f "control_f\[FAUST_REAL_CONTROLS\]"     \
-                 "control_f\[$nf\];"
+    if [not_empty $::rt::nctl_f] {
+        set N_kf [expr max($::rt::nctl_f, 2)]
+        freplacep $f {#KF} $N_kf
+    }
+    if [not_empty $::rt::nctl_i] {
+        set N_ki [expr max($::rt::nctl_i, 2)]
+        freplacep $f {#KI} $N_ki
+    }
+    if [not_empty $::rt::nctl_p] {
+        set N_kp [expr max($::rt::nctl_p, 2)]
+        freplacep $f {#KP} $N_kp
+    }
 }
 
 # -----------------------------------------------------------------------------
@@ -137,12 +151,22 @@ proc run_hls_preprocessor {} {
 # -----------------------------------------------------------------------------
 
 proc encoded {line} {
-    if {[contains "#L" $line] || [contains "#R" $line]} {
+    if {[contains "#L" $line]
+     || [contains "#R" $line]} {
          return 1
     } else {
          return 0
     }
 }
+
+proc encoded_clkdiv {line} {
+    if [contains "#SLOW_CLOCK_DIVIDER" $line] {
+        return 1
+    } else {
+        return 0
+    }
+}
+
 proc encode {line index} {
     set i1 [expr $index+1]
     if [encoded $line] {
@@ -153,6 +177,51 @@ proc encode {line index} {
         return $line
     }
 }
+
+proc encoded_tdm {line pattern} {
+    if [contains $pattern $line] {
+        return 1
+    } else {
+        return 0
+    }
+}
+
+proc get_tdm_buffer_nchannels {index nchannels_o} {
+    set nchannels [expr max($nchannels_o,8)]
+    set nchannels [expr ($nchannels-$index) % 8]
+    if {$nchannels == 0} {
+        set nchannels 8
+    }
+    return $nchannels
+}
+
+proc encode_tdm_1 {line index} {
+     return [string map "#T1 $index" $line]
+}
+
+proc encode_tdm_2 {line index nchannels} {
+     set l [string map "#T2 [expr $index/8]" $line]
+     set max [expr $index + $nchannels]
+     for {set n $index} {$n < $max} {incr n} {
+          if [expr $n%8] {
+            append l " & "
+          } else {
+            append l " <= "
+          }
+          append l "from_faust_ch$n\_latched"
+     }
+     append l ";"
+     print_info "Adding line: $l"
+     return $l;
+}
+
+proc encode_tdm_3 {line index nchannels swidth} {
+    set nbits   [expr $nchannels * $swidth - 1]
+    set line    [string map "#T3 $nbits" $line]
+    print_info "Setting buffer ($index) size to: $nbits bits ($nchannels channels, width = $swidth bits per channel) "
+    return $line
+}
+
 proc parse_scope_level {line lvl} {
     if {[encoded $line] && [regexp { *if *\(} $line]} {
         return 1
@@ -165,33 +234,32 @@ proc parse_scope_level {line lvl} {
     }
 }
 
-proc insert_i2s_header {f} {
-    print_info "Setting I2S Header"
-    switch [get_rt_value $::runtime::sample_width] {
+proc insert_i2s_header {f sw nsamples} {
+    switch $sw   {
         16       {set ws_ratio 32}
         24 - 32  {set ws_ratio 64}
     }
-    print_info $ws_ratio
+    # TODO: set clock ratios programmatically (directly from Makefile?)
     set header_generic " -- AUTO GENERATED WITH Syfala preprocessor \n\
     --------------------------------------------------------------------------\n\
     mclk_sclk_ratio : integer := 4; \n\
     sclk_ws_ratio   : integer := $ws_ratio; \n\
-    d_width         : integer := [get_rt_value $::runtime::sample_width] \n\
+    d_width         : integer := $sw; \n\
+    nsamples        : integer := $nsamples \n\
     --------------------------------------------------------------------------"
     freplacel $f "\[HEADER\]" $header_generic
 }
 
-proc run_i2s_preprocessor {} {
-    set nchannels_min [expr min($::runtime::nchannels_i, $::runtime::nchannels_o)]
-    set nchannels_max [expr max($::runtime::nchannels_i, $::runtime::nchannels_o)]
+
+proc run_i2s_preprocessor {fsource ftarget nchannels_i nchannels_o swidth nsamples} {
+    set nchannels_min [expr min($nchannels_i, $nchannels_o)]
+    set nchannels_max [expr max($nchannels_i, $nchannels_o)]
     set N0 [expr $nchannels_max - $nchannels_min]
-    set source_path $::Syfala::I2S_DIR/i2s_template.vhd
-    set target_path $::Syfala::BUILD_SOURCES_DIR/i2s_transceiver.vhd
-    set source_file [open $source_path r]
-    set target_file [open $target_path w]
+    print_info "fsource = $fsource, ftarget = $ftarget"
+    set source_file [open $fsource r]
+    set target_file [open $ftarget w]
     set if_scope  0
     set scope_buf ""
-    print_info "Running [emph preprocessor] on [emph I2S] file: $source_path"
     while {[gets $source_file line] >= 0} {
         incr if_scope [parse_scope_level $line $if_scope]
         if $if_scope {
@@ -211,13 +279,79 @@ proc run_i2s_preprocessor {} {
                 for {set n 0} {$n < $nchannels_max} {incr n 2} {
                      puts $target_file [encode $line $n]
                 }
+            } elseif [encoded_tdm $line "#T1"] {
+                print_info "Found TDM-encoded variable (pattern #1)"
+                print_info "Line: $line"
+                set N 0
+                for {set n 0} {$n < $nchannels_o} {incr n 8} {
+                     set line_t1 [encode_tdm_1 $line $N]
+                     if [encoded_tdm $line_t1 "#T3"] {
+                         print_info "Encoded with pattern #T3"
+                         set nchannels [get_tdm_buffer_nchannels $n $nchannels_o]
+                         set line_t3 [encode_tdm_3 $line_t1 $N 8 $swidth]
+                         print_info "Adding line: $line_t3"
+                         puts $target_file $line_t3
+                     } else {
+                        print_info "Adding line: $line_t1"
+                        puts $target_file $line_t1
+                     }
+                     incr N
+                }
+            } elseif [encoded_tdm $line "#T2"] {
+                print_info "Found TDM-encoded variable (pattern #2)"
+                set N 0
+                for {set n 0} {$n < $nchannels_o} {incr n 8} {
+                     set nchannels [get_tdm_buffer_nchannels $n $nchannels_o]
+                     set l [encode_tdm_2 $line $n 8]
+                     puts $target_file $l
+                     incr N
+                }
+            } elseif [encoded_tdm $line "#T3"] {
+                print_info "Found TDM-encoded variable (pattern #3)"
+                set line [encode_tdm_3 $line 0 8 $swidth]
+                puts $target_file $line
+            } elseif [encoded_clkdiv $line] {
+
+
             } else {
                 puts $target_file $line
             }
         }
     }
-    close $source_file    
+    close $source_file
     close $target_file
-    insert_i2s_header $target_path
+    insert_i2s_header $ftarget $swidth $nsamples
 }
+
+switch $target {
+    --hls {
+        set hls_source  [lindex $::argv 1]
+        set nchannels_i [lindex $::argv 2]
+        set nchannels_o [lindex $::argv 3]
+        set ncontrols_f [lindex $::argv 4]
+        set ncontrols_i [lindex $::argv 5]
+        set ncontrols_p [lindex $::argv 6]
+        set multisample [lindex $::argv 7]
+        run_hls_preprocessor $hls_source    \
+                             $nchannels_i   \
+                             $nchannels_o   \
+                             $ncontrols_f   \
+                             $ncontrols_i   \
+                             $ncontrols_p   \
+                             $multisample
+    }
+    --i2s {
+        set source      [lindex $::argv 1]
+        set target      [lindex $::argv 2]
+        set nchannels_i [lindex $::argv 3]
+        set nchannels_o [lindex $::argv 4]
+        set swidth      [lindex $::argv 5]
+        set nsamples    [lindex $::argv 6]
+        run_i2s_preprocessor $source        \
+                             $target        \
+                             $nchannels_i   \
+                             $nchannels_o   \
+                             $swidth        \
+                             $nsamples
+    }
 }

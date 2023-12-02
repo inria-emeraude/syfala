@@ -10,6 +10,8 @@ void IP::initialize(XSyfala& x) {
         perror("[main] Syfala device initialization failed");
         exit(err);
     }
+#if SYFALA_CONTROL_BLOCK
     IP::set_control_block(&x, 1);
+#endif
     IP::set_arm_ok(&x, false);
 }

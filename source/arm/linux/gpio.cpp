@@ -1,6 +1,12 @@
 #include <linux/gpio.h>
 #include <syfala/arm/gpio.hpp>
-#include "config.hpp"
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <string.h>
 
 #define SYFALA_GPIO_AXI_LED_DEVICE  "/dev/gpiochip0"
 #define SYFALA_GPIO_AXI_SW_DEVICE   "/dev/gpiochip1"

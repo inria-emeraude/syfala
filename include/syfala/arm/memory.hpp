@@ -9,6 +9,6 @@ struct data {
     float*  f_zone;
 };
 
-// extern void reset();
 extern void initialize(XSyfala& x, data& d, int ilen, int flen);
+
 }

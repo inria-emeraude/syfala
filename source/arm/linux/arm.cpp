@@ -20,6 +20,8 @@
  ************************************************************************
  ************************************************************************/
 
+#include <signal.h>
+#include <list>
 #include <syfala/arm/audio.hpp>
 #include <syfala/arm/gpio.hpp>
 #include <syfala/arm/memory.hpp>
@@ -28,38 +30,39 @@
 #include <syfala/arm/faust/control.hpp>
 #include <syfala/arm/linux/avahi.hpp>
 #include <syfala/utilities.hpp>
+
+#if SYFALA_CONTROL_HTTP
 #include <faust/gui/httpdUI.h>
+#endif
+#if SYFALA_CONTROL_OSC
 #include <faust/gui/OSCUI.h>
+#endif
+#if SYFALA_CONTROL_MIDI
 #include <faust/gui/MidiUI.h>
 #include <faust/midi/rt-midi.h>
 #include <faust/midi/RtMidi.cpp>
+#endif
 
-using namespace Syfala;
-using namespace Syfala::Faust;
+#if (SYFALA_CONTROL_HTTP | SYFALA_CONTROL_OSC | SYFALA_CONTROL_MIDI)
+std::list<GUI*> GUI::fGuiList;
+ztimedmap GUI::gTimedZoneMap;
+#endif
 
-static void poll(Control::data& d, SPI::data& s) {
-    switch (Control::get_current_controller_type()) {
-    case Control::type::Hardware: {
-        printf("Polling Hardware controller\n");
-        auto ncontrols = std::min(8U, d.control.N);
-        SPI::poll(s);
-        bool r = false;
-        for (int n = 0; n < ncontrols; ++n) {
-             if (s.change[n]) {
-                 float v = s.values[n]/1023.f;
-                 if (controllerBoard[n] == SWITCH) {
-                     v = v > 0.f ? 1 : 0;
-                 }
-                 Control::update_controller_hw(d.control, n, v);
-                 r = true;
-             }
-        }
-    }
-    case Control::type::Software: {
-        // nothing to do yet
+static bool running = true;
+
+static void sig_hdl (int signo) {
+    switch (signo) {
+    case SIGINT:
+    case SIGKILL:
+    case SIGSTOP: {
+        printf("Terminating program\n");
+        running = false;
     }
     }
 }
+
+using namespace Syfala;
+using namespace Syfala::Faust;
 
 static inline void write(Control::data& d, XSyfala& x) {
     #if FAUST_REAL_CONTROLS
@@ -70,11 +73,13 @@ static inline void write(Control::data& d, XSyfala& x) {
     #endif
 }
 
+#if FAUST_PASSIVES
 static inline void read(Control::data& d, XSyfala& x) {
     int field = 0;
     IP::read_control_p(&x, 0, (u32*) d.control.p, FAUST_PASSIVES);
     FAUST_LIST_PASSIVES(ACTIVE_ELEMENT_IN);
 }
+#endif
 
 static void send(Control::data& d) {
     switch (Control::get_current_controller_type()) {
@@ -87,15 +92,6 @@ static void send(Control::data& d) {
     }
 }
 
-/**
- * @brief control:
- * @param d
- * @param x
- * @param s
- * @param i_zone
- * @param f_zone
- * @param force
- */
 __attribute__((hot)) static void control(
             Faust::Control::data& d,
                          XSyfala& x,
@@ -107,7 +103,6 @@ __attribute__((hot)) static void control(
             // 1. block control buffers
             // 2. poll controllers (UART/SPI).
         IP::set_control_block(&x, SYFALA_CONTROL_BLOCK_HOST);
-        poll(d, s);
         // 3. compute int & float control expressions from controller inputs.
         // 4. send updated values to IP.
         // 5. allow IP to read the control values once everything is written
@@ -117,50 +112,67 @@ __attribute__((hot)) static void control(
     } else {
         sy_printf("Control lock acquired by FPGA");
     }
-   #if FAUST_PASSIVES // --------------------------
-    // read and send back 'passive' control values.
-       read(d, x);
-       send(d, g, u);
-    #endif // -------------------------------------
 }
 
-std::list<GUI*> GUI::fGuiList;
-ztimedmap GUI::gTimedZoneMap;
+static bool audio_reset(int argc, char* argv[]) {
+    for (int n = 0; n < argc; ++n) {
+         if (strcmp(argv[n], "--no-reset") == 0) {
+             return false;
+         }
+    }
+    return true;
+}
 
 int main(int argc, char* argv[])
 {
-    XSyfala x;    
+    XSyfala x;
     SPI::data spi;
     Memory::data mem;
     Faust::Control::data ctrl;
     avahi::service avahi_svc;
 
+    signal(SIGINT, sig_hdl);
+    signal(SIGKILL, sig_hdl);
+    signal(SIGSTOP, sig_hdl);
+
     GPIO::initialize();
     Status::waiting(RN("Initializing peripherals & modules"));
     IP::initialize(x);
     Memory::initialize(x, mem, FAUST_INT_ZONE, FAUST_FLOAT_ZONE);
-    Audio::initialize();
     SPI::initialize(spi);
 
+    // if CODEC(s) have already been initialized, do not reset audio
+    // otherwise we'll hear its unpleasant sound.
+    if (audio_reset(argc, argv)) {
+        printf("Initializing Audio Codec(s)\n");
+        Audio::initialize();
+    }
+
     Faust::Control::initialize(ctrl, mem.i_zone, mem.f_zone);
+#if SYFALA_CONTROL_MIDI // ----------------------------------
     rt_midi rt("MIDI");
     MidiUI midi_ui(&rt);
+    ctrl.dsp.buildUserInterface(&midi_ui);
+    midi_ui.run();
+#endif
+#if SYFALA_CONTROL_HTTP // ----------------------------------
     httpdUI http("http", ctrl.dsp.getNumInputs(), ctrl.dsp.getNumOutputs(), 0, 0);
+    ctrl.dsp.buildUserInterface(&http);
+    http.run();
+#endif
+#if SYFALA_CONTROL_OSC // -----------------------------------
     OSCUI osc("osc", 0, 0);
     ctrl.dsp.buildUserInterface(&osc);
-    ctrl.dsp.buildUserInterface(&http);    
-    ctrl.dsp.buildUserInterface(&midi_ui);
-    control(ctrl, x, spi, mem);
-
-    IP::set_arm_ok(&x, true);
-    midi_ui.run();
-    http.run();
     osc.run();
+#endif
+
+    control(ctrl, x, spi, mem);
+    IP::set_arm_ok(&x, true);
     avahi::initialize_run(avahi_svc);
     system("ifconfig | grep 'inet addr'");
     Status::ok(RN("Application ready, now running..."));
 
-    while (true) {
+    while (running) {
         control(ctrl, x, spi, mem);
 #if SYFALA_AUDIO_DEBUG_UART // ---------------------------------------
         float debug[FAUST_OUTPUTS];
@@ -171,7 +183,7 @@ int main(int argc, char* argv[])
     }
 #endif // ------------------------------------------------------------
     }
-    // TODO: handle interrupt signal
+    Status::waiting(RN("Exiting application\n"));
     XSyfala_Release(&x);
     return 0;
 }

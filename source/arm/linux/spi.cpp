@@ -1,6 +1,12 @@
 #include <linux/spi/spidev.h>
-#include "config.hpp"
 #include <syfala/arm/spi.hpp>
+#include <cstring>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
+
 /**
  * Note: the way spi-cadence.c driver sets the prescaler is the following:
  * It fetches master's 'speed_hz' property, compares it with the slave's.
@@ -98,5 +104,5 @@ void SPI::poll(SPI::data& d) {
     memset(d.values, 0, sizeof(d.values));
     memset(d.change, 0, sizeof(d.change));
     poll(d);
-    printf("[SPI] Successfully initialized device\n");    
+    printf("[SPI] Successfully initialized device\n");
 }

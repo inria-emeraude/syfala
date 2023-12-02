@@ -4,6 +4,7 @@
 #include <syfala/arm/gpio.hpp>
 #include <syfala/utilities.hpp>
 #include <cstring>
+#include <cstdint>
 
 // -----------------------------------------------
 /**

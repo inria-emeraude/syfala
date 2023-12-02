@@ -1,8 +1,12 @@
-*
 !/**/
 !*.*
 /build/
+/build-linux/
 /export/
+syfala_log.txt
+*.aux
+/tools/multiN/tex/output-template.pdf
+*.autosave
 *.user
 *.o
 *.log
@@ -17,5 +21,13 @@
 *.config
 *.cf
 *.out
-*.aux
-syfala_log.txt
+*.toc
+*.clang
+*.Xil
+makefile.env
+#### Ethernet, Rust etc.
+source/linux/ethernet/client/target
+source/linux/ethernet/server/target
+source/linux/ethernet/target
+.DS_Store
+Cargo.lock
