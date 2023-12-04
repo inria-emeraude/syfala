@@ -13,4 +13,5 @@ struct data {
 extern void reset(data& d);
 extern void poll(data& d);
 extern void initialize(data& d);
+
 }

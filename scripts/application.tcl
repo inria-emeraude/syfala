@@ -1,8 +1,11 @@
-source ../scripts/sylib.tcl
+source scripts/sylib.tcl
 namespace import Syfala::*
 
-set IP_VHDL [lindex $argv 0]
-set BOARD   [lindex $argv 1]
+set CONFIG_MINIMAL  [lindex $::argv 0]
+set BOARD   [lindex $::argv 1]
+set TARGET  [lindex $::argv 2]
+
+print_info "$TARGET"
 
 switch $BOARD {
 Z10 - Z20 {
@@ -28,9 +31,9 @@ set PLATFORM_NAME     "platform"
 set APPLICATION_NAME  "application"
 
 # Create platform
-platform create -name $PLATFORM_NAME        \
-    -hw hw_export/main_wrapper.xsa          \
-    -arch $arch                             \
+platform create -name $PLATFORM_NAME                        \
+    -hw $::Syfala::BUILD_DIR/hw_export/main_wrapper.xsa     \
+    -arch $arch                                             \
     -fsbl-target "psu_cortexa53_0" ;
 # always psu_cortexa53_0, even for Zybo. Don't understand why...
 
@@ -46,7 +49,7 @@ domain create -name $domain_name            \
               -support-app "hello_world"
 
 # Generate platform
-platform generate -domains 
+platform generate -domains
 platform active $PLATFORM_NAME
 
 switch $BOARD {
@@ -84,35 +87,37 @@ app config -name $APPLICATION_NAME -add compiler-misc "-std=c++17"
 
 set sources [list]
 
-if $IP_VHDL {
-    set sources [list   \
-        arm_vhdl.cpp    \
-        audio.cpp       \
-        gpio.cpp        \
-        uart.cpp        \
+if $CONFIG_MINIMAL {
+    set sources [list                                               \
+        $TARGET                                                     \
+        $::Syfala::SOURCE_DIR/arm/baremetal/modules/audio.cpp       \
+        $::Syfala::SOURCE_DIR/arm/baremetal/modules/gpio.cpp        \
+        $::Syfala::SOURCE_DIR/arm/baremetal/modules/uart.cpp        \
+        $::Syfala::SOURCE_DIR/arm/baremetal/modules/ip.cpp          \
     ]
 } else {
 # with HLS, we need to import the /hw/drivers for the IP
 # but obviously, this is not necessary for the faust2vhdl IP
-    set sources [list   \
-        arm.cpp         \
-        audio.cpp       \
-        gpio.cpp        \
-        ip.cpp          \
-        memory.cpp      \
-        spi.cpp         \
-        uart.cpp        \
+    set sources [list                                               \
+        $TARGET                                                     \
+        $::Syfala::SOURCE_DIR/arm/baremetal/modules/audio.cpp       \
+        $::Syfala::SOURCE_DIR/arm/baremetal/modules/gpio.cpp        \
+        $::Syfala::SOURCE_DIR/arm/baremetal/modules/ip.cpp          \
+        $::Syfala::SOURCE_DIR/arm/baremetal/modules/memory.cpp      \
+        $::Syfala::SOURCE_DIR/arm/baremetal/modules/spi.cpp         \
+        $::Syfala::SOURCE_DIR/arm/baremetal/modules/uart.cpp        \
     ]
-    set drivers_path $::Syfala::BUILD_APPLICATION_DIR/$PLATFORM_NAME/hw/drivers/syfala_v1_0/src
-    app config -name $APPLICATION_NAME -add include-path $drivers_path
-    importsources -name $APPLICATION_NAME -path $drivers_path
     importsources -name $APPLICATION_NAME -path $::Syfala::SOURCE_DIR/arm/faust
-    importsources -name $APPLICATION_NAME -path $::Syfala::SOURCE_DIR/arm/codecs
 }
+
+set drivers_path $::Syfala::BUILD_APPLICATION_DIR/$PLATFORM_NAME/hw/drivers/syfala_v1_0/src
+app config -name $APPLICATION_NAME -add include-path $drivers_path
+importsources -name $APPLICATION_NAME -path $drivers_path
+importsources -name $APPLICATION_NAME -path $::Syfala::SOURCE_DIR/arm/codecs
 
 foreach src $sources {
     importsources -name $APPLICATION_NAME \
-                  -path $::Syfala::SOURCE_DIR/arm/baremetal/$src
+                  -path $src
 }
 
 switch $BOARD {

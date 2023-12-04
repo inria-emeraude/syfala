@@ -36,17 +36,17 @@ if {![file exists $fpattern-latency.txt]} {
 # reports concatenation
 # -------------------------------------------------------------------------------------------------
 
-proc write_latency { f header } {
+proc write_latency {f header} {
     puts $f $header
     puts $f [ffindlN $::globals::report "+ Latency:" 5 2]
 }
 
-proc write_utilization { f header } {
+proc write_utilization {f header} {
     puts $f $header
     puts $f [ffindlN $::globals::report "Utilization Estimates" 16 3]
 }
 
-proc lookup_generic { N ftarget f data header } {
+proc lookup_generic {N ftarget f data header} {
     set pattern "+ With N = "
     set spl [split $data "\n"]
     set len [llength $spl]

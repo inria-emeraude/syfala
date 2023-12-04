@@ -102,8 +102,9 @@ architecture logic of i2s_transceiver is
   signal from_faust_#R_int     : std_logic_vector(d_width-1 downto 0); --internal right channel tx data buffer
   signal from_faust_#L_latched : std_logic_vector(d_width-1 downto 0); -- latching faust left
   signal from_faust_#R_latched : std_logic_vector(d_width-1 downto 0); -- latching faust right
-  signal rdy1       : std_logic:= '0';	-- shall trigger ap_start
-  signal rdy1_reg   : std_logic:= '0';	-- used to detect rising edge of rdy1
+  signal rdy1       : std_logic := '0';	-- shall trigger ap_start
+  signal rdy1_reg   : std_logic := '0';	-- used to detect rising edge of rdy1
+  signal clkdiv_cnt : integer    := 1;
 begin
   -- process clock on sys_clok: detecting Faust output arrival
   -- and start of next Faust computation
@@ -172,89 +173,94 @@ begin
         to_faust_#R       <= (others => '0');
         reset_bit_cnt_next_sclk_cycle         := 0;
         read_sd_#L_#R_rx_at_next_mclk_sample  := 0;
+        clkdiv_cnt <= 1;
 
     elsif (mclk'event and mclk = '1') and start = '1' then
         -- mclk rising edge
-        if (sclk_cnt < mclk_sclk_ratio/2-1) then
-            -- set sclk_cnt to 1
-            sclk_cnt := sclk_cnt + 1;
-            if (read_sd_#L_#R_rx_at_next_mclk_sample = 1) then
-                if (ws_int_rx = '0') then
-                    to_faust_#L_int <= to_faust_#L_int(d_width-2 downto 0) & sd_#L_#R_rx;
-                else
-                    to_faust_#R_int <= to_faust_#R_int(d_width-2 downto 0) & sd_#L_#R_rx;
+        clkdiv_cnt <= clkdiv_cnt + 1;
+        if (clkdiv_cnt = #SLOW_CLOCK_DIVIDER) then
+            clkdiv_cnt <= 1;
+            if (sclk_cnt < mclk_sclk_ratio/2-1) then
+                -- set sclk_cnt to 1
+                sclk_cnt := sclk_cnt + 1;
+                if (read_sd_#L_#R_rx_at_next_mclk_sample = 1) then
+                    if (ws_int_rx = '0') then
+                        to_faust_#L_int <= to_faust_#L_int(d_width-2 downto 0) & sd_#L_#R_rx;
+                    else
+                        to_faust_#R_int <= to_faust_#R_int(d_width-2 downto 0) & sd_#L_#R_rx;
+                    end if;
+                    read_sd_#L_#R_rx_at_next_mclk_sample := 0;
                 end if;
-                read_sd_#L_#R_rx_at_next_mclk_sample := 0;
-            end if;
-        else
-            -- sclk edge (rising or falling)
-            sclk_cnt := 0;            --reset sclk_cnt counter
-            sclk_int <= not sclk_int; --toggle serial clock at next round
-            -- updating bit counter
-            if (sclk_int = '1') then
-            -- sclk falling edge
-                bit_cnt := bit_cnt + 1;
-                if (reset_bit_cnt_next_sclk_cycle = 1) then
-                    bit_cnt := 0;
-                    reset_bit_cnt_next_sclk_cycle := 0;
-                end if;
-            end if;
-        -- building counters and updating current samples (input and ouput)
-            if (ws_cnt < sclk_ws_ratio-1) then
-                ws_cnt := ws_cnt + 1;
             else
-          -- changing channel (left or right)
+                -- sclk edge (rising or falling)
+                sclk_cnt := 0;            --reset sclk_cnt counter
+                sclk_int <= not sclk_int; --toggle serial clock at next round
+                -- updating bit counter
                 if (sclk_int = '1') then
-                    -- sclk falling edge
-                    -- reset counters
-                    ws_cnt := 0;
-                    reset_bit_cnt_next_sclk_cycle := 1;
-                    -- latches input samples
-                    -- and produced output samples
-                    if (ws_int = '0') then
-                        -- ws_int rising edge: left channel
-                        to_faust_#L <= to_faust_#L_int;
-                        from_faust_#L_int <= from_faust_#L_latched;
-                    else
-                        -- falling edge of ws_int: right channel
-                        to_faust_#R <= to_faust_#R_int;
-                        from_faust_#R_int <= from_faust_#R_latched;
-                    end if;
-                    ws_int <= not ws_int;  --toggle word select
-                end if; -- en sdlk falling edge
-            end if; -- end changing channel
-                -- building ws_in_tx clock
-            if (sclk_int = '0') then
-                -- rising edge of sclk
-                ws_int_tx <= ws_int;
-                if (bit_cnt < d_width) then --READ ONE BIT
-                    read_sd_#L_#R_rx_at_next_mclk_sample := 1;
-                end if;
-            else
-                -- rising edge of sclk
-                ws_int_rx <= ws_int;
                 -- sclk falling edge
-                -- sending d_width bits, shifted by 1 sclk cycle with respect to ws
-                -- hence bit_cnt counts from 0 to d_width-1
-                if (bit_cnt < d_width) then --WRITE ONE BIT
-                    if (ws_int_tx = '0') then --left channel
-                        sd_#L_#R_tx <= from_faust_#L_int(d_width-1);  -- transmit one left channel  bit
-                        -- shift data of left channel tx data buffer
-                        from_faust_#L_int <= from_faust_#L_int(d_width-2 downto 0) & '0';
-                    else
-                        sd_#L_#R_tx <= from_faust_#R_int(d_width-1);  --transmit one right channel bit
-                        --  shift data of right channel tx data buffer
-                        from_faust_#R_int <= from_faust_#R_int(d_width-2 downto 0) & '0';
+                    bit_cnt := bit_cnt + 1;
+                    if (reset_bit_cnt_next_sclk_cycle = 1) then
+                        bit_cnt := 0;
+                        reset_bit_cnt_next_sclk_cycle := 0;
                     end if;
-                end if; -- end WRITE ONE BIT
-            end if; -- end sclk falling edge
-            -- sending ap_start to faust when ws_cnt = 3 (arbitrary choice)
-            if (ws_cnt = 3) and (ws_int = '1') then
-                rdy1 <= '1';
-            else
-                rdy1 <= '0';
-            end if;
-        end if;  -- mclk rising edge
+                end if;
+            -- building counters and updating current samples (input and ouput)
+                if (ws_cnt < sclk_ws_ratio-1) then
+                    ws_cnt := ws_cnt + 1;
+                else
+              -- changing channel (left or right)
+                    if (sclk_int = '1') then
+                        -- sclk falling edge
+                        -- reset counters
+                        ws_cnt := 0;
+                        reset_bit_cnt_next_sclk_cycle := 1;
+                        -- latches input samples
+                        -- and produced output samples
+                        if (ws_int = '0') then
+                            -- ws_int rising edge: left channel
+                            to_faust_#L <= to_faust_#L_int;
+                            from_faust_#L_int <= from_faust_#L_latched;
+                        else
+                            -- falling edge of ws_int: right channel
+                            to_faust_#R <= to_faust_#R_int;
+                            from_faust_#R_int <= from_faust_#R_latched;
+                        end if;
+                        ws_int <= not ws_int;  --toggle word select
+                    end if; -- en sdlk falling edge
+                end if; -- end changing channel
+                    -- building ws_in_tx clock
+                if (sclk_int = '0') then
+                    -- rising edge of sclk
+                    ws_int_tx <= ws_int;
+                    if (bit_cnt < d_width) then --READ ONE BIT
+                        read_sd_#L_#R_rx_at_next_mclk_sample := 1;
+                    end if;
+                else
+                    -- rising edge of sclk
+                    ws_int_rx <= ws_int;
+                    -- sclk falling edge
+                    -- sending d_width bits, shifted by 1 sclk cycle with respect to ws
+                    -- hence bit_cnt counts from 0 to d_width-1
+                    if (bit_cnt < d_width) then --WRITE ONE BIT
+                        if (ws_int_tx = '0') then --left channel
+                            sd_#L_#R_tx <= from_faust_#L_int(d_width-1);  -- transmit one left channel  bit
+                            -- shift data of left channel tx data buffer
+                            from_faust_#L_int <= from_faust_#L_int(d_width-2 downto 0) & '0';
+                        else
+                            sd_#L_#R_tx <= from_faust_#R_int(d_width-1);  --transmit one right channel bit
+                            --  shift data of right channel tx data buffer
+                            from_faust_#R_int <= from_faust_#R_int(d_width-2 downto 0) & '0';
+                        end if;
+                    end if; -- end WRITE ONE BIT
+                end if; -- end sclk falling edge
+                -- sending ap_start to faust when ws_cnt = 3 (arbitrary choice)
+                if (ws_cnt = 3) and (ws_int = '1') then
+                    rdy1 <= '1';
+                else
+                    rdy1 <= '0';
+                end if;
+            end if;  -- mclk rising edge
+        end if;
     end if; -- mclk event
 end process;
 

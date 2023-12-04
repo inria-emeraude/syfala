@@ -1,36 +1,36 @@
-source ../scripts/sylib.tcl
-namespace import Xilinx::Boards::*
+source scripts/sylib.tcl
 namespace import Syfala::*
 
 # -----------------------------------------------------------------------------
 # configuration
 # -----------------------------------------------------------------------------
-set arguments [lindex $::argv 0]
-print_info "Arguments: $arguments"
 
 namespace eval Xilinx {
     # Note (Pierre): since this script is called from a Vivado environment
     # we have to pass Xilinx::ROOT as an argument and set it from here
     # it will also propagate to the sylib.tcl source
     # (we need Xilinx::ROOT to retrieve the proper board_files version)
-    set ROOT     [lindex $arguments 6]
-    set VERSION  [lindex $arguments 7]
+    set ROOT     $::env(XILINX_ROOT_DIR)
+    set VERSION  $::env(XILINX_VERSION)
 }
-print_info "Xilinx Version: $::Xilinx::VERSION"
 
 namespace eval rt {
-    set board           [lindex $arguments 0]
-    set board_part      [Xilinx::get_board_part $board]
-    set board_property  [Xilinx::get_board_part_full $board]
-    set board_id        [Xilinx::get_board_id $board]
-    set sample_rate     [lindex $arguments 1]
-    set sample_width    [lindex $arguments 2]
-    set nchannels_i     [lindex $arguments 3]
-    set nchannels_o     [lindex $arguments 4]
-    set block_design    [lindex $arguments 5]
-    set nchannels_max   [expr max($nchannels_i, $nchannels_o)]
-    set constraint_file  $::Syfala::CONSTRAINTS_DIR/[Xilinx::get_board_constraint $board]
+    set board               [lindex $::argv 0]
+    set board_part          [lindex $::argv 1]
+    set board_property      [lindex $::argv 2]
+    set board_id            [lindex $::argv 3]
+    set constraint_file     [lindex $::argv 4]
+    set nsamples            [lindex $::argv 5]
+    set sample_rate         [lindex $::argv 6]
+    set sample_width        [lindex $::argv 7]
+    set block_design        [lindex $::argv 8]
+    set ethernet            [lindex $::argv 9]
+    set nchannels_i         [lindex $::argv 10]
+    set nchannels_o         [lindex $::argv 11]
+    set nchannels_max       [expr max($nchannels_i, $nchannels_o)]
+    set nsamples_norm       [expr "max(16,int(pow(2,ceil(log($nsamples)/log(2)))))"]
 }
+
 namespace eval globals {
     variable project
     set project_path $::Syfala::BUILD_PROJECT_DIR
@@ -68,14 +68,22 @@ set_property -objects $::globals::project -name "xpm_libraries" -value "XPM_CDC 
 if [is_empty [get_filesets -quiet "sources_1"]] {
     create_fileset -srcset "sources_1"
 }
+
+set ip_repositories [list $::globals::ip_path]
+if $::rt::ethernet {
+    print_info "Added Ethernet IP to repositories"
+    lappend ip_repositories $::Syfala::BUILD_ETH_IP_DIR/eth_audio
+}
+
 # Set IP repository paths, update catalog
 set sources_1_fset [get_filesets "sources_1"]
-set_property -objects $sources_1_fset -name "ip_repo_paths" -value $::globals::ip_path
+set_property -objects $sources_1_fset -name "ip_repo_paths" \
+             -value $ip_repositories
 update_ip_catalog -rebuild
 
 # Import VHDL files, setting their properties
 set sources_1 [list]
-foreach f [glob -directory $::Syfala::BUILD_SOURCES_DIR *.vhd] {
+foreach f [glob -directory $::Syfala::BUILD_DIR/rtl *.vhd] {
     print_ok "Added $f RTL file to project"
     lappend sources_1 [file normalize $f]
 }

@@ -67,6 +67,35 @@ It will first create all the necessary **build** **subdirectories**:
 
 The script then takes care of all the following build procedures.
 
+```shell
+$ syfala linux build
+```
+
+- it will build both **boot** and **root** partition contents to be transferred to an external **SD** card
+
+#### Building or re-building boot & root partitions separately
+
+You can also build/update the boot & root partitions **separately** with the following commands: 
+
+```shell
+$ syfala linux build boot
+```
+
+this will only build **boot** partition's contents. These subcommands are also available:
+
+- `syfala linux build uboot` - recompiles and exports uboot
+- `syfala linux build kernel` - recompiles and exports kernel image & modules
+- `syfala linux build device-tree` - recompiles and exports device-tree
+
+```shell
+$ syfala linux build root
+```
+
+this will only build **root** partition's contents. These subcommands are also available:
+
+- `syfala linux build dsp` - **re-builds the app** and update the **bitstream** in the **root partition**
+- `syfala linux build app` - only **re-builds the app**
+
 ## boot
 
 ### Build steps

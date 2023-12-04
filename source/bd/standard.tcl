@@ -7,11 +7,15 @@ create_bd_design "main"
 set ip_list [list                       \
     "xilinx.com:ip:xlconstant:1.1"      \
     "xilinx.com:ip:axi_gpio:2.0"        \
+    "xilinx.com:hls:syfala:1.0"		\
     "xilinx.com:ip:clk_wiz:6.0"         \
-    "xilinx.com:hls:syfala:1.0"         \
     "xilinx.com:ip:proc_sys_reset:5.0"  \
     "xilinx.com:ip:xlslice:1.0"         \
 ]
+
+if $::rt::ethernet {
+    lappend ip_list "xilinx.com:hls:eth_audio:1.0"
+}
 
 switch $::rt::board {
 Z10 - Z20 {
@@ -115,7 +119,7 @@ switch $::rt::board {
         set ncodecs_max 13
     }
     GENESYS {
-        set ncodecs_max 1
+        set ncodecs_max 16
     }
 }
 
@@ -491,8 +495,8 @@ connect "pins" syfala/mute                          \
 connect "pins" syfala/bypass                        \
         "pins" sw1/Dout
 # ---------------------------------------------------
-connect "pins" syfala/outGPIO                       \
-        "ports" syfala_out_debug0
+#connect "pins" syfala/outGPIO                       \
+#        "ports" syfala_out_debug0
 # ---------------------------------------------------
 connect "pins" syfala/audio_out_0_ap_vld            \
         "ports" syfala_out_debug1

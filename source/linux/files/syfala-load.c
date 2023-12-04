@@ -29,6 +29,7 @@ static void kill_running_processes(void) {
 
 static void print_usage() {
     printf("usage: syfala-load [<target>|<cmd>] \n"
+           "--no-reset: don't reset audio codec\n"
            "-l | --list: lists all available targets\n"
            "-h | --help: displays this :P\n"
     );
@@ -62,7 +63,7 @@ static inline int file_exists(const char* f) {
     return access(f, F_OK) == 0;
 }
 
-static void parse_load_target(const char* target) {
+static void parse_load_target(const char* target, const char* arguments) {
     char bin[128], app[128], cmd[256]; int err;
     sprintf(bin, "/home/syfala/%s/bitstream.bin", target);
     sprintf(app, "/home/syfala/%s/application.elf", target);
@@ -86,6 +87,10 @@ static void parse_load_target(const char* target) {
     // Execute .elf format application
     if (file_exists(app)) {
         printf("Executing application: %s\n", app);
+        if (arguments) {
+            sprintf(app, "/home/syfala/%s/application.elf %s", target, arguments);
+            printf("%s\n", app);
+        }
         if ((err = system(app))) {
             exit(err);
         }
@@ -95,19 +100,27 @@ static void parse_load_target(const char* target) {
     }
 }
 
-static inline int isopt(const char* argv, const char* t, const char* tfull) {
-    return strcmp(argv, t) == 0 || strcmp(argv, tfull) == 0;
+static inline int isopt(int argc, const char* argv[], const char* t, const char* tfull) {
+    for (int n = 0; n < argc; ++n) {
+         if (strcmp(argv[n], t) == 0 || strcmp(argv[n], tfull) == 0) {
+             return 1;
+         }
+    }
+    return 0;
 }
 
 int main(int argc, char* argv[])
 {
-    const char* argument = argv[1];
-    if (isopt(argument, "-l", "--list")) {
+    const char* target = argv[1];
+    if (isopt(argc, argv, "-l", "--list")) {
         list_available_targets();
-    } else if (isopt(argument, "-h", "--help")) {
+    } else if (isopt(argc, argv, "-h", "--help")) {
         print_usage();
+    } else if (isopt(argc, argv, "-r", "--no-reset")) {
+        printf("NO RESET\n");
+        parse_load_target(target, "--no-reset");
     } else {
-        parse_load_target(argument);
+        parse_load_target(target, NULL);
     }
     return 0;
 }

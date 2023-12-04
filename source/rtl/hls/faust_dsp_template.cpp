@@ -72,7 +72,7 @@ static void read(mydsp& DSP, ap_int<32>* controller) {
 }
 
 /* send passive controllers values to ARM */
-static void write(mydsp& DSP, int* pcontrol) {
+static void write(mydsp& DSP, float* pcontrol) {
     int field = 0;
     FAUST_LIST_PASSIVES(ACTIVE_ELEMENT_IN);
 }
@@ -100,29 +100,30 @@ control_i[FAUST_INT_CONTROLS];
 static sy_real_t
 control_f[FAUST_REAL_CONTROLS];
 
-static bool cycle_1 = true;
+static bool initialize = true;
 
 // DSP struct
 static mydsp DSP;
 
-static bool outGPIO_local = false;
+static int N_min = min(FAUST_INPUTS, FAUST_OUTPUTS);
+static int N_max = max(FAUST_INPUTS, FAUST_OUTPUTS);
+static int N0    = N_max - N_min;
 
 // ----------------------------------------------------------------------------
 // HLS TOP-LEVEL FUNCTION
 // ----------------------------------------------------------------------------
 
 void syfala (
-     sy_ap_int audio_in,
-    sy_ap_int* audio_out,
-         float arm_control_f[16],
-           int arm_control_i[16],
-         float arm_control_p[16],
+     sy_ap_int audio_in_#IN,
+    sy_ap_int* audio_out_#ON,
+         float arm_control_f[#KF],
+           int arm_control_i[#KI],
+         float arm_control_p[#KP],
+#if SYFALA_AUDIO_DEBUG_UART //----------
+         float arm_debug[FAUST_OUTPUTS],
+#endif //-------------------------------
           int* control_block,
-    #if SYFALA_AUDIO_DEBUG_UART // -------
-         float audio_out_arm[32],
-    #endif // ----------------------------
            int arm_ok,
-         bool* outGPIO,
         float* mem_zone_f,
           int* mem_zone_i,
           bool bypass,
@@ -134,69 +135,95 @@ void syfala (
 #pragma HLS INTERFACE s_axilite port=arm_control_p
 #pragma HLS INTERFACE s_axilite port=arm_ok
 #pragma HLS INTERFACE s_axilite port=control_block
-#if SYFALA_AUDIO_DEBUG_UART // -----------------------
-    #pragma HLS INTERFACE s_axilite port=audio_out_arm
-#endif // --------------------------------------------
+#if SYFALA_AUDIO_DEBUG_UART //--------------------
+    #pragma HLS INTERFACE s_axilite port=arm_debug
+#endif //-----------------------------------------
 #pragma HLS INTERFACE m_axi port=mem_zone_f latency=30 bundle=ram
 #pragma HLS INTERFACE m_axi port=mem_zone_i latency=30 bundle=ram
 
-    sy_real_t* ffp = reinterpret_cast<sy_real_t*>(mem_zone_f);
-
-    /* Allocate 'inputs' and 'outputs' for 'compute' method */
-    static sy_real_t inputs[2], outputs[2];
-    for (int n = 0; n < FAUST_OUTPUTS; ++n) {
+#if FAUST_INPUTS //-------------------------------------
+    /* Convert ap_int<24> IP inputs to float in a local array */
+    static sy_real_t inputs[FAUST_INPUTS];
+    inputs[#IN] = audio_in_#IN.to_float() / SCALE_FACTOR;
+#endif
+    static sy_real_t outputs[FAUST_OUTPUTS];
+    for (int n = 0; n < FAUST_OUTPUTS; ++n)
          outputs[n] = 0.f;
-    }
-    /* RAM must be enabled by ARM before any computation */
-    if (arm_ok) {
-        if (cycle_1) {
-            /* first iteration: constant initialization */
-        #if SYFALA_MEMORY_USE_DDR // -------------------------------------------------------
-            /* from values initialised in DDR */
 
-            instanceConstantsFromMemmydsp(&DSP, SYFALA_SAMPLE_RATE, mem_zone_i, ffp);
+    /* Check if ARM is ready to initialize and send control values */
+    if (arm_ok) {
+        if (initialize) {
+            /* First iteration: constant initialization */
+        #if SYFALA_MEMORY_USE_DDR
+            // A. From values initialised in DDR
+            instanceConstantsFromMemmydsp(&DSP, SYFALA_SAMPLE_RATE, mem_zone_i, mem_zone_f);
         #else
-            /* directly on the FPGA */
+            // B. Else, from static arrays
             staticInitmydsp(&DSP, SYFALA_SAMPLE_RATE, mem_zone_i, mem_zone_f);
             instanceConstantsmydsp(&DSP, SYFALA_SAMPLE_RATE, mem_zone_i, mem_zone_f);
-        #endif // --------------------------------------------------------------------------
-            cycle_1 = false;
+        #endif
+            initialize = false;
         } else {
             /* All other iterations:
-             * - update controllers values from IP ports
-             * - compute one sample
-             * - write back passive controller values */
+             * - Update controller values (from ARM)
+             * - Compute one sample
+             * - Write back passive controller values
+             */
             if (*control_block == SYFALA_CONTROL_RELEASE) {
                 *control_block =  SYFALA_CONTROL_BLOCK_FPGA;
-                copy_control(arm_control_f, arm_control_i, control_f, control_i);
+                 copy_control(arm_control_f, arm_control_i, control_f, control_i);
                 *control_block =  SYFALA_CONTROL_RELEASE;
             }
-            computemydsp(&DSP, inputs, outputs, control_i, control_f, mem_zone_i, ffp);
-
-        #if FAUST_PASSIVES // --------
+            if (bypass) {
+                // if bypass switch is UP
+            #if FAUST_INPUTS
+                for (int n = 0; n < N_min; ++n)
+                     outputs[n] = inputs[n];
+            #endif
+                for (int n = 0; n < N0; ++n)
+                     outputs[n] = 0.f;
+            } else if (mute) {
+                // if 'mute' switch is up
+                for (int n = 0; n < FAUST_OUTPUTS; ++n)
+                     outputs[n] = 0.f;
+            } else {
+            #if FAUST_INPUTS
+                computemydsp(&DSP, inputs, outputs, control_i, control_f, mem_zone_i, mem_zone_f);
+            #else
+                computemydsp(&DSP, 0, outputs, control_i, control_f, mem_zone_i, mem_zone_f);
+            #endif
+                // clip outputs
+                for (int n = 0; n < FAUST_OUTPUTS; ++n)
+                     outputs[n] = clip<sy_real_t>(outputs[n], -1, 1);
+            }
+        #if FAUST_PASSIVES
             write(DSP, arm_control_p);
-        #endif // --------------------
+        #endif
         }
     } else {
-        /* if memory is not fully initialized, make a simple bypass */
-        outputs[X] = inputs[X];
+        // If ARM is not ready yet, make a simple bypass
+    #if FAUST_INPUTS
+        for (int n = 0; n < N_min; ++n)
+             outputs[n] = inputs[n];
+    #endif
+        for (int n = 0; n < N0; ++n)
+             outputs[n] = 0.f;
     }
     /* debug: change state of GPIO each cycle to see cycle time */
-    outGPIO_local = !outGPIO_local;
-    *outGPIO = outGPIO_local;
-
     if (bypass) {
-        *audio_out = audio_in;
+    #if FAUST_INPUTS // ---------------------------------------------
+        for (int n = 0; n < N_min; ++n)
+             outputs[n] = inputs[n];
+    #endif // -------------------------------------------------------
+        for (int n = 0; n < N0; ++n)
+             outputs[n] = 0.f;
     } else if (mute) {
-        *audio_out = 0;
+        for (int n = 0; n < FAUST_OUTPUTS; ++n)
+             outputs[n] = 0.f;
     } else {
         // copy produced outputs
-        for (int j = 0; j < FAUST_OUTPUTS; ++j)
-             outputs[j] = clip<sy_real_t>(outputs[j], -1, 1);
-        *audio_out = sy_ap_int(outputs[X] * SCALE_FACTOR);
+        for (int n = 0; n < FAUST_OUTPUTS; ++n)
+             outputs[n] = clip<sy_real_t>(outputs[n], -1, 1);
+        *audio_out_#ON = sy_ap_int(outputs[#ON] * SCALE_FACTOR);
     }
-#if SYFALA_AUDIO_DEBUG_UART // ------------
-    for (int n = 0; n < FAUST_OUTPUTS; ++n)
-         audio_out_arm[n] = outputs[n];
-#endif // ---------------------------------
 }

@@ -253,7 +253,7 @@
 /* DAC_CONTROL1  - Registers (IC 1) */
 #define REG_DAC_CONTROL1_IC_1_ADDR                0x2E
 #define REG_DAC_CONTROL1_IC_1_BYTE                1
-#define REG_DAC_CONTROL1_IC_1_VALUE               0x3
+#define REG_DAC_CONTROL1_IC_1_VALUE               0x23
 
 /* DAC0_VOLUME  - Registers (IC 1) */
 #define REG_DAC0_VOLUME_IC_1_ADDR                 0x2F

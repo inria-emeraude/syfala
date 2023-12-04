@@ -8,11 +8,7 @@
 - A **pre-built syfala project** (see **usage** below)
 - An available **SD card**
 - The following **Linux packages** installed on your machine: 
-  - `git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison`
-  - `uboot-tools`
-  - `cpio`
-  - `qemu-user-static `
-  - `qemu-user-static-binfmt`
+  - `bison flex libssl-dev bc u-boot-tools cpio libyaml-dev curl kmod squashfs-tools qemu-user-static`
   
 
 
@@ -27,50 +23,12 @@
 **First**, a regular **syfala project** has to be built with the following options: 
 
 ```shell
-$ syfala examples/virtualAnalog.dsp --linux --xversion 2022.2
+$ syfala examples/virtualAnalog.dsp --linux
 ```
 
 The `--linux` option is used for **compiling the host-side** (**ARM**) **application** with the **linux-specific source files** (otherwise, it would be compiling the standard baremetal one).
 
-After **synthesis**, the script will detect that you don't currently have a linux build, which is required for building the application, **a prompt will appear**, you just have to **enter 'Y'**. And everything will be built for you, you'll just have to flash it to your formatted SD card afterwards.
-
-```shell
-[ INFO ] No Linux build could be found, would you like to create one? [y/N]
-> Y
-```
-
-#### From an existing build 
-
- If you'd like to start on top of an **already existing build**, you can just **type the command**:
-
-```shell
-$ syfala build-linux
-```
-
-- it will build both **boot** and **root** partition contents to be transferred to an external **SD** card
-
-#### Building or re-building boot & root partitions separately
-
-You can also build/update the boot & root partitions **separately** with the following commands: 
-
-```shell
-$ syfala build-linux boot
-```
-
-this will only build **boot** partition's contents. These subcommands are also available:
-
-- `syfala build-linux uboot` - recompiles and exports uboot
-- `syfala build-linux kernel` - recompiles and exports kernel image & modules
-- `syfala build-linux device-tree` - recompiles and exports device-tree
-
-```shell
-$ syfala build-linux root
-```
-
-this will only build **root** partition's contents. These subcommands are also available:
-
-- `syfala build-linux dsp` - **re-builds the app** and update the **bitstream** in the **root partition**
-- `syfala build-linux app` - only **re-builds the app**
+After **synthesis**, the script will detect that you don't currently have a linux build, which is required for building the application, and will download and build everything for you, you'll just have to flash it to your formatted SD card afterwards
 
 ### Outputs
 
@@ -88,7 +46,7 @@ The **SD card** has to be formatted like so:
 There are many ways to achieve this, for instance:
 
 ```shell
-# you can just replace </dev/...> with your SD device, e.g: /dev/sda
+# you can just replace </dev/...> with your SD device, e.g: /dev/sda or /dev/mmcblk0
 sudo parted </dev/...> --script -- mklabel msdos
 sudo parted </dev/...> --script -- mkpart primary fat32 1MiB 128MiB
 sudo parted </dev/...> --script -- mkpart primary ext4 128MiB 100%
@@ -122,8 +80,23 @@ Once flashed, just insert the SD card in your device's socket, **make also sure 
 
 ### 	Connecting
 
-You can still connect through the *ttyUSB* **Serial Port**, or with **SSH**, provided you are connected on the same network as your device's (e.g. `ssh root@192.168.0.1`) . A login prompt will appear as soon as the booting process has completed.
+You can still connect through the *ttyUSB* **Serial Port**, or with **SSH**.
 
+- for **Serial Port** connection, check that devices ``/dev/ttyUSB0``and ``/dev/ttyUSB1``are present on your host and use a serial communication program with following configuration: device ``/dev/ttyUSB1``, 115200 8N1 (115200 bits/second, one start bit, eight (8) data bits, no (N) parity bit, and one (1) stop bit), no hardware flow control and no software flow control. If hardware flow control is enable, the serial connection will not behave properly. for instance when using minicom: 
+```shell 
+$minicom -b 115200 -D/dev/ttyUSB1 -8
+```
+(check hardware flow control in minicom, ctrl-A Z). Linux booting console will appear. A login prompt will appear as soon as the booting process has completed:
+```shell 
+Welcome to Alpine Linux 3.17
+Kernel 5.15.0-xilinx on an armv7l (/dev/ttyPS0)
+
+syfala login: 
+```
+- for  **SSH** connection, make sure that you are connected on the same network as your device's, get its IP address by serial connection as explained above and log as root:
+```shell
+$ ssh root@192.168.0.1 . 
+```
 ### Login/users
 
 The rootfs has the same structure as any Linux build. The scripts adds a **default user named syfala**, which has its *home* directory in */home/syfala*.
@@ -162,7 +135,7 @@ $ ./application.elf
 If you wish to **add another build** to the SD card, you just have to re-run the syfala toolchain normally on your computer, with the `--linux` option. **Your previous builds won't be erased or modified.**
 
 ```shell
-$ syfala examples/fm.dsp --linux --xversion 2022.2
+$ syfala examples/fm.dsp --linux
 ```
 
 Once the build is complete,  you will have two distinct project directories in your`build-linux/output/root/home/syfala` directory:
@@ -227,8 +200,8 @@ Wi-Fi is handled by *iwd* (provided you have an USB dongle, or the appropriate a
 iwctl device list
 # If you don't know the SSID of your network, you can run a scan and retrieve a list of all the detected networks:
 iwctl station wlan0 scan && iwctl station wlan0 get-networks
-# To connect to a network (add --hidden if it is a private network):
-iwctl station wlan0 connect <SSID> [--hidden]
+# To connect to a network (use connect-hidden if it is a private network):
+iwctl station wlan0 connect <SSID>
 ```
 
 more on: https://wiki.alpinelinux.org/wiki/Wi-Fi

@@ -1,6 +1,5 @@
 #include <syfala/arm/memory.hpp>
 #include <syfala/utilities.hpp>
-#include "config.hpp"
 #include <sys/mman.h>
 
 #define FRAME_BUFFER_BASE_ADDR  0x35000000
