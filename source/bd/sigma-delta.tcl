@@ -20,7 +20,7 @@ set script_folder [_tcl::get_script_folder]
 ################################################################
 # Check if script is running in correct Vivado version.
 ################################################################
-set scripts_vivado_version $::Xilinx::VERSION
+set scripts_vivado_version 2022.2
 set current_vivado_version [version -short]
 
 if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
@@ -38,7 +38,7 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 # source main_script.tcl
 
 
-# The design that will be created by this Tcl script contains the following 
+# The design that will be created by this Tcl script contains the following
 # module references:
 # mux_2to1, sd_dac_first
 
@@ -96,7 +96,7 @@ if { ${design_name} eq "" } {
    set errMsg "Design <$design_name> already exists in your project, please set the variable <design_name> to another value."
    set nRet 1
 } elseif { [get_files -quiet ${design_name}.bd] ne "" } {
-   # USE CASES: 
+   # USE CASES:
    #    6) Current opened design, has components, but diff names, design_name exists in project.
    #    7) No opened design, design_name exists in project.
 
@@ -130,7 +130,7 @@ set bCheckIPsPassed 1
 ##################################################################
 set bCheckIPs 1
 if { $bCheckIPs == 1 } {
-   set list_check_ips "\ 
+   set list_check_ips "\
 xilinx.com:ip:xlconstant:1.1\
 xilinx.com:ip:axi_gpio:2.0\
 xilinx.com:ip:clk_wiz:6.0\
@@ -162,7 +162,7 @@ xilinx.com:hls:syfala:1.0\
 ##################################################################
 set bCheckModules 1
 if { $bCheckModules == 1 } {
-   set list_check_mods "\ 
+   set list_check_mods "\
 mux_2to1\
 sd_dac_first\
 "
@@ -328,7 +328,7 @@ proc create_root_design { parentCell } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-  
+
   # Create instance: processing_system7_0, and set properties
   set processing_system7_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_system7_0 ]
   set_property -dict [ list \
@@ -838,7 +838,7 @@ proc create_root_design { parentCell } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-  
+
   # Create instance: sw0, and set properties
   set sw0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 sw0 ]
   set_property -dict [ list \
@@ -899,9 +899,9 @@ proc create_root_design { parentCell } {
   connect_bd_net -net sw1_Dout [get_bd_pins sw1/Dout] [get_bd_pins syfala/bypass]
   connect_bd_net -net sw2_Dout [get_bd_pins mux_2to1_0/Sel] [get_bd_pins sw2/Dout]
   connect_bd_net -net switches_1 [get_bd_ports switches] [get_bd_pins axi_gpio_SW/gpio_io_i] [get_bd_pins sw0/Din] [get_bd_pins sw1/Din] [get_bd_pins sw2/Din]
-  connect_bd_net -net syfala_outGPIO [get_bd_ports syfala_out_debug0] [get_bd_pins syfala/outGPIO]
-  connect_bd_net -net syfala_out_ch0_V [get_bd_pins sd_dac_first_0/input] [get_bd_pins syfala/out_ch0_V]
-  connect_bd_net -net syfala_out_ch0_V_ap_vld [get_bd_ports syfala_out_debug1] [get_bd_pins sd_dac_first_0/samp_clock] [get_bd_pins syfala/out_ch0_V_ap_vld]
+  connect_bd_net -net syfala_outGPIO [get_bd_ports syfala_out_debug0] [get_bd_pins syfala/outGPIO_o]
+  connect_bd_net -net syfala_audio_out_0 [get_bd_pins sd_dac_first_0/input] [get_bd_pins syfala/audio_out_0]
+  connect_bd_net -net syfala_audio_out_0_ap_vld [get_bd_ports syfala_out_debug1] [get_bd_pins sd_dac_first_0/samp_clock] [get_bd_pins syfala/audio_out_0_ap_vld]
   connect_bd_net -net vdd33_dout [get_bd_ports internal_codec_out_mute] [get_bd_pins processing_system7_0/SPI0_SS_I] [get_bd_pins vdd33/dout]
 
   # Create address segments

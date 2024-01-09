@@ -1,0 +1,57 @@
+
+ALPINE_PACKAGES += busybox-suid
+ALPINE_PACKAGES += sudo
+ALPINE_PACKAGES += openssh
+ALPINE_PACKAGES += ucspi-tcp6
+ALPINE_PACKAGES += iw
+ALPINE_PACKAGES += iwd
+ALPINE_PACKAGES += dhcpcd
+ALPINE_PACKAGES += dnsmasq
+ALPINE_PACKAGES += hostapd
+ALPINE_PACKAGES += iptables
+ALPINE_PACKAGES += avahi-dev
+ALPINE_PACKAGES += dbus
+ALPINE_PACKAGES += dcron
+ALPINE_PACKAGES += chrony
+ALPINE_PACKAGES += gpsd
+ALPINE_PACKAGES += musl-dev
+ALPINE_PACKAGES += libconfig-dev
+ALPINE_PACKAGES += alsa-lib-dev
+ALPINE_PACKAGES += alsa-utils
+ALPINE_PACKAGES += alsaconf
+ALPINE_PACKAGES += alsa-ucm-conf
+ALPINE_PACKAGES += wget
+ALPINE_PACKAGES += vim
+ALPINE_PACKAGES += emacs
+ALPINE_PACKAGES += bc
+ALPINE_PACKAGES += patch
+ALPINE_PACKAGES += make
+ALPINE_PACKAGES += gcc
+ALPINE_PACKAGES += g++
+ALPINE_PACKAGES += gdb
+ALPINE_PACKAGES += liblo-dev
+ALPINE_PACKAGES += libmicrohttpd-dev
+ALPINE_PACKAGES += libc6-compat
+ALPINE_PACKAGES += linux-headers
+ALPINE_PACKAGES += python3
+ALPINE_PACKAGES += i2c-tools
+ALPINE_PACKAGES += spi-tools
+ALPINE_PACKAGES += autologin
+ALPINE_PACKAGES += hwdata-usb
+ALPINE_PACKAGES += usbutils
+ALPINE_PACKAGES += util-linux
+ALPINE_PACKAGES += gzip
+ALPINE_PACKAGES += procps-dev
+ALPINE_PACKAGES += mingetty
+ALPINE_PACKAGES += git
+ALPINE_PACKAGES += libgpiod-dev
+ALPINE_PACKAGES += linux-tools-iio
+ALPINE_PACKAGES += linux-firmware
+ALPINE_PACKAGES += htop
+
+ALPINE_PACKAGES_EDGE_MAIN += llvm16
+ALPINE_PACKAGES_EDGE_TESTING += faust-dev a2jmidid libiio-dev
+
+ifeq (ETHERNET, $(filter ETHERNET, $(CONFIG)))
+    ALPINE_PACKAGES_EDGE_MAIN += cargo
+endif
