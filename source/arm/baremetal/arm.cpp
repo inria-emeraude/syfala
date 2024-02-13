@@ -366,7 +366,7 @@ int main(int argc, char* argv[])
     // sinon on arrive pas à afficher correctement l'initialisation.
 #if (SYFALA_BOARD_ZYBO) // --
     UART::initialize(uart);
-#endif // ------------------- 
+#endif // -------------------
     GPIO::initialize();
     Control::Type ctrl_t = Control::Type::Undefined;
     // Wait for all peripherals to be initialized
@@ -385,11 +385,16 @@ int main(int argc, char* argv[])
     // From this point, we can tell the DSP IP to start processing samples
     IP::set_arm_ok(&ip, true);
     Status::ok(RN("[status] Application ready, now running..."));
+
+#if (SYFALA_BOARD_GENESYS)
     TUI::initialize();
+#endif
 
     // Main event loop:
     while (true) {
+    #if (SYFALA_BOARD_GENESYS)
         TUI::updateUserInput();
+    #endif
         if constexpr (SYFALA_ARM_BENCHMARK) {
             static xtime::hdl start = 0, end = 0;
             xtime::print_elapsed_time(start, end);

@@ -279,7 +279,9 @@ proc make {} {
         } else {
             if {[set err [catch "exec make {*}$::runtime::targets reports >&@stdout | tee -a syfala_log.txt"]]} {
                 print_error "Command failed with error code: $err"
-                exec make reports >&@stdout
+                if [contains "hls" $::runtime::targets] {
+                    exec make reports >&@stdout
+                }
                 exit
             }
         }

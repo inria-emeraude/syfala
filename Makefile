@@ -726,8 +726,6 @@ VITIS_CMD_ARGUMENTS := $(SCRIPT_HOST_CONFIG)	\
 .PHONY: host-includes
 # -----------------------------------------------------------------------------
 
-HOST_INCLUDES		+= $(BUILD_SYFALA_ARM_CONFIG_H)
-HOST_INCLUDES           += $(BUILD_SYFALA_UTILITIES_H)
 HOST_INCLUDES           += $(wildcard $(INCLUDE_DIR)/syfala/arm/*.hpp)
 HOST_INCLUDES_CODECS    += $(wildcard $(INCLUDE_DIR)/syfala/arm/codecs/*.hpp)
 HOST_INCLUDES_CODECS    += $(wildcard $(INCLUDE_DIR)/syfala/arm/codecs/*.h)
@@ -740,7 +738,10 @@ BUILD_HOST_INCLUDES += $(foreach hpp,$(HOST_INCLUDES_CODECS),                   
 
 host-includes: $(BUILD_HOST_INCLUDES)
 
-$(BUILD_HOST_INCLUDES): $(HOST_INCLUDES) $(HOST_INCLUDES_CODECS)
+$(BUILD_HOST_INCLUDES): $(HOST_INCLUDES)		\
+			$(HOST_INCLUDES_CODECS)		\
+			$(BUILD_SYFALA_ARM_CONFIG_H)	\
+			$(BUILD_SYFALA_UTILITIES_H)
 	$(call shell_info, Copying host include directories)
 	@mkdir -p $(BUILD_INCLUDE_DIR)/syfala/arm
 	@cp -r $(HOST_INCLUDES) $(BUILD_INCLUDE_DIR)/syfala/arm/
@@ -751,6 +752,7 @@ $(BUILD_HOST_INCLUDES): $(HOST_INCLUDES) $(HOST_INCLUDES_CODECS)
 # -----------------------------------------------------------------------------
 
 HOST_APPLICATION    := $(BUILD_SW_EXPORT_DIR)/application.elf
+
 HOST_DEPENDENCIES   += $(SCRIPT_HOST)
 HOST_DEPENDENCIES   += $(HW_PLATFORM)
 HOST_DEPENDENCIES   += $(BUILD_HOST_INCLUDES)

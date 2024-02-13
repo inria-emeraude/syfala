@@ -94,7 +94,7 @@ $(ALPINE_SOURCES):
 	)
 
 define chroot # --------------------------------------------------------------
-    @export PATH=$PATH:/usr/bin:/sbin:/bin &&                                 \
+    @export PATH=$PATH:/usr/bin:/sbin:/bin:/usr/sbin &&                     \
     sudo chroot $(ALPINE_ROOT_DIR) /usr/bin/qemu-arm-static /bin/sh -c '$(1)'
 endef # ----------------------------------------------------------------------
 
@@ -347,14 +347,17 @@ ALPINE_DSP_DIR_CH   := /home/syfala/$(DSP_TARGET_NAME)
 ALPINE_DSP_DIR      := $(ALPINE_ROOT_DIR)$(ALPINE_DSP_DIR_CH)
 
 ALPINE_DSP_APPLICATION_SOURCES += $(SOURCE_ARM_LINUX_DIR)/Makefile
+ALPINE_DSP_APPLICATION_SOURCES += $(ARM_LINUX_CPP_MODULES)
 
 ifeq ($(TARGET_TYPE), faust) # ----------------------------------------------
-    ALPINE_DSP_APPLICATION_SOURCES += $(ARM_LINUX_CPP_MODULES)
     ALPINE_DSP_APPLICATION_SOURCES += $(SOURCE_ARM_LINUX_DIR)/arm.cpp
     ALPINE_DSP_APPLICATION_SOURCES += $(SOURCE_ARM_DIR)/faust/control.cpp
 else ifeq ($(TARGET_TYPE), cpp) # -------------------------------------------
-    ALPINE_DSP_APPLICATION_SOURCES += $(ARM_LINUX_CPP_MODULES)
-    ALPINE_DSP_APPLICATION_SOURCES += $(SOURCE_ARM_LINUX_DIR)/arm_no_faust.cpp
+    ifdef HOST_MAIN_SOURCE
+        ALPINE_DSP_APPLICATION_SOURCES += $(HOST_MAIN_SOURCE)
+    else
+        ALPINE_DSP_APPLICATION_SOURCES += $(SOURCE_ARM_LINUX_DIR)/arm_no_faust.cpp
+    endif
 endif # ----------------------------------------------------------------
 
 ALPINE_DSP_APPLICATION_SOURCES_TARGETS := $(addprefix $(ALPINE_DSP_DIR)/src/,$(notdir $(ALPINE_DSP_APPLICATION_SOURCES)))
@@ -403,31 +406,31 @@ $(ALPINE_DSP_APPLICATION_XSOURCES): $(XSOURCES)
 	@sudo mkdir -p $(ALPINE_DSP_DIR)/src
 	@sudo cp -r $(XSOURCES) $(ALPINE_DSP_DIR)/src
 
-$(ALPINE_DSP_APPLICATION_INCLUDE_DIR): $(BUILD_INCLUDES)	    \
-				       $(BUILD_HOST_INCLUDES)	    \
-				       $(FAUST_CONTROL_SOURCE)	    \
-				       $(BUILD_SYFALA_ARM_CONFIG_H)
-	$(call shell_info, Copying include directory)
-	@sudo cp -r $(BUILD_DIR)/include $(ALPINE_DSP_APPLICATION_INCLUDE_DIR)
-	@sudo cp -r include/syfala/arm/linux $(ALPINE_DSP_APPLICATION_INCLUDE_DIR)/syfala/arm
-
 #------------------------------------------------------------------------------
 .PHONY: alpine-application
 #------------------------------------------------------------------------------
 
 ALPINE_DSP_APPLICATION := $(ALPINE_DSP_DIR)/application.elf
-
 alpine-application: $(ALPINE_DSP_APPLICATION)
 
 ALPINE_DSP_APPLICATION_DEPENDENCIES += $(ALPINE_DSP_APPLICATION_SOURCES_TARGETS)
 ALPINE_DSP_APPLICATION_DEPENDENCIES += $(ALPINE_DSP_APPLICATION_XSOURCES)
-ALPINE_DSP_APPLICATION_DEPENDENCIES += $(ALPINE_DSP_APPLICATION_INCLUDE_DIR)
+ALPINE_DSP_APPLICATION_DEPENDENCIES += $(BUILD_SYFALA_UTILITIES_H)
+ALPINE_DSP_APPLICATION_DEPENDENCIES += $(BUILD_SYFALA_ARM_CONFIG_H)
+ALPINE_DSP_APPLICATION_DEPENDENCIES += $(BUILD_HOST_INCLUDES)
 ALPINE_DSP_APPLICATION_DEPENDENCIES += $(ALPINE_HOME_SYFALA_CH)
 
+ifeq ($(TARGET_TYPE), faust)
+    ALPINE_DSP_APPLICATION_DEPENDENCIES += $(FAUST_CONTROL_SOURCE)
+endif
+
 $(ALPINE_DSP_APPLICATION): $(ALPINE_DSP_APPLICATION_DEPENDENCIES)
+	$(call shell_info, Copying/updating include directory)
+	@sudo cp -r $(BUILD_DIR)/include $(ALPINE_DSP_DIR)/src
+	@sudo cp -r $(INCLUDE_DIR)/syfala/arm/linux $(ALPINE_DSP_APPLICATION_INCLUDE_DIR)/syfala/arm
 	$(call shell_info, Compiling DSP control application)
+	$(call chroot, make -C $(ALPINE_DSP_DIR_CH)/src clean)
 	$(call chroot, make -C $(ALPINE_DSP_DIR_CH)/src -j8)
-	@sudo touch $(ALPINE_DSP_APPLICATION)
 	@mkdir -p $(BUILD_DIR)/linux
 	@cp -r $(ALPINE_DSP_DIR) $(BUILD_DIR)/linux
 
@@ -457,7 +460,7 @@ ALPINE_ETHERNET_JSON_TARGET_CH	:= $(ALPINE_DSP_DIR_CH)/eth_audio_data.json
 
 $(ALPINE_ETHERNET_JSON_TARGET): $(ALPINE_HOME_SYFALA_CH) $(ETHERNET_HLS_OUTPUT) $(ALPINE_ETHERNET_JSON_SOURCE)
 	$(call shell_info, Installing Ethernet Audio register map)
-	@mkdir -p $(ALPINE_DSP_DIR)
+	@sudo mkdir -p $(ALPINE_DSP_DIR)
 	@sudo cp -r $(ALPINE_ETHERNET_JSON_SOURCE) $(ALPINE_DSP_DIR)/
 
 ALPINE_ETHERNET_DEPENDENCIES += $(ALPINE_ETHERNET_SOURCES)

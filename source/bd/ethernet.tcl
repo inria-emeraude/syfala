@@ -682,9 +682,12 @@ connect "pins" syfala/audio_out_$n\_ap_vld          \
         "pins" i2s_transceiver_0/from_faust_ch$n\_ap_vld
 
 # 4 from i2s to eth_audio
-connect "pins" i2s_transceiver_0/to_eth_ch$n        \
-        "pins" eth_audio_0/audio_in_$n
-
+if {$::rt::ethernet_no_output} {
+    # ---------------------------------------------------
+    connect "pins" i2s_transceiver_0/to_eth_ch$n        \
+            "pins" eth_audio_0/audio_in_$n
+    # ---------------------------------------------------
+}
 }}
 
 #  connect_bd_net -net eth_audio_0_audio_out0 [get_bd_pins eth_audio_0/audio_out0] [get_bd_pins i2s_transceiver_0/from_eth_ch0]

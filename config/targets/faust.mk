@@ -72,6 +72,7 @@ SCRIPT_HOST_CONFIG              := std
 build-faust-target: $(BUILD_FAUST_DSP_TARGET)
 
 $(BUILD_FAUST_DSP_TARGET): $(FAUST_DSP_TARGET)
+	$(call shell_info, Updating Faust DSP target: $(FAUST_DSP_TARGET))
 	@mkdir -p $(BUILD_DIR)
 	@touch $(FAUST_DSP_TARGET)
 	@rm -rf $(wildcard $(BUILD_DIR)/*.dsp)
