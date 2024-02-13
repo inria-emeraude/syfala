@@ -1,0 +1,99 @@
+-------------------------------------------------------------------------------
+Usage
+-------------------------------------------------------------------------------
+$ syfala <faustfile.dsp|cfile.cpp> [run_parameters] [run_steps]
+
+examples:
+$ syfala examples/faust/virtualAnalog.dsp --board Z20
+$ syfala examples/cpp/bypass.cpp --board Z10 --hls --report hls
+
+-------------------------------------------------------------------------------
+Commands
+-------------------------------------------------------------------------------
+        clean: deletes current build directory
+        reset: deletes current build directory as well as the syfala_log
+               & resets the current configuration
+       import: <buildname> sets previously exported .zip build as the current build
+       export: <buildname> exports current build as a .zip in the export/ directory
+       report: <hls|any*> prints global or HLS report for the current build
+          log: displays the current build's full log
+         test: builds & runs all toolchain tests
+        flash: flashes current build onto target device (baremetal w/ JTAG)
+    start-gui: executes Faust-generated gui application
+ open-project: <hls|vivado*> opens the generated .xpr project with Vivado or
+               the Vitis HLS report.
+          log: displays the full build log for the current project.
+
+-------------------------------------------------------------------------------
+Run steps
+-------------------------------------------------------------------------------
+    --sources: generate all source files required for the project
+               without building it.
+        --hls: runs Vitis HLS on target IP file
+    --project: generates the Vivado project
+      --synth: synthesizes full Vivado project
+       --host: compiles Host Control Application (ARM)
+        --gui: compiles Faust GUI controller
+      --flash: flashes boot files on device
+     --report: prints HLS report at the end of the run
+     --export: <id> exports build to export/ directory at the end of the run
+
+-------------------------------------------------------------------------------
+Build options
+-------------------------------------------------------------------------------
+      --linux: builds the Embedded Linux for syfala
+       --midi: adds MIDI control for Faust GUI and/or Embedded Linux application
+       --http: adds HTTP control for Faust GUI and/or Embedded Linux application
+        --osc: adds OSC control for Faust GUI and/or Embedded Linux application
+
+-------------------------------------------------------------------------------
+Design options
+-------------------------------------------------------------------------------
+    --multisample: <power of two number>
+                   DSP block will compute a block of samples instead of a single
+                   one. This may improve overall throughput but will introduce
+                   audio i/o latency.
+            --tdm: Builds the project with i2s TDM (experimental).
+    --sigma-delta: Builds the project with a sigma-delta-dac
+                   configuration (experimental).
+       --ethernet: (linux only) Uses TCP/IP ethernet to convey input/output signals
+                   from & to the DSP IP.
+
+-------------------------------------------------------------------------------
+HLS options
+-------------------------------------------------------------------------------
+   --accurate-use: Runs HLS with the impl flow, shows more accurate
+                   resources/latency reports, but takes longer to run.
+           --csim: <csim_file.cpp>
+                   Runs C simulation for the Syfala DSP IP.
+      --csim-iter: <integer>
+                   Sets the number of 'syfala' calls during the C simulation.
+    --csim-inputs: <path_to_directory>
+                   Sets the directory containing input sample files (as .txt files).
+                   Each sample should be normalized floating point values going from
+                   -1.f to 1.f separated by a white space or a line return.
+             --mcd: (faust only) Max-copy-delay: threshold between copy and ring-buffer
+                    implementation (defaults to 16)
+             --umo: Adds the Vitis HLS unsafe_math_optimizations directive to the syfala
+                    DSP IP.
+
+-------------------------------------------------------------------------------
+ARM options
+-------------------------------------------------------------------------------
+       --shield: <adau|motherboard>
+                 Adds support for the ADAU1777, ADAU1787 external codecs, or for the
+                 ADAU 'Motherboard'.
+    --benchmark: (faust only) Enables benchmark for the ARM control event loop.
+      --verbose: n/a
+   --arm-target: Selects the main (.cpp) source file for the ARM control application.
+
+-------------------------------------------------------------------------------
+Run parameters
+-------------------------------------------------------------------------------
+      --memory, -m: <DDR*|STATIC>
+       --board, -b: <Z10*|Z20|GENESYS>
+     --sample-rate: <48000*|96000|192000|384000|768000>
+    --sample-width: <16|24*|32>
+ --controller-type: <DEMO|PCB1*|PCB2|PCB3|PCB4>
+      --ssm-volume: <FULL|HEADPHONE|DEFAULT*>
+       --ssm-speed: <FAST|DEFAULT*>

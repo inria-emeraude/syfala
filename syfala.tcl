@@ -18,303 +18,276 @@ if {[string match "l*" $sym]} {
 source $sroot/scripts/sylib.tcl
 namespace import Syfala::*
 
-set OS $tcl_platform(os)
-set OS_VERSION $tcl_platform(osVersion)
-
-namespace eval Xilinx {
-    variable ROOT
-    variable VERSION 2022.2
-}
-
-# -----------------------------------------------------------------------------
-# runtime steps
-# -----------------------------------------------------------------------------
-
-namespace eval runsteps {
-
-variable data [list]
-
-proc add_runstep { name targets } {
-    lappend runsteps::data [list $name $targets]
-}
-
-proc get_next { } {
-    set next [lindex [lindex $::runsteps::data 0] 0]
-    set index 0
-    foreach runstep $::runsteps::data {
-        set name    [lindex $runstep 0]
-        set targets [lindex $runstep 1]
-        foreach target $targets {
-            if {![file exists $target]} {
-                return $next
-            }
-        }
-        incr index
-        if {$index > [llength $::runsteps::data]} {
-            return "--flash"
-        }
-        set next [lindex [lindex $::runsteps::data $index] 0]
-    }
-    return $next
-}
-
-add_runstep "--arch" [list                      \
-    $::Syfala::BUILD_APPLICATION_FILE           \
-    $::Syfala::BUILD_IP_FILE                    \
-]
-add_runstep "--hls" [list                       \
-    $::Syfala::BUILD_HLS_REPORT_COPY            \
-]
-add_runstep "--project" [list                   \
-    $::Syfala::BUILD_XPR_FILE                   \
-]
-add_runstep "--synth" [list                     \
-    $::Syfala::BUILD_BITSTREAM_FILE             \
-]
-add_runstep "--host" [list                      \
-    $::Syfala::BUILD_APPLICATION_TARGET         \
-]
-add_runstep "--gui" [list                       \
-    $::Syfala::BUILD_GUI_TARGET                 \
-]
-}
-
-# -----------------------------------------------------------------------------
-# runtime variable declarations
-# -----------------------------------------------------------------------------
-
-proc p_runtime { v a } {
-    return [dict create value $v accepted $a]
-}
-
-proc get_value { a } {
-    return [dict get $a value]
-}
-
-proc set_value { p v } {
-    dict set $p value $v
-}
-
-namespace eval runtime {
-    variable steps              ""
-    variable post_steps         ""
-    variable dsp_target         ""
-    variable board_cpp_id       10
-    variable app_config         0
-    variable export_id          ""
-    variable external_bd        0
-    variable mcd                16
-    variable compiler           [p_runtime "HLS" { HLS VHDL }]
-    variable xversion           [p_runtime "2020.2" { 2020.2 2022.2 }]
-    variable board              [p_runtime "Z10" { Z10 Z20 GENESYS }]
-    variable memory             [p_runtime 1 { DDR STATIC }]
-    variable sample_rate        [p_runtime 48000 { 24000 48000 96000 192000 384000 768000 }]
-    variable sample_width       [p_runtime 24 { 16 24 32 }]
-    variable controller_type    [p_runtime "PCB1" { DEMO PCB1 PCB2 PCB3 PCB4 }]
-    variable ssm_volume         [p_runtime "HEADPHONE" { FULL HEADPHONE DEFAULT }]
-    variable ssm_speed          [p_runtime "DEFAULT" { FAST DEFAULT }]
-    variable vhdl_type          [p_runtime 0 {0 1}]
-}
-
-proc check_runtime_parameters {} {
-    set sr [get_value $::runtime::sample_rate]
-    set sw [get_value $::runtime::sample_width]
-    if {$sr == 768000 && $sw > 16} {
-         set_value ::runtime::sample_width 16
-         print_info "Note: a sample-rate of 768kHz requires a 16-bit sample-width"
-         print_info "SYFALA_SAMPLE_WIDTH changed to value: 16"
-    }
-}
-
-# -----------------------------------------------------------------------------
-# utility procedures
-# -----------------------------------------------------------------------------
-
-proc print_usage {} {
-    print_info "
--------------------
-Usage:
--------------------
-\$ syfala <command>
-\$ syfala <myfaustprogram.dsp> \[options steps parameters\]
--------------------------------------------------------------------------------
-Commands
--------------------------------------------------------------------------------
-      install: installs this script as a symlink in /usr/bin/
-        clean: deletes current build directory
-       import: <buildname> sets previously exported .zip build as the current build
-       export: <buildname> exports current build as a .zip in the export/ directory
-       report: <HLS|any> displays HLS or global report
-         demo: fully builds demo based on default example (virtualAnalog)
-        flash: flashes current build onto target device
-          gui: executes Faust-generated gui application
- open-project: opens the generated .xpr project with Vivado
-          log: displays log for the current build
-
--------------------------------------------------------------------------------
-General Options
--------------------------------------------------------------------------------
-   --xversion: \[ 2020.2 | 2022.2 \] chooses Xilinx toolchain version
-                (2020.2 and 2022.2 only supported for now)
-      --reset: resets current build directory before building
-               (careful! all files from previous build will be lost)
-        --mcd: <power of 2 value> (defaults to 16)
--------------------------------------------------------------------------------
-Run steps
--------------------------------------------------------------------------------
-        --all: runs all toolchain build steps (from --arch to --gui) (DEFAULT)
-       --arch: uses Faust to generate ip/host .cpp files for HLS and
-               Host application compilation
-        --hls: runs Vitis HLS on generated ip cpp file
-    --project: generates Vivado project
-      --synth: synthesizes full Vivado project
-       --host: compiles Host Control Application (ARM)
-        --gui: compiles Faust GUI controller
-      --flash: flashes boot files on device
-     --report: prints HLS report at the end of the run
-     --export: <id> exports build to export/ directory at the end of the run
-
--------------------------------------------------------------------------------
-Run parameters
--------------------------------------------------------------------------------
-      --memory, -m: \[ DDR*|STATIC \]
-       --board, -b: \[ Z10*|Z20|GENESYS \]
-     --sample-rate: \[ 48000*|96000|192000|384000|768000 \]
-    --sample-width: \[ 16|24*|32 \]
- --controller-type: \[ DEMO|PCB1*|PCB2|PCB3|PCB4 \]
-      --ssm-volume: \[ FULL|HEADPHONE|DEFAULT* \]
-       --ssm-speed: \[ FAST|DEFAULT* \]
-
-'*' means default parameter value
-" 0
-}
-
-proc print_version {} {
-    upvar OS os
-    upvar OS_VERSION osv
-    print_info "Running syfala toolchain script (v$::Syfala::VERSION) on $os ($osv)"    
-}
-
-# Tries to parse Xilinx Toolchain root installation directory
-proc parse_xroot {} {
-    if {![info exists ::Xilinx::ROOT]} {
-        # if already defined in environment as 'XILINX_ROOT_DIR'
-        if {[info exists ::env(XILINX_ROOT_DIR)]} {
-             set ::Xilinx::ROOT $::env(XILINX_ROOT_DIR)
-             print_ok "XILINX_ROOT_DIR defined in env as: $Xilinx::ROOT"
-        } else {
-            print_error "XILINX_ROOT_DIR is undefined, aborting"
-            print_usage
-            exit 1
-        }
-    } else {
-        print_info "Checking XILINX_ROOT_DIR from command-line arguments...
-             Please set XILINX_ROOT_DIR environment variable in your current shell configuration
-             file in order to avoid this in future uses..."
-    }
-    # then, check if installation is valid
-    # and add Vitis/Vivado/HLS environments to exec path
-    # (we don't require the 'use_vitis' function anymore)
-    check_xroot $Xilinx::ROOT $Xilinx::VERSION
-    set_xenv $Xilinx::ROOT $Xilinx::VERSION "Vitis_HLS"
-    set_xenv $Xilinx::ROOT $Xilinx::VERSION "Vivado"
-    set_xenv $Xilinx::ROOT $Xilinx::VERSION "Vitis"
-    print_ok "Xilinx toolchain environment added to script's PATH"
-}
-
-# gets command line argument value at next 'argv' index
-proc get_argument_value { index } {
+# gets command line argument value at next '::argv' index
+proc get_argument_value {index} {
     upvar $index idx
     return [lindex $::argv [incr idx]]
 }
 
-# checks argument value validity
-# by comparing to the 'accepted' values set for the argument
-# (see the runtime variables above)
-proc parse_argument_value { argument value } {
-    upvar $argument rparameter
-    set accept [dict get $rparameter "accepted"]
-    if {[lsearch -exact $accept $value] >= 0 || $accept == {}} {
-         dict set rparameter value "$value"
-    } else {
-        print_error "Value ($value) for argument not accepted"
-        print_error "Accepted values: $accept"
-        print_error "Default value: [dict get $rparameter value]"
-        exit 1
-    }
+namespace eval runtime {
+# runtime makefile variable & targets
+    variable targets        [list]
+    variable make_debug     0
+    variable faust2vhdl     0
+    variable reset_check    1
+    set mkenv_parameters    [list]
+    set cli_parameters      [list]
+    variable mode           "command"
+    set root                $sroot
 }
 
-# checks if ::runtime::steps variable includes 'step'
-proc is_run_step {step} {
-    return [contains $step $::runtime::steps]
+namespace eval p {
+    set fpga_parameters [list   \
+        "TARGET_TYPE"           \
+        "FAUST_DSP_TARGET"      \
+        "FAUST_FIXED_POINT"     \
+        "FAUST_MCD"             \
+        "HLS_SOURCE_MAIN"       \
+        "HLS_CSIM_SOURCE"       \
+        "HLS_CSIM_NUM_ITER"     \
+        "HLS_CSIM_INPUTS_DIR"   \
+        "XILINX_ROOT"           \
+        "XILINX_VERSION"        \
+        "HLS_DIRECTIVES_UNSAFE_MATH_OPTIMIZATIONS"  \
+        "HLS_ROUTING_AND_PLACEMENT"                 \
+        "CONFIG_EXPERIMENTAL_ETHERNET"              \
+        "CONFIG_EXPERIMENTAL_ETHERNET_NO_OUTPUT"    \
+        "CONFIG_EXPERIMENTAL_SIGMA_DELTA"           \
+        "CONFIG_EXPERIMENTAL_TDM"                   \
+        "INPUTS"                \
+        "OUTPUTS"               \
+        "MULTISAMPLE"           \
+        "BOARD"                 \
+        "MEMORY_TARGET"         \
+        "SAMPLE_RATE"           \
+        "SAMPLE_WIDTH"          \
+        "DEBUG_AUDIO"           \
+    ]
+    set arm_parameters [list    \
+        "CTRL_MIDI"             \
+        "CTRL_OSC"              \
+        "CTRL_HTTP"             \
+        "ADAU_EXTERN"           \
+        "ADAU_MOTHERBOARD"      \
+        "SSM_VOLUME"            \
+        "SSM_SPEED"             \
+        "CONTROLLER_TYPE"       \
+        "VERBOSE"               \
+    ]
+    set cmd_parameters [list    \
+        "SCP_TARGET_ADDR"       \
+        "SCP_TARGET_USER"       \
+        "SD_DEVICE"             \
+        "IMPORT_TARGET"         \
+        "EXPORT_TARGET"         \
+    ]
 }
 
-# checks if ::runtime::post_steps variable includes 'step'
-proc is_post_run_step {step} {
-    return [contains $step $::runtime::post_steps]
-}
-
-# checks dsp target file validity:
-# if no dsp target file has been set in the command line
-# we look for one saved in the build directory
-proc check_dsp_target {} {
-    if {$::runtime::dsp_target eq ""} {
-         print_info "No dsp target, looking for previous target in build directory"
-         foreach f [glob -directory $::Syfala::BUILD_DIR *.dsp] {
-            # pick the first one
-            set ::runtime::dsp_target [file normalize $f]
-            print_ok "Setting [file tail $f] as dsp target"
-         }
-    } else {
-        file copy -force $::runtime::dsp_target $::Syfala::BUILD_DIR
-    }
-}
-
-proc display_report {} {
-    set dsp [get_dsp_name]
-    set board_cpp_id [get_syconfig_define "SYFALA_BOARD"]
-    set sample_rate  [get_syconfig_define "SYFALA_SAMPLE_RATE"]
-    set sample_width [get_syconfig_define "SYFALA_SAMPLE_WIDTH"]
-    set volume [get_syconfig_define "SYFALA_SSM_VOLUME"]
-    set controller [get_syconfig_define "SYFALA_CONTROLLER_TYPE"]
-    set version $::Syfala::VERSION
-    set path $::Syfala::ROOT
-    set num_io [get_num_io]
-    set mem_access [Faust::mem_access_count]
-    switch $board_cpp_id {
-        10 { set board "Z10" }
-        20 { set board "Z20" }
-        30 { set board "GENESYS" }
-        default {
-            print_error "Incorrect board model, aborting..."
-            exit 1
+if [file exists "$::runtime::root/makefile.env"] {
+    # Parse parameters
+    set f [open $::runtime::root/makefile.env r]
+    set d [read $f]
+    foreach l [split $d "\n"] {
+        if [regexp {.*:=.*} $l] {
+            set s [split $l ":="]
+            set p [string trimright [lindex $s 0]]
+            set v [string trimleft [lindex $s 2]]
+            lappend ::runtime::mkenv_parameters [list $p $v]
+            # print_info "Retrieved parameter $p with value $v"
         }
     }
-    exec $::Syfala::ROOT/tools/print_reports.sh     \
-            $path                                   \
-            $version                                \
-            $dsp                                    \
-            $board                                  \
-            $sample_rate                            \
-            $sample_width                           \
-            $controller                             \
-            $volume                                 \
-            [lindex $num_io 0]                      \
-            [lindex $num_io 1]                      \
-            [lindex $mem_access 0]                  \
-            [lindex $mem_access 1]                  \
-        >&@stdout
-    exit 0
+} else {
+    # Otherwise, don't ask for a reset when adding parameters
+    set ::runtime::reset_check 0
 }
 
-# -----------------------------------------------------------------------------------------
-# SCRIPT START
-# -----------------------------------------------------------------------------------------
-if ![lcontains "log" $::argv] {
-    print_version
-    print_info "Running from: $spath"
-    Syfala::basic_print "\[ [color 3 CMD!] \] Command used: syfala $::argv"
+proc add_target {target} {
+    lappend ::runtime::targets $target
 }
+
+proc set_parameter {parameter value} {
+    lappend ::runtime::cli_parameters [list $parameter $value]
+}
+
+proc parameter_type {p} {
+    if [lcontains $p $::p::fpga_parameters] {
+        return "fpga"
+    } elseif [lcontains $p $::p::arm_parameters] {
+        return "arm"
+    } elseif [lcontains $p $::p::cmd_parameters] {
+        return "cmd"
+    } else {
+        return "err"
+    }
+}
+
+proc reset_yn {p} {
+    print_info "[emph Warning], adding/removing or re-setting parameter [emph $p] would require
+re-setting the project, would you like to continue? \[y/[emph N]\]"
+    set confirm [gets stdin]
+    switch $confirm {
+        y - Y - yes - Yes - YES {
+            file delete -force "build"
+            exec rm -rf "syfala_log.txt"
+        }
+        default {
+            exit 0
+        }
+    }
+}
+
+proc handle_value_change {p} {
+    # If value is different, two possibilities:
+    switch [parameter_type $p] {
+        fpga {
+            # For an FPGA-dependent parameter, ask for a build reset
+            # print_info "Parameter $p: value changed!"
+            if $::runtime::reset_check {
+                reset_yn $p
+                set ::runtime::reset_check 0
+            }
+        }
+        arm {
+            # For an ARM-dependent parameter, re-build host control application.
+            exec touch $::Syfala::INCLUDE_DIR/syfala/config_arm.hpp
+        }
+        cmd {}
+        err {}
+    }
+}
+
+proc write_mkenv {mkenv} {
+    # Write 'makefile.env'
+    set f [open "$::runtime::root/makefile.env" w]
+    foreach p $mkenv {
+        set n [lindex $p 0]
+        set v [lindex $p 1]
+        set l "$n := $v"
+        puts $f $l
+    }
+    close $f
+}
+
+proc process_mkenv {} {
+    switch $::runtime::mode {
+        command {
+        # If we're in 'command mode':
+        # - we should keep 'makefile.env' as is, not to mess with the current build.
+        set mkenv [list]
+        foreach mkenv_p $::runtime::mkenv_parameters {
+            set mkenv_pn [lindex $mkenv_p 0]
+            set mkenv_pv [lindex $mkenv_p 1]
+        # - the only thing we can remove/replace are the command-related
+        # options & variables.
+            switch [parameter_type $mkenv_pn] {
+                fpga - arm {
+                    lappend mkenv $mkenv_p
+                }
+                cmd {
+                    foreach p $::runtime::cli_parameters {
+                        set pn [lindex $p 0]
+                        set pv [lindex $p 1]
+                        if {$pn == $mkenv_pn} {
+                        # 1. if also in cli, re-set it with newest value
+                            lappend mkenv $p
+                            break
+                        }
+                    }
+
+                }
+            }
+        }
+        # Now, check if new cmd_parameters have been added
+        foreach p $::runtime::cli_parameters {
+            set pn [lindex $p 0]
+            switch [parameter_type $pn] {
+                cmd {
+                    set found 0
+                    foreach mkenv_p $::runtime::mkenv_parameters {
+                        set mkenv_pn [lindex $mkenv_p 0]
+                        if {$pn == $mkenv_pn} {
+                            set found 1
+                        }
+                    }
+                    # Parameter not already found in 'makefile.env'
+                    # Add it to the list.
+                    if !$found {
+                        lappend mkenv $p
+                    }
+                }
+            }
+        }
+        write_mkenv $mkenv
+        }
+        build {
+            # Otherwise, check all command-line-entered parameters.
+            foreach p $::runtime::cli_parameters {
+                # Retrieve parameter name 'pn' & value 'pv'
+                set pn [lindex $p 0]
+                set pv [lindex $p 1]
+                set found 0
+                # Check if parameters is not already registered in 'makefile.env'
+                foreach mkenv_p $::runtime::mkenv_parameters {
+                    set mkenv_pn [lindex $mkenv_p 0]
+                    set mkenv_pv [lindex $mkenv_p 1]
+                    if {$pn == $mkenv_pn} {
+                        # If already registered, compare their values
+                        set found 1
+                        if {$pv != $mkenv_pv} {
+                            handle_value_change $pn
+                        }
+                    }
+                }
+                # Now if the parameter has not been registered in previous 'makefile.env':
+                if !$found {
+                    handle_value_change $pn
+                }
+            }
+            # Finally, check for 'removed' parameters
+            foreach mkenv_p $::runtime::mkenv_parameters {
+                set mkenv_pn [lindex $mkenv_p 0]
+                set found 0
+                foreach p $::runtime::cli_parameters {
+                    set pn [lindex $p 0]
+                    if {$mkenv_pn == $pn} {
+                        set found 1
+                    }
+                }
+                if !$found {
+                    handle_value_change $mkenv_pn
+                }
+            }
+            write_mkenv $::runtime::cli_parameters
+        }
+    }
+}
+
+proc make {} {
+    # Write 'makefile.env' with cli parameters
+    cd $::runtime::root
+    process_mkenv
+    if [is_empty $::runtime::targets] {
+        lappend ::runtime::targets "all"
+    }
+    if $::runtime::make_debug {
+        exec make -dn {*}$::runtime::targets reports >&@stdout
+    } else {
+        if [contains "log" $::runtime::targets] {
+            exec make {*}$::runtime::targets >&@stdout
+        } elseif [contains "help" $::runtime::targets] {
+            exec make {*}$::runtime::targets >&@stdout
+        } else {
+            if {[set err [catch "exec make {*}$::runtime::targets reports >&@stdout | tee -a syfala_log.txt"]]} {
+                print_error "Command failed with error code: $err"
+                if [contains "hls" $::runtime::targets] {
+                    exec make reports >&@stdout
+                }
+                exit
+            }
+        }
+    }
+}
+
 # -----------------------------------------------------------------------------------------
 # PARSING COMMAND-LINE ARGUMENTS
 # -----------------------------------------------------------------------------------------
@@ -330,11 +303,10 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
         # -----------------------------------------------------------------------------------------
         }
         -h - --help - help {
-            print_usage
-            exit 0
+            add_target "help"
         }
         -v - --version - version {
-            exit 0
+            add_target "version"
         }
         COMMENT {
         # -----------------------------------------------------------------------------------------
@@ -342,188 +314,258 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
         # -----------------------------------------------------------------------------------------
         }
         install {
-            print_info "Installing script as symlink in /usr/bin"
-            exec sudo ln -fs $spath /usr/bin/syfala
-            print_ok   "You can now use \$ syfala --help to check if script has been installed properly"
-            print_info "Don't forget to add 'export XILINX_ROOT_DIR=/your/path/to/Xilinx/root'
-         to your shell resource file (~/.bashrc, ~/.zshrc etc.)"
-            exit 0
+            add_target "install"
+        }
+        tidy {
+            add_target "tidy"
         }
         clean {
-            rstbuild
-            exit 0
+            add_target "clean"
         }
-        next {
-            set ::runtime::steps [runsteps::get_next]
-        }
-        demo {
-            set ::runtime::dsp_target [file normalize examples/virtualAnalog.dsp]
-            set ::runtime::steps "$::runtime::steps
-                --arch --hls --project --synth --host
-                --report --export demo"
+        reset {
+            set target [get_argument_value index]
+            switch $target {
+                linux {
+                    set part [get_argument_value index]
+                    switch $part {
+                        boot    {add_target "reset-linux-boot"}
+                        root    {add_target "reset-linux-root"}
+                        default {add_target "reset-linux"}
+                    }
+                }
+                default {
+                    add_target "reset"
+                }
+            }
         }
         open-project {
-            parse_xroot
-            exec [Xilinx::vivado] $::Syfala::BUILD_XPR_FILE
-            exit 0
+            set target [get_argument_value index]
+            switch $target {
+                hls - HLS {
+                    add_target "open-project-hls"
+                }
+                default {
+                    add_target "open-project"
+                }
+            }
         }
-        report - rpt {
+        report - rpt - --report - --rpt {
             set target [get_argument_value index]
             switch $target {
                 HLS - hls {
-                    cd $::Syfala::BUILD_DIR
-                    Xilinx::Vitis_HLS::report
+                    add_target "report-hls"
                 }
                 default {
-                    display_report
+                    add_target "report"
                 }
             }
-            exit 0
         }
         import {
             set target [get_argument_value index]
-            if [file exists $target] {
-                print_info "Setting $target as current build"
-                rstbuild
-                exec unzip $target -d build/
-                print_ok "$target successfully imported"
-            }
-            exit 0
+            set_parameter "IMPORT_TARGET" $target
+            add_target "import"
         }
         export {
-            set build_id [get_argument_value index]
-            set build_id "[generate_build_id]-$build_id"
-            print_info "build id: #$build_id"
-            cd $::Syfala::BUILD_DIR
-            Syfala::export_build $build_id
-            exit 0
+            set target [get_argument_value index]
+            set_parameter "EXPORT_TARGET" $target
+            add_target "export"
         }
-        flash {
-            # note: fixes the '--board' argument not being parsed
-            # whenever this command is called
-            set ::runtime::post_steps "$::runtime::post_steps --flash"
+        flash - --flash {
+            set platform [get_argument_value index]
+            switch $platform {
+                linux {
+                    set target [get_argument_value index]
+                    add_target "linux"
+                    switch $target {
+                        boot    {add_target "flash-linux-boot"}
+                        root    {add_target "flash-linux-root"}
+                        dsp     {add_target "flash-linux-dsp"}
+                        default {
+                            incr index -1
+                            add_target "flash-linux"
+                        }
+                    }
+                }
+                boot {
+                    add_target "flash-boot"
+                }
+                default {
+                    add_target "flash"
+                }
+            }
         }
-        gui {
-            print_info "Now executing Faust-generated GUI application"
-            exec $::Syfala::BUILD_GUI_DIR/faust-gui
-            exit 0
+        scp {
+            set addr [get_argument_value index]
+            set host [get_argument_value index]
+            set_parameter "SCP_TARGET_ADDR" $addr
+            if [not_empty $host] {
+                set_parameter "SCP_TARGET_USER" $host
+            }
+            add_target "scp"
         }
-        get-board-version {
-            parse_xroot
-            ::Xilinx::get_board_part_full [get_value $::runtime::board]
-            exit 0
-        }
-        set-default-board {
-            set old [get_value $::runtime::board]
-            parse_argument_value ::runtime::board [get_argument_value index]
-            set new [get_value $::runtime::board]
-            set args [list $old $new]
-            freplacelfn $spath "{ Z10 Z20 GENESYS }" $args {{line args} {
-                set flat [lindex $args 0]
-                set A "\"[lindex $flat 0]\""
-                set B "\"[lindex $flat 1]\""
-                return [string map [list $A $B] $line]
-            }}
-            exit 0
-        }
+
         test {
-            # remove the 'test' command from arguments
-            parse_xroot
-            source $::Syfala::TESTS_DIR/tests.tcl
-            exit 0
+            add_target "tests"
         }
         log {
-            exec cat syfala_log.txt >&@stdout
-            display_report
-            exit 0
+            add_target "log"
         }
+
         COMMENT {
         # -----------------------------------------------------------------------------------------
         # OPTIONS
         # -----------------------------------------------------------------------------------------
         }
-        -c - --compiler {
-            parse_argument_value ::runtime::compiler [get_argument_value index]
-        }
         -x - --xilinx-root {
-            # note: it has to be before any other options or flags
-            set ::Xilinx::ROOT [get_argument_value index]
-            print_info "Setting XILINX_ROOT to $::Xilinx::ROOT"
+            set_parameter "XILINX_ROOT" [get_argument_value index]
         }
 
         --xversion {
-            parse_argument_value ::runtime::xversion [get_argument_value index]
-            set ::Xilinx::VERSION [get_value $::runtime::xversion]
-            print_info "Setting XILINX_VERSION to $::Xilinx::VERSION"
+            set_parameter "XILINX_VERSION" [get_argument_value index]
         }
-        --reset {
-            # resets current build directory (careful, all files from previous build will be lost)
-            rstbuild
-            file mkdir $::Syfala::BUILD_DIR
+
+        --unsafe-math-optimizations - --umo {
+            set_parameter "HLS_DIRECTIVES_UNSAFE_MATH_OPTIMIZATIONS" TRUE
         }
-        -sd - --sigma-delta {
-            set ::runtime::external_bd 1
-            set_value ::runtime::sample_rate 5000000
-            set_value ::runtime::sample_width 16
-            file mkdir $::Syfala::BUILD_DIR
-            file mkdir $::Syfala::BUILD_SOURCES_DIR
-            file copy -force $::Syfala::EXTERNAL_BD_SIGMA_DELTA     \
-                             $::Syfala::BUILD_EXTERNAL_BD
-            file copy -force $::Syfala::VHDL_DIR/sd_dac_first.vhd   \
-                             $::Syfala::BUILD_SOURCES_DIR/sd_dac_first.vhd
-             file copy -force $::Syfala::PROJECT_SCRIPT_TEMPLATE \
-                              $::Syfala::PROJECT_SCRIPT
+        --accurate-use {
+            set_parameter "HLS_ROUTING_AND_PLACEMENT" TRUE
+        }
+        --csim {
+            add_target "hls-csim"
+            set_parameter "HLS_CSIM_SOURCE" [get_argument_value index]
+        }
+        --csim-iter {
+            set_parameter "HLS_CSIM_NUM_ITER" [get_argument_value index]
+        }
+        --csim-inputs {
+            set_parameter "HLS_CSIM_INPUTS_DIR" [file normalize [get_argument_value index]]
+        }
+        --arm-target {
+            set_parameter "HOST_MAIN_SOURCE" [file normalize [get_argument_value index]]
+        }
+        --benchmark {
+            set_parameter "ARM_BENCHMARK" 1
+        }
+        --verbose {
+            set level [get_argument_value index]
+            if [is_empty $level] {
+                set level 1
+            }
+            set_parameter "VERBOSE" $level
+        }
+        --sigma-delta {
+            set_parameter "CONFIG_EXPERIMENTAL_SIGMA_DELTA" TRUE
         }
         --tdm {
-            set ::runtime::external_bd 1
-            set_value ::runtime::sample_rate 48825
-            set_value ::runtime::sample_width 16
-            file mkdir $::Syfala::BUILD_DIR
-            file mkdir $::Syfala::BUILD_SOURCES_DIR
-            file copy -force $::Syfala::EXTERNAL_BD_TDM                     \
-                             $::Syfala::BUILD_EXTERNAL_BD
-            file copy -force $::Syfala::VHDL_DIR/i2s_transceiver_tdm.vhd    \
-                             $::Syfala::BUILD_SOURCES_DIR/i2s_transceiver_tdm.vhd
-            file copy -force $::Syfala::PROJECT_SCRIPT_TEMPLATE \
-                             $::Syfala::PROJECT_SCRIPT
+            set_parameter "CONFIG_EXPERIMENTAL_TDM" TRUE
+        }
+        --linux {
+            add_target "linux"
+        }
+        --linux-dsp {
+            set_parameter "LINUX" TRUE
+            add_target "linux-dsp"
+        }
+        --vhdl - --faust2vhdl {
+            set_parameter "TARGET_TYPE" faust2vhdl
+            set ::runtime::faust2vhdl 1
+        }
+        --fixed-point {
+            set_parameter "FAUST_FIXED_POINT" TRUE
+        }
+        --inputs {
+            set_parameter "INPUTS" [get_argument_value index]
+        }
+        --outputs {
+            set_parameter "OUTPUTS" [get_argument_value index]
         }
         --mcd {
-            set ::runtime::mcd [get_argument_value index]
-            print_info "Set Faust -mcd option to $::runtime::mcd"
+            set_parameter "FAUST_MCD" [get_argument_value index]
+        }
+        --multisample {
+            set_parameter "MULTISAMPLE" [get_argument_value index]
+        }
+        --no-ctrl-block - --ncb {
+            set_parameter "CONTROL_BLOCK" 0
+        }
+        --shield {
+            set target [get_argument_value index]
+            switch $target {
+                adau {
+                    set_parameter "ADAU_EXTERN" 1
+                }
+                motherboard {
+                    set_parameter "ADAU_EXTERN" 1
+                    set_parameter "ADAU_MOTHERBOARD" 1
+                }
+            }
+        }
+        --ethernet - --eth {
+            set_parameter "CONFIG_EXPERIMENTAL_ETHERNET" TRUE
+        }
+        --no-ethernet-output {
+            set_parameter "CONFIG_EXPERIMENTAL_ETHERNET_NO_OUTPUT" 1
+        }
+        --midi {
+            set_parameter "CTRL_MIDI" 1
+        }
+        --osc {
+            set_parameter "CTRL_OSC" 1
+        }
+        --http {
+            set_parameter "CTRL_HTTP" 1
+        }
+        --sd {
+            set target [get_argument_value index]
+            set_parameter "SD_DEVICE" $target
+        }
+        --debug {
+            set target [get_argument_value index]
+            switch $target {
+                audio {
+                    set_parameter "DEBUG_AUDIO" 1
+                }
+                make {
+                    set ::runtime::make_debug 1
+                }
+                default {
+                    # TODO
+                }
+            }
         }
         COMMENT {
         # -----------------------------------------------------------------------------------------
-        # RUNTIME STEPS
+        # BUILD STEPS
         # -----------------------------------------------------------------------------------------
         }
-        -a - --all {
-            # runs all toolchain build steps (from --arch to --gui) (DEFAULT)
-            set ::runtime::steps "$::runtime::steps --arch --hls --project --synth --host --gui"
+	--faust {
+	    # This is used by multiN, in order to make a copy of the dsp file and
+	    # replace the patterns there instead of doing so in the original file.
+	    add_target "build-faust-target"
+	}
+        arch - --arch - sources - --sources {
+            add_target "sources"
         }
-        --arch           { append ::runtime::steps "--arch"    }
-        --hls - --ip     { append ::runtime::steps "--hls"     }
-        --project        { append ::runtime::steps "--project" }
-        --syn - --synth  { append ::runtime::steps "--synth"   }
-        --app - --host - --app-rebuild - --rebuild-app - rebuild-app - app-rebuild  {
-            if {[file exists build/syfala_application/application] ||
-                [file exists build/syfala_application/platform]} {
-                print_info "Resetting Host Application build"
-                file delete -force -- build/include
-                file delete -force -- build/syfala_application
-                file delete -force -- build/sw_export
-                append ::runtime::steps "--arch --host"
-            } else {
-                append ::runtime::steps "--host"
-            }
+        hls - --hls - ip - --ip {
+            add_target "hls"
         }
-        --gui             { append ::runtime::steps "--gui" }
-        --report - --rpt  { append ::runtime::post_steps "--report" }
-        --flash           { append ::runtime::post_steps "--flash"  }
-        --export          {
-            append ::runtime::post_steps "--export"
-            set build_id [get_argument_value index]
-            set build_id "[generate_build_id]-$build_id"
-            set ::runtime::export_id $::build_id
+        project - --project {
+            add_target "project"
+        }
+        syn - synth - --syn - --synth {
+            add_target "hw"
+        }
+        app - --app - host - --host {
+            add_target "sw"
+        }
+        gui - --gui {
+            add_target "gui"
+        }
+        start-gui {
+            add_target "start-gui"
+        }
+        boot - --boot {
+            add_target "boot"
         }
 
         COMMENT {
@@ -532,37 +574,25 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
         # -----------------------------------------------------------------------------------------
         }
         -b - --board {
-            parse_argument_value ::runtime::board [get_argument_value index]
-            switch [get_value $::runtime::board] {
-                Z10      { set ::runtime::board_cpp_id 10 }
-                Z20      { set ::runtime::board_cpp_id 20 }
-                GENESYS  { set ::runtime::board_cpp_id 30 }
-            }
+            set_parameter "BOARD" [get_argument_value index]
         }
         -m - --memory {
-            parse_argument_value ::runtime::memory [get_argument_value index]
-            switch [get_value $::runtime::memory] {
-                "DDR"     { dict set ::runtime::memory value 1 }
-                "STATIC"  { dict set ::runtime::memory value 0 }
-            }
+            set_parameter "MEMORY_TARGET" [get_argument_value index]
         }
         --sample-rate {
-            parse_argument_value ::runtime::sample_rate [get_argument_value index]
+            set_parameter "SAMPLE_RATE" [get_argument_value index]
         }
         --sample-width {
-            parse_argument_value ::runtime::sample_width [get_argument_value index]
+            set_parameter "SAMPLE_WIDTH" [get_argument_value index]
         }
         --controller-type {
-            parse_argument_value ::runtime::controller_type [get_argument_value index]
+            set_parameter "CONTROLLER_TYPE" [get_argument_value index]
         }
         --ssm-volume {
-            parse_argument_value ::runtime::ssm_volume [get_argument_value index]
+            set_parameter "SSM_VOLUME" [get_argument_value index]
         }
         --ssm-speed {
-            parse_argument_value ::runtime::ssm_speed [get_argument_value index]
-        }
-        --vhdl-type {
-            parse_argument_value ::runtime::vhdl_type [get_argument_value index]
+            set_parameter "SSM_SPEED" [get_argument_value index]
         }
         COMMENT {
         # -----------------------------------------------------------------------------------------
@@ -571,11 +601,16 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
         }
         default {
             # check DSP target file
-            set pattern ".dsp"
-            if {[string match *$pattern $argument] && [file exists $argument]} {
-                 print_ok "Setting $argument as DSP target file"
-                 set ::runtime::dsp_target [file normalize $argument]
-                 # copy file into build directory root
+            if [string match "*.dsp" $argument] {
+                 set_parameter "FAUST_DSP_TARGET" [file normalize $argument]
+                 set ::runtime::mode "build"
+                 if !$::runtime::faust2vhdl {
+                     set_parameter "TARGET_TYPE" faust
+                 }
+            } elseif [string match "*.cpp" $argument] {
+                 set_parameter "HLS_SOURCE_MAIN" [file normalize $argument]
+                 set_parameter "TARGET_TYPE" cpp
+                 set ::runtime::mode "build"
             } else {
                 print_error "Invalid argument ($argument), aborting"
                 exit 1
@@ -584,139 +619,7 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
     }
 }
 
-# -------------------------------------------------------------------------
-# From this point, script is running in build mode:
-# -------------------------------------------------------------------------
-# if there are no runtime steps, set them all
-if {[is_empty $::runtime::steps] && ![is_empty $::runtime::dsp_target]} {
-    set ::runtime::steps "--arch --hls --project --synth --host --gui"
-}
-# Check that XILINX_ROOT_DIR and correct .dsp target are set
-parse_xroot
-
-# Make sure we're into BUILD_DIR, even if we didn't run the --arch step
-if ![file exist $::Syfala::BUILD_DIR] {
-     file mkdir $::Syfala::BUILD_DIR
-}
-cd $::Syfala::BUILD_DIR
-
-if [file exists $::Syfala::BUILD_INCLUDE_DIR] {
-    # If build already exists, retrieve board value
-    set ::runtime::board_cpp_id [get_syconfig_define "SYFALA_BOARD"]
-    switch $::runtime::board_cpp_id {
-        10 { set_value ::runtime::board "Z10" }
-        20 { set_value ::runtime::board "Z20" }
-        30 { set_value ::runtime::board "GENESYS" }
-        default {
-            print_error "Incorrect board model, aborting..."
-            exit 1
-        }
-    }
-    print_info "Retrieved previously used board model: [get_value $::runtime::board]"
-}
-
-print_info "Running build steps: $::runtime::steps"
-print_info "Running post-build steps: $::runtime::post_steps"
-
-check_dsp_target
-
-if [is_run_step "--arch"] {
-     # Overwrite #define values in syconfig.hpp from command-line arguments
-     # Note: this is common to both configurations (HLS/FAUST2VHDL)
-    initialize_build
-    check_runtime_parameters
-    set_syconfig_define  "SYFALA_BOARD" $::runtime::board_cpp_id [get_value $::runtime::board]
-    set_syconfig_define  "SYFALA_SAMPLE_RATE"      [get_value $::runtime::sample_rate]
-    set_syconfig_define  "SYFALA_SAMPLE_WIDTH"     [get_value $::runtime::sample_width]
-    set_syconfig_define  "SYFALA_CONTROLLER_TYPE"  [get_value $::runtime::controller_type]
-    set_syconfig_define  "SYFALA_SSM_VOLUME"       [get_value $::runtime::ssm_volume]
-    set_syconfig_define  "SYFALA_SSM_SPEED"        [get_value $::runtime::ssm_speed]
-    set_syconfig_define  "SYFALA_MEMORY_USE_DDR"   [get_value $::runtime::memory]
-}
-
-# This is where the toolchain's steps diverge,
-# depending on the chosen IP 'compiler' (HLS | faust2vhdl)
-# this includes the following steps:
-# --arch     (IP file generation)
-# --hls      (not needed for faust2vhdl)
-# --project  (project script files are different)
-
-switch [get_value $::runtime::compiler] {
-    HLS {
-    # -------------------------------------------------------------------------
-        print_ok "Selected HLS configuration (with Vitis)"
-    # -------------------------------------------------------------------------
-        set ::runtime::app_config 1
-        # 1. Generate Faust IP and Host Application cpp files
-        if [is_run_step "--arch"] {
-            Faust::generate_ip_hls $::runtime::dsp_target
-            # Generate sources with set number of channels
-            source $::Syfala::SCRIPTS_DIR/prebuild.tcl
-            # new: count izone/fzone accesses immediately after
-            # ip cpp file is generated.
-            Faust::mem_access_count
-            Faust::generate_host $::runtime::dsp_target                 \
-                                 $::Syfala::ARCH_ARM_FILE_HLS
-        }
-        # 2. Synthesize IP with Vitis HLS
-        if [is_run_step "--hls"] {
-            Xilinx::Vitis_HLS::run $::Syfala::HLS_SCRIPT                \
-                                   [get_value $::runtime::board]
-        }
-
-        # 3. Run Vivado to generate the full project
-        if [is_run_step "--project"] {
-            Xilinx::Vivado::run $::Syfala::PROJECT_SCRIPT               \
-                                [get_value $::runtime::board]           \
-                                $::runtime::external_bd                 \
-                                $::Xilinx::ROOT                         \
-                                $::Xilinx::VERSION
-        }
-    }
-    VHDL {
-    # -------------------------------------------------------------------------
-        print_ok "Selected faust2vhdl configuration"
-    # -------------------------------------------------------------------------
-        set ::runtime::app_config 0
-        if [is_run_step "--arch"] {
-            Faust::generate_ip_vhdl $::runtime::dsp_target             \
-                                    [get_value $::runtime::vhdl_type]
-            Faust::generate_host    $::runtime::dsp_target             \
-                                    $::Syfala::ARCH_ARM_FILE_VHDL
-        }
-        if [is_run_step "--project"] {
-            Xilinx::Vivado::run $Syfala::FAUST2VHDL_SCRIPT             \
-                                [get_value $::runtime::board]
-        }
-    }
-}
-
-# -------------------------------------------------------------------------
-# common steps
-# -------------------------------------------------------------------------
-
-# 4. Synthesize the whole design
-if [is_run_step "--synth"] {
-     Xilinx::Vivado::run $::Syfala::SYNTHESIS_SCRIPT
-}
-# 5. Compile Host Control Application
-if [is_run_step "--host"] {
-     Xilinx::compile_host $::runtime::app_config [get_value $::runtime::board]
-}
-if [is_run_step "--gui"] {
-    Faust::generate_gui_app $::runtime::dsp_target
-}
-if [is_post_run_step "--export"] {
-    Syfala::export_build $::runtime::export_id
-}
-if [is_post_run_step "--report"] {
-    Xilinx::Vitis_HLS::report
-}
-if [is_post_run_step "--flash"] {
-    Xilinx::flash_jtag [get_value $::runtime::board]
-}
-
+make
 print_elapsed_time $tstart
 print_ok "Successful run!"
 print_ok "To see the build's full log: open 'syfala_log.txt' in the repository's root directory"
-display_report

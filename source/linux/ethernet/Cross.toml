@@ -1,0 +1,5 @@
+[build]
+default-target = "arm-unknown-linux-musleabihf"    # use MUSL on ARM
+
+[build.env]
+volumes = ["SYFALA_HOME=../../.."]

@@ -1,0 +1,69 @@
+FROM docker://ubuntu:18.04
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV TERM linux
+
+RUN apt-get update
+RUN apt-get -y upgrade
+RUN apt-get install -y      \
+    build-essential         \
+    default-jre             \
+    xorg                    \
+    libxrender-dev          \
+    libxtst-dev             \
+	xvfb					\
+	x11vnc					\
+	xfce4					\
+	xfce4-terminal			\
+	firefox					\
+	wget					\
+	rsync					\
+    vim                     \
+    sudo                    \
+    locales					\
+	git						\
+	cmake					\
+	libmicrohttpd-dev		\
+	pkg-config				\
+	libasound2-dev			\
+	gtk+2.0			        \
+    bison                   \
+    flex                    \
+    libssl-dev              \
+    bc                      \
+    u-boot-tools            \
+    cpio                    \
+    libyaml-dev             \
+    curl                    \
+    kmod                    \
+    squashfs-tools          \
+    qemu-user-static
+
+RUN apt-get clean
+RUN rm -rf /var/lib/apt/lists/*
+RUN useradd -ms /bin/bash syfala 
+RUN echo 'root:syfala' | chpasswd
+RUN echo 'syfala:syfala' | chpasswd
+RUN usermod -aG sudo syfala
+RUN usermod -aG dialout syfala
+RUN chown -R syfala /home/syfala
+RUN locale-gen en_US.UTF-8
+
+RUN echo "source /home/syfala/Xilinx/Vivado/2022.2/settings64.sh" >> /home/syfala/.bashrc
+RUN echo "source /home/syfala/Xilinx/Vitis/2022.2/settings64.sh" >> /home/syfala/.bashrc 
+RUN echo "source /home/syfala/Xilinx/Vitis_HLS/2022.2/settings64.sh" >> /home/syfala/.bashrc
+RUN echo "export XILINX_ROOT_DIR=/home/syfala/Xilinx" >> home/syfala/.bashrc
+
+COPY files/syfala /etc/sudoers.d/syfala 
+COPY files/startx /home/syfala/.startx 
+RUN chmod 755 /home/syfala/.startx
+RUN git clone https://github.com/grame-cncm/faust.git /home/syfala/faust
+RUN make -C /home/syfala/faust -j8
+RUN make -C /home/syfala/faust install
+
+USER syfala
+WORKDIR /home/syfala
+ENV DISPLAY :0
+ENV GEOMETRY 1920x1200
+
+EXPOSE 5900
