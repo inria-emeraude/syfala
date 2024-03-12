@@ -4,7 +4,6 @@ copyright: Copyright &copy; 2023 <a href="https://team.inria.fr/emeraude/">Emera
 nav:
     - Home: index.md
     - Manual:
-        - 'Overview': manual/manual.md
         - 'Dependencies': manual/dependencies.md
         - 'Reference': manual/reference.md
     - Tutorials:
