@@ -13,9 +13,13 @@ nav:
         - 'C++ tutorial': tutorials/cpp-tutorial-advanced.md
 
 theme: 
-  name: mkdocs
-    #custom_dir: 'theme'
+  name: null
+  custom_dir: 'cinder'
+  colorscheme: nord
   navigation_depth: 4
+  highlightjs: true
+  hlsjs_languages:
+    - cpp
 
 site_dir: ../../docs
 

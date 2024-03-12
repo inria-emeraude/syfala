@@ -1,163 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        
-        
-        
-        <link rel="shortcut icon" href="../../img/favicon.ico">
-        <title>Dependencies - Syfala Documentation</title>
-        <link href="../../css/bootstrap.min.css" rel="stylesheet">
-        <link href="../../css/font-awesome.min.css" rel="stylesheet">
-        <link href="../../css/base.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css">
 
-        <script src="../../js/jquery-1.10.2.min.js" defer></script>
-        <script src="../../js/bootstrap.min.js" defer></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
-        <script>hljs.initHighlightingOnLoad();</script> 
-    </head>
-
-    <body>
-        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
-            <div class="container">
-                <a class="navbar-brand" href="../..">Syfala Documentation</a>
-                <!-- Expander button -->
-                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-                <!-- Expanded navigation -->
-                <div id="navbar-collapse" class="navbar-collapse collapse">
-                        <!-- Main navigation -->
-                        <ul class="nav navbar-nav">
-                            <li class="navitem">
-                                <a href="../.." class="nav-link">Home</a>
-                            </li>
-                            <li class="dropdown active">
-                                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Manual <b class="caret"></b></a>
-                                <ul class="dropdown-menu">
-                                    
-<li>
-    <a href="../manual/" class="dropdown-item">Overview</a>
-</li>
-                                    
-<li>
-    <a href="./" class="dropdown-item active">Dependencies</a>
-</li>
-                                    
-<li>
-    <a href="../reference/" class="dropdown-item">Reference</a>
-</li>
-                                </ul>
-                            </li>
-                            <li class="dropdown">
-                                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Tutorials <b class="caret"></b></a>
-                                <ul class="dropdown-menu">
-                                    
-<li>
-    <a href="../../tutorials/faust-getting-started/" class="dropdown-item">Faust tutorial</a>
-</li>
-                                    
-<li>
-    <a href="../../tutorials/embedded-linux-getting-started/" class="dropdown-item">Embedded Linux</a>
-</li>
-                                    
-<li>
-    <a href="../../tutorials/cpp-tutorial-advanced/" class="dropdown-item">C++ tutorial</a>
-</li>
-                                </ul>
-                            </li>
-                        </ul>
-
-                    <ul class="nav navbar-nav ml-auto">
-                        <li class="nav-item">
-                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
-                                <i class="fa fa-search"></i> Search
-                            </a>
-                        </li>
-                            <li class="nav-item">
-                                <a rel="prev" href="../manual/" class="nav-link">
-                                    <i class="fa fa-arrow-left"></i> Previous
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a rel="next" href="../reference/" class="nav-link">
-                                    Next <i class="fa fa-arrow-right"></i>
-                                </a>
-                            </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <div class="container">
-            <div class="row">
-                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
-    <div class="navbar-header">
-        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
-            <span class="fa fa-angle-down"></span>
-        </button>
-    </div>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A guide to the Syfala toolchain.">
+    
+    
+    <link rel="shortcut icon" href="../../img/favicon.ico">
 
     
-    <div id="toc-collapse" class="navbar-collapse collapse card bg-light">
-        <ul class="nav flex-column">
+    <title>Dependencies - Syfala Documentation</title>
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/v4-shims.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hack-font@3.3.0/build/web/hack.min.css">
+    <link href='//rsms.me/inter/inter.css' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,300,600,700&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+    <link href="../../css/base.min.css" rel="stylesheet">
+    <link href="../../css/cinder.min.css" rel="stylesheet">
+
+    
+        
+        <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.18.0/build/styles/github.min.css">
+        
+    
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+            <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+        <![endif]-->
+
+    
+
+     
+</head>
+
+<body>
+
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
             
-            <li class="nav-item" data-level="1"><a href="#syfala-toolchain-dependencies" class="nav-link">Syfala toolchain dependencies</a>
-              <ul class="nav flex-column">
-            <li class="nav-item" data-level="2"><a href="#linux-targets" class="nav-link">Linux targets</a>
-              <ul class="nav flex-column">
-            <li class="nav-item" data-level="3"><a href="#ubuntu-dependencies" class="nav-link">Ubuntu dependencies</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="3"><a href="#archlinux-dependencies" class="nav-link">Archlinux dependencies</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#faust" class="nav-link">Faust</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#vivado-vitis-vitis-hls-20222-version" class="nav-link">Vivado, Vitis &amp; Vitis HLS (2022.2 version)</a>
-              <ul class="nav flex-column">
-            <li class="nav-item" data-level="3"><a href="#installing-cable-drivers-on-linux" class="nav-link">Installing Cable Drivers on Linux</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="3"><a href="#installing-digilent-board-files" class="nav-link">Installing Digilent Board Files</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="3"><a href="#installing-the-2022-patch-amd-xilinx-toolchain-v20202-only" class="nav-link">Installing the 2022 patch (AMD-Xilinx toolchain v2020.2 only)</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#cloning-the-syfala-repository" class="nav-link">Cloning the Syfala repository</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#troubleshooting" class="nav-link">Troubleshooting</a>
-              <ul class="nav flex-column">
-            <li class="nav-item" data-level="4"><a href="#vitisjava-issues" class="nav-link">Vitis/Java issues</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-              </ul>
-            </li>
-              </ul>
-            </li>
-        </ul>
+
+            <!-- Main title -->
+
+            
+              <a class="navbar-brand" href="../..">Syfala Documentation</a>
+            
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                
+                
+                    <li >
+                        <a href="../..">Home</a>
+                    </li>
+                
+                
+                
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Manual <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../manual/">Overview</a>
+</li>
+
+                        
+                            
+<li class="active">
+    <a href="./">Dependencies</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../reference/">Reference</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Tutorials <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../../tutorials/faust-getting-started/">Faust tutorial</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../../tutorials/embedded-linux-getting-started/">Embedded Linux</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../../tutorials/cpp-tutorial-advanced/">C++ tutorial</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                            <i class="fas fa-search"></i> Search
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../manual/">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="next" href="../reference/">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </li>
+            </ul>
+        </div>
     </div>
+</div>
+
+    <div class="container">
+        
+        
+        <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="first-level active"><a href="#syfala-toolchain-dependencies">Syfala toolchain dependencies</a></li>
+            <li class="second-level"><a href="#linux-targets">Linux targets</a></li>
+                
+                <li class="third-level"><a href="#ubuntu-dependencies">Ubuntu dependencies</a></li>
+                <li class="third-level"><a href="#archlinux-dependencies">Archlinux dependencies</a></li>
+            <li class="second-level"><a href="#faust">Faust</a></li>
+                
+            <li class="second-level"><a href="#vivado-vitis-vitis-hls-20222-version">Vivado, Vitis &amp; Vitis HLS (2022.2 version)</a></li>
+                
+                <li class="third-level"><a href="#installing-cable-drivers-on-linux">Installing Cable Drivers on Linux</a></li>
+                <li class="third-level"><a href="#installing-digilent-board-files">Installing Digilent Board Files</a></li>
+                <li class="third-level"><a href="#installing-the-2022-patch-amd-xilinx-toolchain-v20202-only">Installing the 2022 patch (AMD-Xilinx toolchain v2020.2 only)</a></li>
+            <li class="second-level"><a href="#cloning-the-syfala-repository">Cloning the Syfala repository</a></li>
+                
+            <li class="second-level"><a href="#troubleshooting">Troubleshooting</a></li>
+                
+                <li class="third-level"><a href="#vitisjava-issues">Vitis/Java issues</a></li>
+    </ul>
 </div></div>
-                    <div class="col-md-9" role="main">
+        <div class="col-md-9" role="main">
 
 <h1 id="syfala-toolchain-dependencies">Syfala toolchain dependencies</h1>
 <p>The Syfala toolchain is a compilation toolchain of Faust programs onto AMD-Xilinx FPGA targets. This document explains how to install and run the <strong>version 0.7.1</strong> of the toolchain  on a Linux machine. In practice, installing the Syfala toolchain means:</p>
@@ -285,37 +303,62 @@ $ mv libstdc++.so.6 libstdc++.so.6.old
 $ rm -rf libstdc++.so (symlink)
 $ sudo ln -s /usr/lib/libstdc++.so.6 libstdc++.so.6
 </code></pre></div>
-            </div>
-        </div>
+        
+        
+    </div>
 
-        <footer class="col-md-12">
+    
+      <footer class="col-md-12 text-center">
+          
+          
             <hr>
-                <p>Copyright &copy; 2023 <a href="https://team.inria.fr/emeraude/">Emeraude</a></p>
-            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
-        </footer>
-        <script>
-            var base_url = "../..",
-                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
-        </script>
-        <script src="../../js/base.js" defer></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML" defer></script>
-        <script src="../../search/main.js" defer></script>
+            <p>
+            <small>Copyright &copy; 2023 <a href="https://team.inria.fr/emeraude/">Emeraude</a></small><br>
+            
+            <small>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</small>
+            </p>
+          
 
-        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+          
+          
+      </footer>
+    
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="../../js/bootstrap-3.0.3.min.js"></script>
+
+    
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.18.0/build/highlight.min.js"></script>
+        
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+
+    <script>var base_url = "../.."</script>
+    
+    <script src="../../js/base.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="../../search/main.js"></script>
+
+    <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                    <span class="sr-only">Close</span>
+                </button>
                 <h4 class="modal-title" id="searchModalLabel">Search</h4>
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
             </div>
             <div class="modal-body">
-                <p>From here you can search these documents. Enter your search terms below.</p>
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
                 <form>
                     <div class="form-group">
-                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
                     </div>
                 </form>
-                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+                <div id="mkdocs-search-results"></div>
             </div>
             <div class="modal-footer">
             </div>
@@ -361,6 +404,6 @@ $ sudo ln -s /usr/lib/libstdc++.so.6 libstdc++.so.6
         </div>
     </div>
 </div>
-
     </body>
+
 </html>
