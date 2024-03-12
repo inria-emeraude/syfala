@@ -1,4 +1,4 @@
-# Syfala Toolchain Dependencies
+# Syfala toolchain dependencies
 
 The Syfala toolchain is a compilation toolchain of Faust programs onto AMD-Xilinx FPGA targets. This document explains how to install and run the **version 0.7.1** of the toolchain  on a Linux machine. In practice, installing the Syfala toolchain means:
 
@@ -9,18 +9,18 @@ The Syfala toolchain is a compilation toolchain of Faust programs onto AMD-Xilin
 - Installing *udev* rules in order to use the JTAG connection.
 - Cloning the **Syfala repository**, and running a **simple example** to make sure everything is working properly.
 
-## Linux Targets
+## Linux targets
 
 We recommend using **Ubuntu** (>= 18.04 LTS) for installing and using the toolchain, since it is officially supported by AMD-Xilinx. While it is still possible to use other distributions, such as Archlinux, you may encounter unresolved bugs, which won't necessarily appear in our *Troubleshooting* section below. 
 
-### Ubuntu Dependencies
+### Ubuntu dependencies
 
 ```shell
 $ sudo apt-get update 
 $ sudo apt-get install git libncurses5 libtinfo-dev build-essential default-jre pkg-config g++-multilib gtk+2.0 locales
 ```
 
-### Archlinux Dependencies
+### Archlinux dependencies
 
 ```bash
 # faust (required)
@@ -44,7 +44,9 @@ $ sudo make install
 ## Vivado, Vitis & Vitis HLS (2022.2 version)
 
 - Open an account on https://www.xilinx.com/registration
+
 - The AMD-Xilinx [download page](https://www.xilinx.com/support/download.html) contains links for downloading the **Vivado Design Suite - HLx Editions - Full Product**. It is available for both Linux and Windows. 
+
   - Download the Linux installer `Xilinx_Unified_2022.2_1014_8888_Lin64.bin`
 
 - Execute `chmod a+x Xilinx_Unified_2022.2_1014_8888_Lin64.bin`
@@ -56,9 +58,9 @@ $ sudo make install
 - Execute `./xsetup`
 
   -  Choose to install **Vitis** (it will still install **Vivado**, **Vitis**, and **Vitis HLS**). 
-  - It will need **110GB of disk space**: if you uncheck *Ultrascale*, *Ultrascale+*, *Versal ACAP* and *Alveo acceleration platform*, it will use less space and still work.
-  - **Agree** with everything and choose a directory to install (e.g. ~/Xilinx)
-  - **Install and wait** (it may take quite a while)
+  -  It will need **110GB of disk space**: if you uncheck *Ultrascale*, *Ultrascale+*, *Versal ACAP* and *Alveo acceleration platform*, it will use less space and still work.
+  -  **Agree** with everything and choose a directory to install (e.g. ~/Xilinx)
+  -  **Install and wait** (it may take quite a while)
 
 - **Setup a shell environment variable** allowing to use the tools when necessary (add this to your `~/.bashrc`, `~/.zshrc` or whatever you're currently using, replacing `$XILINX_ROOT_DIR` by the directory you chose to install all the tools)
 
@@ -69,8 +71,8 @@ $ sudo make install
 ### Installing Cable Drivers on Linux
 
 -  Go to: `$XILINX_ROOT_DIR/Vivado/2022.2/data/xicom/cable_drivers/lin64/install_script/install_drivers` directory
-- Run `./install_drivers`
-- Run `sudo cp 52-xilinx-digilent-usb.rules /etc/udev/rules.d`, this allows **JTAG** connection through **USB**.
+-  Run `./install_drivers`
+-  Run `sudo cp 52-xilinx-digilent-usb.rules /etc/udev/rules.d`, this allows **JTAG** connection through **USB**.
 
 ### Installing Digilent Board Files
 
@@ -97,7 +99,7 @@ Vivado and Vitis tools that use HLS in the background are also affected by this 
   $ Vivado/2020.2/tps/lnx64/python-3.8.3/bin/python3 y2k22_patch/patch.py
   ```
 
-## Cloning the Syfala Repository
+## Cloning the Syfala repository
 
 To clone and install the latest stable version of the Syfala toolchain, you can use the following commands:
 
@@ -120,7 +122,7 @@ On **Archlinux**, if you see an error like this one
 
 you'll have to rename the `Vivado/2020.2/tps/lnx64/binutils-2.26` (Vitis will then search in the system libraries).
 
-#### Vitis/Java Issues
+#### Vitis/Java issues
 
 On recent systems (or with **Archlinux**), you might have problems compiling the host-side (**ARM**) application. The problem is caused by system libraries requiring newer versions of GCC than the one provided by Vitis. Replacing GCC target in Vitis' path **by system GCC** works:
 

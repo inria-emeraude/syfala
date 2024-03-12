@@ -12,19 +12,18 @@
         <link href="../../css/bootstrap.min.css" rel="stylesheet">
         <link href="../../css/font-awesome.min.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css">
 
-        <script src="../../js/jquery-3.6.0.min.js" defer></script>
+        <script src="../../js/jquery-1.10.2.min.js" defer></script>
         <script src="../../js/bootstrap.min.js" defer></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
         <script>hljs.initHighlightingOnLoad();</script> 
     </head>
 
     <body>
         <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
-                <a class="navbar-brand" href="../..">Syfala Documentation </a>
-                <!--<a class="navbar-brand" href="../.."><img src="../../img/faustText.svg" width="150px"> </a>-->
+                <a class="navbar-brand" href="../..">Syfala Documentation</a>
                 <!-- Expander button -->
                 <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
                     <span class="navbar-toggler-icon"></span>
@@ -54,6 +53,23 @@
 </li>
                                 </ul>
                             </li>
+                            <li class="dropdown">
+                                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Tutorials <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../../tutorials/faust-getting-started/" class="dropdown-item">Faust tutorial</a>
+</li>
+                                    
+<li>
+    <a href="../../tutorials/embedded-linux-getting-started/" class="dropdown-item">Embedded Linux</a>
+</li>
+                                    
+<li>
+    <a href="../../tutorials/cpp-tutorial-advanced/" class="dropdown-item">C++ tutorial</a>
+</li>
+                                </ul>
+                            </li>
                         </ul>
 
                     <ul class="nav navbar-nav ml-auto">
@@ -62,15 +78,24 @@
                                 <i class="fa fa-search"></i> Search
                             </a>
                         </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../dependencies/" class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../../tutorials/faust-getting-started/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
                     </ul>
                 </div>
             </div>
         </div>
-        
-        
 
         <div class="container">
-            <div class="row"><div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
     <div class="navbar-header">
         <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
             <span class="fa fa-angle-down"></span>
@@ -81,35 +106,51 @@
     <div id="toc-collapse" class="navbar-collapse collapse card bg-light">
         <ul class="nav flex-column">
             
-            <li class="nav-item" data-level="1"><a href="#syfala-reference" class="nav-link">Syfala Reference</a>
+            <li class="nav-item" data-level="1"><a href="#syfala-command-line-interface-reference" class="nav-link">Syfala command-line interface reference</a>
               <ul class="nav flex-column">
-            <li class="nav-item" data-level="3"><a href="#general-option-flags" class="nav-link">General Option Flags</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="3"><a href="#one-shot-commands" class="nav-link">'One-shot' Commands</a>
+            <li class="nav-item" data-level="2"><a href="#general-options" class="nav-link">General options</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-level="3"><a href="#run-steps" class="nav-link">Run Steps</a>
+            <li class="nav-item" data-level="2"><a href="#commands" class="nav-link">Commands</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-level="3"><a href="#run-parameters" class="nav-link">Run Parameters</a>
+            <li class="nav-item" data-level="2"><a href="#build-options" class="nav-link">Build options</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-level="3"><a href="#parameter-description" class="nav-link">Parameter Description</a>
+            <li class="nav-item" data-level="2"><a href="#design-options" class="nav-link">Design options</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-level="2"><a href="#hardware-configuration-zybo-z7-1020" class="nav-link">Hardware Configuration (Zybo Z7-10/20)</a>
-              <ul class="nav flex-column">
-            <li class="nav-item" data-level="4"><a href="#syfala-hardware-controller-board-sw3-up" class="nav-link">Syfala Hardware Controller Board (SW3 UP)</a>
+            <li class="nav-item" data-level="2"><a href="#hls-options" class="nav-link">HLS options</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-level="3"><a href="#switch-description" class="nav-link">Switch Description</a>
+            <li class="nav-item" data-level="2"><a href="#arm-options" class="nav-link">ARM options</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#run-steps" class="nav-link">Run steps</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#run-parameters" class="nav-link">Run parameters</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#hardware-configuration-zybo-z7-1020" class="nav-link">Hardware configuration (Zybo Z7-10/20)</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="3"><a href="#syfala-hardware-controller-board-sw3-up" class="nav-link">Syfala Hardware Controller Board (SW3 UP)</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="4"><a href="#controller-type-values-description" class="nav-link">Controller-type values description</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+            <li class="nav-item" data-level="3"><a href="#switch-description" class="nav-link">Switch description</a>
               <ul class="nav flex-column">
               </ul>
             </li>
@@ -117,7 +158,7 @@
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-level="3"><a href="#sd-card-files" class="nav-link">SD Card Files</a>
+            <li class="nav-item" data-level="3"><a href="#sd-card-files-baremetal-configuration" class="nav-link">SD card files (baremetal configuration)</a>
               <ul class="nav flex-column">
               </ul>
             </li>
@@ -128,37 +169,41 @@
         </ul>
     </div>
 </div></div>
-                    <div class="col-md-9 main-container" role="main">
+                    <div class="col-md-9" role="main">
 
-<h1 id="syfala-reference">Syfala Reference</h1>
-<h3 id="general-option-flags">General Option Flags</h3>
-<table>
-<thead>
-<tr>
-<th>option</th>
-<th>accepted values</th>
-<th>description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>--xversion</code></td>
-<td><code>2020.2 - 2022.2</code></td>
-<td>chooses Xilinx toolchain version (2020.2 &amp; 2022.2 only supported for now)</td>
-</tr>
-<tr>
-<td><code>--reset</code></td>
-<td>/</td>
-<td>resets current build directory before building (<strong>careful</strong>! all files from previous build will be lost)</td>
-</tr>
-<tr>
-<td><code>--mcd</code></td>
-<td>power of 2</td>
-<td>(defaults to 16)</td>
-</tr>
-</tbody>
-</table>
-<h3 id="one-shot-commands">'One-shot' Commands</h3>
+<h1 id="syfala-command-line-interface-reference">Syfala command-line interface reference</h1>
+<pre><code class="language-shell">$ syfala &lt;command&gt; [command-options]
+
+$ syfala help
+$ syfala version
+$ syfala tidy
+$ syfala clean
+$ syfala reset
+$ syfala import &lt;path-to-file.zip&gt;
+$ syfala export &lt;name&gt;
+$ syfala report &lt;hls|any*&gt;
+$ syfala log
+$ syfala test
+$ syfala flash
+$ syfala start-gui
+$ syfala open-project &lt;hls|any*&gt;
+
+$ syfala &lt;file.dsp|file.cpp&gt; [general-options]
+                 [build-options]
+                 [design-options]
+                 [hls-options]
+                 [arm-options]
+                 [run-step]
+# examples:
+$ syfala examples/faust/bypass.dsp
+    --board Z10
+    --linux --midi --osc --http
+
+$ syfala examples/cpp/templates/gain-control-hls.cpp
+        --board Z20
+        --arm-target examples/cpp/gain-control-arm.cpp
+</code></pre>
+<h2 id="general-options">General options</h2>
 <table>
 <thead>
 <tr>
@@ -169,13 +214,45 @@
 </thead>
 <tbody>
 <tr>
-<td><code>install</code></td>
-<td>installs this script as a symlink in /usr/bin/</td>
+<td><code>-x</code> <code>--xilinx-root</code></td>
+<td>sets <code>XILINX_ROOT_DIR</code> for the current build</td>
+<td>path</td>
+</tr>
+<tr>
+<td><code>--xversion</code></td>
+<td>sets <code>XILINX_VERSION</code> for the current build</td>
+<td><code>2020.2|2022.2*</code></td>
+</tr>
+<tr>
+<td><code>--board, -b</code></td>
+<td>Defines the target board: Digilent Zybo Z7-10/20 or Genesys ZU-3EG</td>
+<td><code>Z10*|Z20|GENESYS</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="commands">Commands</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>description</th>
+<th>arguments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tidy</code></td>
+<td>removes all temporary files generated by the toolchain</td>
 <td>none</td>
 </tr>
 <tr>
 <td><code>clean</code></td>
 <td>deletes current build directory</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>reset</code></td>
+<td>deletes current build directory as well as the syfala_log &amp; resets the current toolchain configuration</td>
 <td>none</td>
 </tr>
 <tr>
@@ -191,11 +268,16 @@
 <tr>
 <td><code>report</code></td>
 <td>displays HLS or global report</td>
-<td>HLS | any</td>
+<td><hls\|**any***></td>
 </tr>
 <tr>
-<td><code>demo</code></td>
-<td>fully builds demo based on default example (virtualAnalog.dsp)</td>
+<td><code>log</code></td>
+<td>displays the current build's full log</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>test</code></td>
+<td>builds &amp; runs all toolchain tests</td>
 <td>none</td>
 </tr>
 <tr>
@@ -204,14 +286,14 @@
 <td>none</td>
 </tr>
 <tr>
-<td><code>gui</code></td>
+<td><code>start-gui</code></td>
 <td>executes the Faust-generated GUI application</td>
 <td>none</td>
 </tr>
 <tr>
 <td><code>open-project</code></td>
 <td>opens the generated .xpr project with Vivado</td>
-<td>none</td>
+<td><hls\|**any***></td>
 </tr>
 <tr>
 <td><code>help</code></td>
@@ -221,22 +303,175 @@
 <tr>
 <td><code>version</code></td>
 <td>displays the current script's version</td>
-<td></td>
+<td>none</td>
 </tr>
 </tbody>
 </table>
-<h3 id="run-steps">Run Steps</h3>
+<h2 id="build-options">Build options</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--linux</code></td>
+<td>builds the embedded linux if doesn't already exist and exports the build in the root partition (<code>/home/syfala/mybuild</code>)</td>
+</tr>
+<tr>
+<td><code>--midi</code></td>
+<td>adds MIDI control for the Faust GUI and/or the Embedded Linux Control Application</td>
+</tr>
+<tr>
+<td><code>--osc</code></td>
+<td>adds OSC control for the Faust GUI and/or the Embedded Linux Control Application</td>
+</tr>
+<tr>
+<td><code>--http</code></td>
+<td>adds HTTP control for the Faust GUI and/or the Embedded Linux Control Application</td>
+</tr>
+</tbody>
+</table>
+<h2 id="design-options">Design options</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>arguments</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--multisample</code></td>
+<td>power of two integer (e.g. 16, 24, 32, <em>etc.</em>)</td>
+<td>DSP block will compute a block of samples instead of a single one. This may improve overall throughput but will introduce audio i/o latency.</td>
+</tr>
+<tr>
+<td><code>--sigma-delta</code></td>
+<td>none</td>
+<td>Builds the project with a <em>sigma-delta</em> dac configuration (<em>experimental</em>)</td>
+</tr>
+<tr>
+<td><code>--tdm</code></td>
+<td>none</td>
+<td>Builds the project with <em>i2s TDM</em> (<em>experimental</em>)</td>
+</tr>
+<tr>
+<td><code>--ethernet</code></td>
+<td>none</td>
+<td>(<strong>linux only</strong>) uses tcp/ip ethernet to convey input/output signals from &amp; to faust</td>
+</tr>
+</tbody>
+</table>
+<h2 id="hls-options">HLS options</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>arguments</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--accurate-use</code></td>
+<td>none</td>
+<td>Runs HLS with the impl flow, shows more accurate resources/latency reports, but takes longer to run.</td>
+</tr>
+<tr>
+<td><code>--csim</code></td>
+<td>path to simulation .cpp file</td>
+<td>Runs C simulation for the syfala DSP IP</td>
+</tr>
+<tr>
+<td><code>--csim-iter</code></td>
+<td>integer (1 to ...)</td>
+<td>Sets the number of <code>syfala</code> calls during the C simulation</td>
+</tr>
+<tr>
+<td><code>--csim-inputs</code></td>
+<td>path to directory containing <code>in0.txt / in1.txt etc.</code></td>
+<td>Set the directory containing input samples files (as <code>.txt</code> files). Each sample should be normalized floating point values going from -1.f to 1.f separated by a white space or a line return.</td>
+</tr>
+<tr>
+<td><code>--mcd</code></td>
+<td>none</td>
+<td>(<strong>faust only</strong>) Max-copy-delay: threshold between copy and ring buffer implementation (default 16).</td>
+</tr>
+<tr>
+<td><code>--unsafe-math-optimizations</code></td>
+<td><code>--umo</code></td>
+<td>Adds the Vitis HLS <code>unsafe_math_optimizations</code> directive to the syfala DSP IP.</td>
+</tr>
+<tr>
+<td><code>--hls-flags</code></td>
+<td>Tcl string</td>
+<td>n/a</td>
+</tr>
+</tbody>
+</table>
+<h2 id="arm-options">ARM options</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>arguments</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--shield</code></td>
+<td><code>adau|motherboard</code></td>
+<td>Adds support for <em>ADAU1777</em>/<em>ADAU1787</em> external codecs, or for the <em>ADAU Motherboard</em></td>
+</tr>
+<tr>
+<td><code>--benchmark</code></td>
+<td>none</td>
+<td>(<strong>faust only</strong>) Enables benchmark for the ARM control-loop.</td>
+</tr>
+<tr>
+<td><code>--verbose</code></td>
+<td>none</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td><code>--arm-target</code></td>
+<td>path to .cpp file</td>
+<td>Selects the main (.cpp) source file for the ARM control application.</td>
+</tr>
+<tr>
+<td><code>--controller-type</code></td>
+<td><code>DEMO|PCB1*|PCB2|PCB3|PCB4|TEENSY</code></td>
+<td>Defines the controller used to drive the controls when SW3 is UP.</td>
+</tr>
+<tr>
+<td><code>--ssm-volume</code></td>
+<td><code>FULL|HEADPHONE*|DEFAULT</code></td>
+<td>(<strong>Zybo boards only</strong>)  <code>HEADPHONE</code>: lower volume for headphone use. <code>DEFAULT</code>: default value +1dB, the true 0dB (<code>0b001111001</code>) decreases the signal a little bit.</td>
+</tr>
+<tr>
+<td><code>--ssm-speed</code></td>
+<td><code>FAST|DEFAULT*</code></td>
+<td>(<strong>Zybo boards only</strong>) changes <strong>SSM ADC/DAC</strong> sample rate. <code>DEFAULT</code>: 48kHz sample rate. <strong>FAST</strong>: 96Khz sample rate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="run-steps">Run steps</h2>
 <p><strong>Note</strong>: the <code>--all</code> is not necessary if you wish to run all steps, just run <code>syfala myfaustdsp.dsp</code></p>
 <table>
 <thead>
 <tr>
 <th><code>--all</code></th>
-<th>runs all toolchain compilation steps (from <code>--arch</code> to <code>--gui</code>)</th>
+<th>runs all toolchain compilation steps (from <code>--sources</code> to <code>--gui</code>)</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>--arch</code></td>
+<td><code>--sources</code></td>
 <td>uses Faust to generate ip/host cpp files for HLS  and Host application compilation</td>
 </tr>
 <tr>
@@ -273,12 +508,13 @@
 </tr>
 </tbody>
 </table>
-<h3 id="run-parameters">Run Parameters</h3>
+<h2 id="run-parameters">Run parameters</h2>
 <table>
 <thead>
 <tr>
 <th style="text-align: left;">parameter</th>
 <th>accepted values</th>
+<th>description</th>
 <th>default value</th>
 </tr>
 </thead>
@@ -286,93 +522,38 @@
 <tr>
 <td style="text-align: left;"><code>--memory, -m</code></td>
 <td><code>DDR - STATIC</code></td>
+<td>(<strong>faust only</strong>) Choose between DDR &amp; static memory layout for faust delay-lines, rd/rwtables.</td>
 <td><code>DDR</code></td>
-</tr>
-<tr>
-<td style="text-align: left;"><code>--board, -b</code></td>
-<td><code>Z10 - Z20 - GENESYS</code></td>
-<td><code>Z10</code></td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>--sample-rate</code></td>
 <td><code>48000 - 96000 - 192000 - 384000 - 768000</code></td>
+<td>Changes <strong>sample rate</strong> value (Hz). Only 48kHz and 96kHz is available for <strong>SSM</strong> embeded codec. 192000 (<strong>ADAU1777</strong> and <strong>ADAU1787</strong> only)  384000 (<strong>ADAU1787</strong> only)  768000 (<strong>ADAU1787</strong> only and with <code>--sample--width 16</code> only)</td>
 <td><code>48000</code></td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>--sample-width</code></td>
 <td><code>16 - 24 - 32</code></td>
-<td><code>24</code></td>
-</tr>
-<tr>
-<td style="text-align: left;"><code>--controller-type</code></td>
-<td><code>DEMO - PCB1 - PCB2 - PCB3 - PCB4</code></td>
-<td><code>PCB1</code></td>
-</tr>
-<tr>
-<td style="text-align: left;"><code>--ssm-volume</code></td>
-<td><code>FULL - HEADPHONE - DEFAULT</code></td>
-<td><code>DEFAULT</code></td>
-</tr>
-<tr>
-<td style="text-align: left;"><code>--ssm-speed</code></td>
-<td><code>FAST - DEFAULT</code></td>
-<td><code>DEFAULT</code></td>
-</tr>
-</tbody>
-</table>
-<h3 id="parameter-description">Parameter Description</h3>
-<table>
-<thead>
-<tr>
-<th>parameter</th>
-<th>description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>--memory, -m</code></td>
-<td>selects if <strong>external</strong> <strong>DDR3</strong> is used. Enable if you use some delay, disable if you do not want any memory access (should not be disabled)</td>
-</tr>
-<tr>
-<td><code>--board</code></td>
-<td>Defines target board. <strong>Z10</strong> ,<strong>Z20</strong> and <strong>GENESYS</strong> only. If you have a VGA port (rather than 2 HDMI ports), you have an old Zybo version, which is not supported.</td>
-</tr>
-<tr>
-<td><code>--sample-rate</code></td>
-<td>Changes <strong>sample rate</strong> value (Hz). Only 48kHz and 96kHz is available for <strong>SSM</strong> embeded codec. 192000 (<strong>ADAU1777</strong> and <strong>ADAU1787</strong> only)  384000 (<strong>ADAU1787</strong> only)  768000 (<strong>ADAU1787</strong> only and with <code>--sample--width 16</code> only)</td>
-</tr>
-<tr>
-<td><code>--sample-width</code></td>
 <td>Defines <strong>sample bit depth</strong> (16|24|32)</td>
-</tr>
-<tr>
-<td><code>--controller-type</code></td>
-<td>Defines the controller used to drive the controls when <strong>SW3</strong> is <strong>UP</strong>. (<strong>SW3</strong> <strong>DOWN</strong> for <strong>software</strong> control), <u><strong>SEE BELOW</strong></u> for details on each value</td>
-</tr>
-<tr>
-<td><code>--ssm-volume</code></td>
-<td>Chooses audio codec to use. For now, it only changes the scale factor. <strong>FULL</strong>: Maximum (<strong>WARNING</strong>: for speaker only, do not use with headphones). <strong>HEADPHONE</strong>: Lower volume for headphone use. <strong>DEFAULT</strong>: Default value +1dB because the true 0dB (<code>0b001111001</code>) decreases the signal a little bit.</td>
-</tr>
-<tr>
-<td><code>--ssm-speed</code></td>
-<td>Changes <strong>SSM ADC/DAC</strong> sample rate. <strong>DEFAULT</strong>: 48kHz sample rate. <strong>FAST</strong>: 96Khz sample rate</td>
+<td><code>16</code></td>
 </tr>
 </tbody>
 </table>
-<h2 id="hardware-configuration-zybo-z7-1020">Hardware Configuration (Zybo Z7-10/20)</h2>
-<h4 id="syfala-hardware-controller-board-sw3-up">Syfala Hardware Controller Board (SW3 UP)</h4>
+<h2 id="hardware-configuration-zybo-z7-1020">Hardware configuration (Zybo Z7-10/20)</h2>
+<h3 id="syfala-hardware-controller-board-sw3-up">Syfala Hardware Controller Board (SW3 UP)</h3>
 <p>If you use a Hardware Controller Board, please set the <code>--controller-type</code> command-line parameter to the proper value (see below)</p>
-<h5 id="controller-type-values-description">Controller-Type Values Description</h5>
+<h4 id="controller-type-values-description">Controller-type values description</h4>
 <ul>
-<li><strong>DEMO</strong>:  Popophone demo box</li>
-<li><strong>PCB1</strong>: Emeraude PCB config 1: 4 knobs, 2 switches, 2 sliders (default)</li>
-<li><strong>PCB2</strong>: Emeraude PCB config 2: 8 knobs</li>
-<li><strong>PCB3</strong>: Emeraude PCB config 3: 4 knobs, 4 switches </li>
-<li><strong>PCB4</strong>: Emeraude PCB config 4: 4 knobs above, 4 switches below </li>
+<li><code>DEMO</code>:  Popophone demo box</li>
+<li><code>PCB1</code>: Emeraude PCB config 1: 4 knobs, 2 switches, 2 sliders (default)</li>
+<li><code>PCB2</code>: Emeraude PCB config 2: 8 knobs</li>
+<li><code>PCB3</code>: Emeraude PCB config 3: 4 knobs, 4 switches</li>
+<li><code>PCB4</code>: Emeraude PCB config 4: 4 knobs above, 4 switches below</li>
+<li><code>TEENSY</code>: Teensy-based controller.</li>
 </ul>
 <p>You can <strong>swap from hardware to software controller</strong> during DSP execution by changing <strong>SW3</strong>.</p>
-<h3 id="switch-description">Switch Description</h3>
-<p>Default configuration in <strong>bold</strong>  </p>
+<h3 id="switch-description">Switch description</h3>
+<p>Default configuration in <strong>bold</strong></p>
 <pre>
   SW3   SW2    SW1    SW0
 +-----+-----+-------+------+
@@ -382,11 +563,12 @@
 | <b>GUI</b> | <b>SSM</b> |<b>USE DSP</b>|<b>UNMUTE</b>|
 +-----+-----+-------+------+
 </pre>
+
 <ul>
-<li><strong>SW3</strong>: Controller type select: hardware (Controller board) or software (GUI).  </li>
-<li><strong>SW2</strong>: Audio codec input select (ADAU=external or SSM=onboard). Does not affect output.  </li>
-<li><strong>SW1</strong>: Bypass audio dsp.  </li>
-<li><strong>SW0</strong>: Mute.  </li>
+<li><strong>SW3</strong>: Controller type select: hardware (Controller board) or software (GUI).</li>
+<li><strong>SW2</strong>: Audio codec input select (ADAU=external or SSM=onboard). Does not affect output.</li>
+<li><strong>SW1</strong>: Bypass audio dsp.</li>
+<li><strong>SW0</strong>: Mute.</li>
 </ul>
 <h3 id="status-leds">Status LEDs</h3>
 <p>The RGB led indicate the program state:</p>
@@ -397,16 +579,17 @@
 <li><strong>RED</strong>: ERROR! (configuration failed or incompatible), could happen if you select the SSM codec with incompatible sample rate.</li>
 </ul>
 <p>The 4 LEDs above the switches indicate the switches state. If one of them blink, it indicates the source of the warning/error.</p>
-<h3 id="sd-card-files">SD Card Files</h3>
-<p>You can put the program on an SD card (if you want something reproducible and easily launchable, for the demos...).<br />
-After a <code>make</code> command, you should see a <code>BOOT.bin</code> file in SW_export (or you can build it with <code>make boot_file</code>).<br />
-Put the file on the root of SD card. And don't forget to put JP5 on 'SD' position !  </p></div>
+<h3 id="sd-card-files-baremetal-configuration">SD card files (baremetal configuration)</h3>
+<p>You can put the program on an SD card (if you want something reproducible and easily launchable, for the demos...).
+After a <code>make</code> command, you should see a <code>BOOT.bin</code> file in SW_export (or you can build it with <code>make boot_file</code>).
+Put the file on the root of SD card. And don't forget to put JP5 on 'SD' position !</p></div>
             </div>
         </div>
 
         <footer class="col-md-12">
             <hr>
                 <p>Copyright &copy; 2023 <a href="https://team.inria.fr/emeraude/">Emeraude</a></p>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
         </footer>
         <script>
             var base_url = "../..",

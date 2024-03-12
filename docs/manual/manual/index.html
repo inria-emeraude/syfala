@@ -12,19 +12,18 @@
         <link href="../../css/bootstrap.min.css" rel="stylesheet">
         <link href="../../css/font-awesome.min.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css">
 
-        <script src="../../js/jquery-3.6.0.min.js" defer></script>
+        <script src="../../js/jquery-1.10.2.min.js" defer></script>
         <script src="../../js/bootstrap.min.js" defer></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
         <script>hljs.initHighlightingOnLoad();</script> 
     </head>
 
     <body>
         <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
-                <a class="navbar-brand" href="../..">Syfala Documentation </a>
-                <!--<a class="navbar-brand" href="../.."><img src="../../img/faustText.svg" width="150px"> </a>-->
+                <a class="navbar-brand" href="../..">Syfala Documentation</a>
                 <!-- Expander button -->
                 <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
                     <span class="navbar-toggler-icon"></span>
@@ -54,6 +53,23 @@
 </li>
                                 </ul>
                             </li>
+                            <li class="dropdown">
+                                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Tutorials <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li>
+    <a href="../../tutorials/faust-getting-started/" class="dropdown-item">Faust tutorial</a>
+</li>
+                                    
+<li>
+    <a href="../../tutorials/embedded-linux-getting-started/" class="dropdown-item">Embedded Linux</a>
+</li>
+                                    
+<li>
+    <a href="../../tutorials/cpp-tutorial-advanced/" class="dropdown-item">C++ tutorial</a>
+</li>
+                                </ul>
+                            </li>
                         </ul>
 
                     <ul class="nav navbar-nav ml-auto">
@@ -62,15 +78,24 @@
                                 <i class="fa fa-search"></i> Search
                             </a>
                         </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../.." class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../dependencies/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
                     </ul>
                 </div>
             </div>
         </div>
-        
-        
 
         <div class="container">
-            <div class="row"><div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
     <div class="navbar-header">
         <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
             <span class="fa fa-angle-down"></span>
@@ -83,137 +108,98 @@
             
             <li class="nav-item" data-level="1"><a href="#syfala-toolchain-documentation" class="nav-link">Syfala Toolchain Documentation</a>
               <ul class="nav flex-column">
-            <li class="nav-item" data-level="2"><a href="#supported-board-models" class="nav-link">Supported Board Models</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#dependencies" class="nav-link">Dependencies</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#installing" class="nav-link">Installing</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#getting-started" class="nav-link">Getting Started</a>
-              <ul class="nav flex-column">
-            <li class="nav-item" data-level="3"><a href="#hardware-setup-digilent-zybo-z7-1020-boards" class="nav-link">Hardware Setup (Digilent Zybo-Z7-10/20 Boards)</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="3"><a href="#software" class="nav-link">Software</a>
-              <ul class="nav flex-column">
-            <li class="nav-item" data-level="4"><a href="#faust-targets" class="nav-link">Faust Targets</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="4"><a href="#c-targets" class="nav-link">C++ Targets</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-              </ul>
-            </li>
-            <li class="nav-item" data-level="3"><a href="#exporting-and-re-importing-your-builds" class="nav-link">Exporting and Re-Importing Your Builds</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="3"><a href="#making-another-build" class="nav-link">Making Another Build</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#embedded-linux" class="nav-link">Embedded Linux</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#going-further" class="nav-link">Going Further</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-level="2"><a href="#the-syfala-team" class="nav-link">The Syfala Team</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
               </ul>
             </li>
         </ul>
     </div>
 </div></div>
-                    <div class="col-md-9 main-container" role="main">
+                    <div class="col-md-9" role="main">
 
 <h1 id="syfala-toolchain-documentation">Syfala Toolchain Documentation</h1>
-<p>Automatic compilation of Faust audio DSP programs for AMD-Xilinx FPGAs.</p>
-<h2 id="supported-board-models">Supported Board Models</h2>
+<ul>
+<li>Automatic compilation of Faust audio DSP programs for AMD-Xilinx FPGAs.</li>
+</ul>
+<p>## Supported board models</p>
 <ul>
 <li>[x] Digilent <strong>Zybo Z7-10</strong> - Zynq-7000 ARM/FPGA SoC Development Board</li>
 <li>[x] Digilent <strong>Zybo Z7-20</strong> - Zynq-7000 ARM/FPGA SoC Development Board</li>
 <li>[x] Digilent <strong>Genesys ZU-3EG</strong> - Zynq UltraScale+ MPSoC Development Board</li>
 </ul>
 <p>and more to come...</p>
-<h2 id="dependencies">Dependencies</h2>
-<p>Please follow the instructions in the file <a href="../dependencies/">dependencies.md</a> in order to install the <strong>AMD-Xilinx</strong> <strong>toolchain</strong> and various other dependencies.</p>
-<h2 id="installing">Installing</h2>
-<p>the command <code>make install</code> will install a <strong>symlink</strong> in <strong>/usr/bin</strong>. After this you'll be able to just run:</p>
-<p><code>$ syfala myfaustprogram.dsp</code></p>
-<p>You'll also have to <strong>edit</strong> your shell <strong>resource</strong> <strong>file</strong> (~/.<strong>bashrc</strong> / ~/.<strong>zshrc</strong>) and set the following environment variable:</p>
-<pre><code class="language-shell">export XILINX_ROOT_DIR=/my/path/to/Xilinx/root/directory
-</code></pre>
+<p>## Dependencies</p>
+<p>Please follow the instructions in the file <a href="../dependencies/">doc/dependencies.md</a> in order to install the <strong>AMD-Xilinx</strong> <strong>toolchain</strong> and various other dependencies.</p>
+<p>## Installing</p>
+<p>the command <code>make install</code> will install a <strong>symlink</strong> in <strong>/usr/bin</strong>. After this you'll be able to just run: </p>
+<p><code>$ syfala myfaustprogram.dsp</code> </p>
+<p>You'll also have to <strong>edit</strong> your shell <strong>resource</strong> <strong>file</strong> (~/.<strong>bashrc</strong> / ~/.<strong>zshrc</strong>) and set the following environment variable: </p>
+<p><code>shell
+  export XILINX_ROOT_DIR=/my/path/to/Xilinx/root/directory</code></p>
 <p><code>XILINX_ROOT_DIR</code> is the root directory where all of the AMD-Xilinx tools (Vivado, Vitis, Vitis_HLS) are installed.</p>
-<h2 id="getting-started">Getting Started</h2>
-<h3 id="hardware-setup-digilent-zybo-z7-1020-boards">Hardware Setup (Digilent <strong>Zybo-Z7-10/20</strong> Boards)</h3>
+<p>## Getting started</p>
+<p>### Hardware setup (Digilent <strong>Zybo-Z7-10/20</strong> boards)</p>
 <ul>
-<li>[ ] Jumper <strong>JP5</strong> should be on <em>JTAG</em></li>
-<li>[ ] <strong>Power select</strong> jumper should be on <em>USB</em></li>
-<li>[ ] <strong>Switches</strong> SW0, SW1, SW2, SW3 should be <strong>down</strong></li>
-<li>[ ] The <strong>audio input</strong> is <strong>LINE IN</strong> (blue), not MIC IN</li>
-<li>[ ] The <strong>audio output</strong> is the black <strong>HPH OUT</strong> jack</li>
+<li>[ ] Jumper <strong>JP5</strong> should be on <em>JTAG</em> </li>
+<li>[ ] <strong>Power select</strong> jumper should be on <em>USB</em>  </li>
+<li>[ ] <strong>Switches</strong> SW0, SW1, SW2, SW3 should be <strong>down</strong>  </li>
+<li>[ ] The <strong>audio input</strong> is <strong>LINE IN</strong> (blue), not MIC IN  </li>
+<li>[ ] The <strong>audio output</strong> is the black <strong>HPH OUT</strong> jack  </li>
 </ul>
-<h3 id="software">Software</h3>
-<h4 id="faust-targets">Faust Targets</h4>
+<p>### Software</p>
+<p>#### Faust targets</p>
 <p>Building a simple example for the <strong>default board</strong> (Digilent Zybo <strong>Z7-10)</strong>:</p>
-<pre><code class="language-shell">$ syfala examples/faust/virtualAnalog.dsp
-</code></pre>
+<p><code>shell
+  syfala examples/faust/virtualAnalog.dsp</code></p>
 <p>This will run the <strong>full syfala toolchain</strong> on the virtualAnalog.dsp <strong>Faust</strong> file, which will then be ready to be flashed on the board. Y<strong>ou can specify the targeted board</strong> using the <code>-b (--board)</code> option:</p>
-<pre><code class="language-shell">$ syfala examples/faust/virtualAnalog.dsp --board Z20
-$ syfala examples/faust/virtualAnalog.dsp --board GENESYS
-</code></pre>
+<p><code>shell
+  syfala examples/faust/virtualAnalog.dsp --board Z20
+  syfala examples/faust/virtualAnalog.dsp --board GENESYS</code></p>
 <p>You can now <strong>connect the board</strong> to your computer with the proper <strong>USB/Serial port cable</strong> and run the <code>flash</code> command:</p>
-<pre><code class="language-shell">$ syfala flash
-</code></pre>
+<p><code>shell
+  syfala flash</code></p>
 <p>The board's <strong>RGB LED</strong> should then flash <strong>green</strong> after a few seconds, indicating that your program is running. You can now <strong>start the Faust GUI application</strong>, which will display a set of sliders/knobs/buttons and <strong>update the DSP parameters in real-time through USB-UART</strong>:</p>
-<pre><code class="language-shell">$ syfala start-gui
-</code></pre>
-<h4 id="c-targets">C++ Targets</h4>
+<p><code>shell
+  syfala start-gui</code></p>
+<p>#### C++ targets</p>
 <p>For C++ targets, the process is exactly the same (excepted for the GUI part, which is not available):</p>
-<pre><code class="language-shell">$ syfala examples/cpp/bypass.cpp --board Z20
-$ syfala flash
-</code></pre>
-<h3 id="exporting-and-re-importing-your-builds">Exporting and Re-Importing Your Builds</h3>
+<p><code>shell
+  syfala examples/cpp/templates/bypass.cpp --board Z20
+  syfala flash</code></p>
+<p>### Exporting and re-importing your builds</p>
 <p>When you're done playing with your program, you can <strong>save and export it</strong> as a <code>.zip</code> file with the following command:</p>
-<pre><code class="language-shell">$ syfala export my-faust-virtual-analog-build
-# the exported .zip file is tagged with date &amp; time, e.g.:
-&gt;&gt; &quot;export/2022-02-17-my-faust-virtual-analog-build.zip&quot;
-</code></pre>
+<p><code>shell
+  syfala export my-faust-virtual-analog-build
+  # output in 'export/my-faust-virtual-analog-build.zip'</code></p>
 <p>The resulting <code>.zip</code> file is now available in the repository's <code>export</code> directory, you can <strong>re-import</strong> it by typing:</p>
-<pre><code class="language-shell">$ syfala import export/2022-02-17-my-faust-virtual-analog-build.zip
-</code></pre>
-<h3 id="making-another-build">Making Another Build</h3>
-<p>Before building another DSP program, please <strong>make sure you have saved and exported your previous build</strong> beforehand, otherwise <strong>it will be overwritten</strong> whenever you start a new build.</p>
-<pre><code class="language-shell">$ syfala examples/my-new-dsp-build.dsp
-</code></pre>
-<h2 id="embedded-linux">Embedded Linux</h2>
-<p>Please report to the <a href="doc/linux-getting-started.md">linux-getting-started.md</a> document in order to get you started with the Embedded Linux for Syfala.</p>
-<h2 id="going-further">Going Further</h2>
+<p><code>shell
+  syfala import export/my-faust-virtual-analog-build.zip</code></p>
+<p>### Building another DSP target</p>
+<p>Before building another DSP program, please <strong>make sure you have saved and exported your previous build</strong> beforehand, otherwise <strong>it will be overwritten</strong> whenever you start a new build. </p>
+<p><code>shell
+  syfala examples/my-new-dsp-build.dsp</code></p>
+<p>## Tutorials</p>
+<p>### Getting started with syfala and Faust</p>
+<p><a href="../../tutorials/faust-getting-started/">tutorials/getting-started-faust.md</a></p>
+<p>In this tutorial, we will cover the essential topics to get you started with the <strong>Faust programming language</strong>, <strong>syfala</strong>, and audio programming on <strong>FPGAs</strong>. </p>
+<p>### Embedded Linux</p>
+<p>Please report to the <a href="../../tutorials/embedded-linux-getting-started/">linux/getting-started.md</a> document in order to get you started with the Embedded Linux for Syfala</p>
+<p>### Using syfala with C++ (advanced)</p>
+<p><a href="../../tutorials/cpp-tutorial-advanced/">tutorials/cpp-tutorial-advanced.md</a></p>
+<p>This tutorial will show you how to program a syfala DSP <em>kernel</em> using C++. It is intended for advanced users.</p>
+<p>## Going further</p>
 <p>Please report to the <a href="../reference/">reference</a> for more information on available <strong>commands</strong>, <strong>options</strong> and documentation.</p>
-<h2 id="the-syfala-team">The Syfala Team</h2>
+<p>## The syfala team</p>
 <p>Here is a list of person that have contributed to the Syfala project :</p>
 <ul>
-<li>Tanguy Risset</li>
-<li>Yann Orlarey</li>
+<li>
+<p>Tanguy Risset</p>
+</li>
+<li>
+<p>Yann Orlarey </p>
+</li>
 <li>Romain Michon</li>
 <li>Stephane Letz</li>
 <li>Florent de Dinechin</li>
+<li>Anastasia Volkova</li>
 <li>Alain Darte</li>
 <li>Yohan Uguen</li>
 <li>Gero Müller</li>
@@ -229,6 +215,7 @@ $ syfala flash
 <li>Agathe Herrou</li>
 <li>Jurek Weber</li>
 <li>Aloïs Rautureau</li>
+<li>Jessica Zaki-Sewa</li>
 </ul></div>
             </div>
         </div>
@@ -236,6 +223,7 @@ $ syfala flash
         <footer class="col-md-12">
             <hr>
                 <p>Copyright &copy; 2023 <a href="https://team.inria.fr/emeraude/">Emeraude</a></p>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
         </footer>
         <script>
             var base_url = "../..",
