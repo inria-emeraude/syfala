@@ -2,7 +2,6 @@
 !*.*
 /build/
 /export/
-/docs/
 *.user
 *.o
 *.log
