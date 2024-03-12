@@ -1,37 +1,4 @@
-# Syfala command-line interface reference
-
-```shell
-$ syfala <command> [command-options]
-
-$ syfala help
-$ syfala version
-$ syfala tidy
-$ syfala clean
-$ syfala reset
-$ syfala import <path-to-file.zip>
-$ syfala export <name>
-$ syfala report <hls|any*>
-$ syfala log
-$ syfala test
-$ syfala flash
-$ syfala start-gui
-$ syfala open-project <hls|any*>
-
-$ syfala <file.dsp|file.cpp> [general-options]
-			     [build-options]
-			     [design-options]
-			     [hls-options]
-			     [arm-options]
-			     [run-step]
-# examples:
-$ syfala examples/faust/bypass.dsp
-	--board Z10
-	--linux --midi --osc --http
-
-$ syfala examples/cpp/templates/gain-control-hls.cpp
-        --board Z20
-        --arm-target examples/cpp/gain-control-arm.cpp
-```
+# Command-line interface reference
 
 ## General options
 

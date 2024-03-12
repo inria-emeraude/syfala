@@ -1,6 +1,6 @@
 # Syfala toolchain dependencies
 
-The Syfala toolchain is a compilation toolchain of Faust programs onto AMD-Xilinx FPGA targets. This document explains how to install and run the **version 0.7.1** of the toolchain  on a Linux machine. In practice, installing the Syfala toolchain means:
+The Syfala toolchain is a compilation toolchain of Faust programs onto AMD-Xilinx FPGA targets. This document explains how to install and run the **version 0.8.0** of the toolchain  on a Linux machine. In practice, installing the Syfala toolchain means:
 
 - Installing the required **linux-packages**, depending on your Linux distribution.
 - Installing the **Faust** compiler
@@ -47,13 +47,14 @@ $ sudo make install
 
 - The AMD-Xilinx [download page](https://www.xilinx.com/support/download.html) contains links for downloading the **Vivado Design Suite - HLx Editions - Full Product**. It is available for both Linux and Windows. 
 
-  - Download the Linux installer `Xilinx_Unified_2022.2_1014_8888_Lin64.bin`
+- Download the Linux installer `Xilinx_Unified_2022.2_1014_8888_Lin64.bin`
 
-- Execute `chmod a+x Xilinx_Unified_2022.2_1014_8888_Lin64.bin`
+```shell
+chmod a+x Xilinx_Unified_2022.2_1014_8888_Lin64.bin
+./Xilinx_Unified_2022.2_1014_8888_Lin64.bin
+```
 
-- Execute `./Xilinx_Unified_2022.2_1014_8888_Lin64.bin`
-
-  - We suggest to use the "**Download Image (Install Separately)**" option. It creates a directory with a **xsetup** file to execute that you can reuse in case of failure during the installation
+- We suggest to use the "**Download Image (Install Separately)**" option. It creates a directory with a **xsetup** file to execute that you can reuse in case of failure during the installation
 
 - Execute `./xsetup`
 
@@ -64,22 +65,25 @@ $ sudo make install
 
 - **Setup a shell environment variable** allowing to use the tools when necessary (add this to your `~/.bashrc`, `~/.zshrc` or whatever you're currently using, replacing `$XILINX_ROOT_DIR` by the directory you chose to install all the tools)
 
-  - ```shell
-    export XILINX_ROOT_DIR=$HOME/Xilinx
-    ```
+```shell
+export XILINX_ROOT_DIR=$HOME/Xilinx
+```
 
 ### Installing Cable Drivers on Linux
 
--  Go to: `$XILINX_ROOT_DIR/Vivado/2022.2/data/xicom/cable_drivers/lin64/install_script/install_drivers` directory
--  Run `./install_drivers`
--  Run `sudo cp 52-xilinx-digilent-usb.rules /etc/udev/rules.d`, this allows **JTAG** connection through **USB**.
+```shell
+cd $XILINX_ROOT_DIR/Vivado/2022.2/data/xicom/cable_drivers/lin64/install_script/install_drivers
+./install_drivers
+# Allow JTAG-USB connection:
+sudo cp 52-xilinx-digilent-usb.rules /etc/udev/rules.d
+```
 
 ### Installing Digilent Board Files
 
 - Download the board files from [github](https://github.com/Digilent/vivado-boards/archive/master.zip?_ga=2.76732885.1953828090.1655988025-1125947215.1655988024):
 - Open the folder extracted from the archive and navigate to its `new/board_files` folder. You will be copying all of this folder's subfolders
-  - For the 2020.2 version, go to `$XILINX_ROOT_DIR/Vivado/2020.2/data/boards/board_files`
-  - For the 2022.2 version, go to `$XILINX_ROOT_DIR/Vivado/2022.2/data/xhub/boards/XilinxBoardStore/boards/Xilinx`
+  - For the **2020.2 version**, go to `$XILINX_ROOT_DIR/Vivado/2020.2/data/boards/board_files`
+  - For the **2022.2 version**, go to `$XILINX_ROOT_DIR/Vivado/2022.2/data/xhub/boards/XilinxBoardStore/boards/Xilinx`
 
 - **Copy** all of the folders found in vivado-boards `new/board_files `folder and **paste** them into this folder
 
@@ -88,26 +92,25 @@ $ sudo make install
 Vivado and Vitis tools that use HLS in the background are also affected by this issue. HLS tools set the ip_version in the format YYMMDDHHMM and this value is accessed as a signed integer (32-bit) that causes an overflow and generates the errors below (or something similar).
 
 - Follow this link: https://support.xilinx.com/s/article/76960?language=en_US
-
 - Download the file at the bottom of th page and unzip it in `$XILINX_ROOT_DIR`
 
-- run the following commands: 
+- Run the following commands: 
 
-- ```shell
-  $ cd $XILINX_ROOT_DIR
-  $ export LD_LIBRARY_PATH=$PWD/Vivado/2020.2/tps/lnx64/python-3.8.3/lib/
-  $ Vivado/2020.2/tps/lnx64/python-3.8.3/bin/python3 y2k22_patch/patch.py
-  ```
+```shell
+cd $XILINX_ROOT_DIR
+export LD_LIBRARY_PATH=$PWD/Vivado/2020.2/tps/lnx64/python-3.8.3/lib/
+Vivado/2022.2/tps/lnx64/python-3.8.3/bin/python3 y2k22_patch/patch.py
+```
 
 ## Cloning the Syfala repository
 
 To clone and install the latest stable version of the Syfala toolchain, you can use the following commands:
 
 ```shell
-$ git clone https://github.com/inria-emeraude/syfala 
-$ cd syfala
-$ ./syfala.tcl install
-$ syfala --help
+git clone https://github.com/inria-emeraude/syfala 
+cd syfala
+make install
+syfala --help
 ```
 
 In order to use the Syfala toolchain to compile your first example, please report to the main [README](https://github.com/inria-emeraude/syfala/blob/main/README.md) file located in the repository's root directory.
@@ -116,7 +119,7 @@ In order to use the Syfala toolchain to compile your first example, please repor
 
 On **Archlinux**, if you see an error like this one 
 
-```
+```shell
 /lib/../lib64/crti.o: file not recognized: File format not recognized
 ```
 

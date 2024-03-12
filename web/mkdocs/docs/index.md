@@ -4,9 +4,11 @@ Automatic compilation of Faust and C++ audio DSP programs for AMD/Xilinx FPGA pl
 
 ## Supported board models
 
-- [x] Digilent **Zybo Z7-10** - Zynq-7000 ARM/FPGA SoC Development Board
-- [x] Digilent **Zybo Z7-20** - Zynq-7000 ARM/FPGA SoC Development Board
-- [x] Digilent **Genesys ZU-3EG** - Zynq UltraScale+ MPSoC Development Board
+- Digilent **Zybo Z7-10** - Zynq-7000 ARM/FPGA SoC Development Board
+
+- Digilent **Zybo Z7-20** - Zynq-7000 ARM/FPGA SoC Development Board
+
+- Digilent **Genesys ZU-3EG** - Zynq UltraScale+ MPSoC Development Board
 
 and more to come...
 
@@ -32,11 +34,15 @@ export XILINX_ROOT_DIR=/my/path/to/Xilinx/root/directory
 
 ### Hardware setup (Digilent **Zybo-Z7-10/20** boards)
 
-- [ ] Jumper **JP5** should be on *JTAG* 
-- [ ] **Power select** jumper should be on *USB*  
-- [ ] **Switches** SW0, SW1, SW2, SW3 should be **down**  
-- [ ] The **audio input** is **LINE IN** (blue), not MIC IN  
-- [ ] The **audio output** is the black **HPH OUT** jack  
+- Jumper **JP5** should be on *JTAG* 
+
+- **Power select** jumper should be on *USB*  
+
+- **Switches** SW0, SW1, SW2, SW3 should be **down**  
+
+- The **audio input** is **LINE IN** (blue), not MIC IN  
+
+- The **audio output** is the black **HPH OUT** jack  
 
 ### Software
 

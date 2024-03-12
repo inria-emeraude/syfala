@@ -179,7 +179,8 @@
             <li class="second-level"><a href="#sharing-processingcontrol-with-the-arm-executable">Sharing processing/control with the ARM executable</a></li>
                 
                 <li class="third-level"><a href="#basic-axi-lite-control-example">Basic AXI-Lite control example</a></li>
-                <li class="third-level"><a href="#delay-line-axi-example-ddr-memory">Delay-line AXI example (DDR memory)</a></li>
+                <li class="third-level"><a href="#ddr-axi-axi-lite-control-embedded-linux-and-osc">DDR AXI + AXI-Lite control (Embedded Linux and OSC)</a></li>
+                <li class="third-level"><a href="#_1"></a></li>
     </ul>
 </div></div>
         <div class="col-md-9" role="main">
@@ -345,8 +346,7 @@ void syfala (
             }
 </code></pre>
 <p>For our <em>stereo gain</em> example, we first convert the input data to <em>float</em>, multiply it by <code>0.5f</code> and <strong>write it back to the output ports</strong>.</p>
-<pre><code class="language-cpp">static void compute(sy_ap_int const inputs[], sy_ap_int outputs[])
-{
+<pre><code class="language-cpp">static void compute(sy_ap_int const inputs[], sy_ap_int outputs[]) {
     // if you need to convert to float, use the following:
     // (audio inputs and outputs are 24-bit integers by default)
     float f0 = Syfala::HLS::ioreadf(inputs[0]) * 0.5f;
@@ -410,12 +410,12 @@ void syfala (
 <pre><code class="language-cpp">sy_ap_int audio_in[2] = {0, 0};
 sy_ap_int audio_out[2] = {0, 0};
 // Here, we simulate having the ARM initialized and ready, by setting the 'arm_ok' variable to 'true':
-int arm_ok   = true;
+int arm_ok = true;
 // The i2s is not part of the simulation, so this really doesn't matter:
 bool i2s_rst = false;
 // We don't use DDR memory, nor the bypass/mute switches: set everything to zero:
 float* mem_zone_f = nullptr;
-int* mem_zone_i   = nullptr;
+int* mem_zone_i = nullptr;
 bool bypass = false;
 bool mute   = false;
 bool debug  = false;
@@ -432,14 +432,14 @@ bool debug  = false;
 <pre><code class="language-cpp">    // For each simulation iteration (set with the '--csim-iter' flag)   
     for (int i = 0; i &lt; SYFALA_CSIM_NUM_ITER; i++) {
             if (i &gt; 0) {
-         // first iteration = initialization, inputs will be ignored
-         // wait for second iteration.
+                // first iteration = initialization, inputs will be ignored
+                // wait for second iteration.
                 f_inputs[0] = (float)rand()/RAND_MAX;
                 f_inputs[1] = (float)rand()/RAND_MAX;
             }
             Syfala::HLS::iowritef(f_inputs[0], audio_in[0]);
             Syfala::HLS::iowritef(f_inputs[1], audio_in[1]);
-        // call top-level function
+            // call top-level function
             syfala(audio_in, audio_out,
                    arm_ok, &amp;i2s_rst,
                    mem_zone_f, mem_zone_i,
@@ -578,7 +578,7 @@ Lat. 38%
 <pre><code class="language-shell">syfala examples/cpp/fir300.cpp --hls --umo --accurate-use
 </code></pre>
 <p>This will tell Vitis HLS to run both the <strong>synthesis</strong> and <strong>implementation</strong> <strong>steps</strong> on the <em>DSP kernel</em> only (not on the final design). It usually takes more time (approximately 5 to 10 minutes, depending on the kernel), but it will give precise and valuable information on the resources that will be used on the board:</p>
-<pre><code>                                GUIDELINE
+<pre><code>                        GUIDELINE
 - DSP:  31% (25)        OK (80%)
 - Reg:  22% (7912)      OK (50%)
 - LUT:  70% (12332)     WARNING (70%)
@@ -665,9 +665,10 @@ Lat. 72%
 </code></pre>
 <pre><code class="language-cpp">// examples/cpp/templates/gain-multisample.cpp
 
-static void compute(sy_ap_int const inputs[INPUTS][SYFALA_BLOCK_NSAMPLES],
-                    sy_ap_int outputs[OUTPUTS][SYFALA_BLOCK_NSAMPLES])
-{
+static void compute(
+    sy_ap_int const inputs[INPUTS][SYFALA_BLOCK_NSAMPLES],
+         sy_ap_int outputs[OUTPUTS][SYFALA_BLOCK_NSAMPLES]
+) {
     for (int n = 0; n &lt; OUTPUTS; ++n)
         for (int m = 0; m &lt; SYFALA_BLOCK_NSAMPLES; ++m) {
             // if you need to convert to float, use the following:
@@ -797,7 +798,8 @@ u32 XSyfala_Get_gain(XSyfala *InstancePtr);
 <p><strong>Note</strong>: floating-point data have to be set using <code>reinterpret_cast&lt;u32*&gt;</code>, otherwise, it will be interpreted as an integer and truncated. </p>
 </blockquote>
 <p>In the <code>main()</code> function, all we have to do now is call our <code>update_gain()</code> function in the <strong>main event loop</strong>, passing it the <code>XSyfala</code> handle <code>struct</code>.</p>
-<pre><code class="language-cpp">int main(int argc, char* argv[]) {
+<pre><code class="language-cpp">int main(int argc, char* argv[]) 
+{
     XSyfala syfala;
     UART::data uart;
     // UART &amp; GPIO should be initialized first,
@@ -825,8 +827,174 @@ u32 XSyfala_Get_gain(XSyfala *InstancePtr);
 <p>Finally, <strong>to fully run syfala on our example</strong>, including the ARM executable, we need to add the <code>--arm-target</code> <strong>flag</strong> to the command line, with the path to our <code>.cpp</code> file as an argument:</p>
 <pre><code class="language-shell">syfala examples/cpp/templates/gain-control-hls.cpp --arm-target examples/cpp/templates/gain-control-arm.cpp --board Z10
 </code></pre>
-<h3 id="delay-line-axi-example-ddr-memory">Delay-line AXI example (DDR memory)</h3>
-<p>[...]</p></div>
+<h4 id="axi-lite-array-arguments">AXI-Lite array arguments</h4>
+<p>It is also entirely possible to pass <strong>array arguments</strong> to the AXI-Lite bus. On the HLS side, it remains straightforward:</p>
+<pre><code class="language-cpp">void syfala (
+        sy_ap_int audio_in[INPUTS],
+        sy_ap_int audio_out[OUTPUTS],
+        [...]
+        float my_control_parameters[64]
+) {
+#pragma HLS INTERFACE s_axilite port=my_control_parameters
+</code></pre>
+<p>In the <code>xsyfala.h</code> header, the <strong>matching functions</strong> generated by Vitis HLS will be the following:</p>
+<pre><code class="language-cpp">u32 XSyfala_Write_my_control_parameters_Words(XSyfala *InstancePtr, int offset, word_type* data, int length);
+u32 XSyfala_Read_my_control_parameters_Words(XSyfala *InstancePtr, int offset, word_type* data, int length);
+</code></pre>
+<p>Which you'll be able to access like in the following example:</p>
+<pre><code class="language-cpp">    XSyfala dsp;
+    // Instantiate and initialize a local array
+    float my_control_parameters[64];
+    for (int n = 0; n &lt; 64; ++n) {
+         my_control_parameters[n] = n;
+    }
+    // Write all of the local array's data to the AXI-Lite bus
+    // using the appropriate function:
+    XSyfala_Write_my_control_parameters_Words (
+        &amp;dsp, 0, reinterpret_cast&lt;u32*&gt;(my_control_parameters), 64
+    );
+</code></pre>
+<h3 id="ddr-axi-axi-lite-control-embedded-linux-and-osc">DDR AXI + AXI-Lite control (Embedded Linux and OSC)</h3>
+<p>Let's take a different example this time, and since we haven't really dealt with audio synthesis yet, we will implement a simple <strong>wavetable-based sine oscillator</strong>, for which its <code>frequency</code> and <code>gain</code> parameter will be <strong>remotely controllable</strong> with the <strong>Open Sound Control</strong> protocol, and its <strong>wavetable allocated on the DDR</strong> ram, <strong>initialized on the ARM</strong>, and, finally,<strong>read from the DSP kernel</strong>. You can find the HLS implementation in <code>examples/cpp/templates/osc-synth-hls.cpp</code> and the ARM (Linux) part in <code>examples/cpp/templates/osc-synth-arm.cpp</code>.</p>
+<pre><code class="language-cpp">// examples/cpp/templates/osc-synth-hls.cpp
+
+#define INPUTS 0
+#define OUTPUTS 2
+
+void syfala (
+    sy_ap_int audio_out[OUTPUTS],
+          int arm_ok,
+        bool* i2s_rst,
+       float* mem_zone_f,
+         int* mem_zone_i,
+         bool bypass,
+         bool mute,
+         bool debug,
+        float frequency,
+        float gain
+) {
+#pragma HLS INTERFACE s_axilite port=frequency
+#pragma HLS INTERFACE s_axilite port=gain
+#pragma HLS INTERFACE m_axi port=mem_zone_f latency=30 bundle=ram
+#pragma HLS INTERFACE m_axi port=mem_zone_i latency=30 bundle=ram
+</code></pre>
+<p>Our <strong>DSP kernel HLS code</strong>, above and below, is still pretty straightforward here: </p>
+<ul>
+<li>We add two read-only floating-point parameters <code>frequency</code> and <code>gain</code> to the top-level function arguments, </li>
+<li>Just like our previous example, we register them to the <strong>AXI-Lite bus</strong> with the proper <code>pragmas</code>.</li>
+<li>Then, we're simply going to <strong>update and compute the oscillator's phase</strong>, and <strong>read its wavetable</strong> using the <code>mem_zone_f</code> <strong>pointer</strong> read/write argument. As you may have noticed, this specific argument is registered on the <code>m_axi</code> (<strong>AXI</strong>) bus with a different HLS <code>pragma</code>.</li>
+</ul>
+<pre><code class="language-cpp">          } else {
+                /* ... or compute samples here */
+                static float phase;
+                static int iphase;
+                // Update increment value and the oscillator's phase
+                float incr = frequency/SYFALA_SAMPLE_RATE;
+                iphase = (int)(phase * 16384);
+                phase = fmodf(phase + incr, 1.f);
+                // Read the DDR wavetable at index [iphase]
+                float f = mem_zone_f[iphase];
+            #ifdef __CSIM__
+                printf(&quot;iphase: %d, f: %f\n&quot;, iphase, f);
+            #endif
+                // Finally, apply gain factor
+                f *= gain;
+                Syfala::HLS::iowritef(f, audio_out[0]);
+                Syfala::HLS::iowritef(f, audio_out[1]);
+            }
+</code></pre>
+<blockquote>
+<p><strong>Note</strong>: we fundamentally 'assume' the <code>mem_zone_f</code> variable is directly pointing to the <strong>wavetable's start,</strong> which we are going to really make sure of in the code that is going to be <strong>on the Linux/ARM-side of things.</strong></p>
+</blockquote>
+<h4 id="allocatinginitializing-the-wavetable">Allocating/initializing the wavetable</h4>
+<p>In the ARM code, we will first retrieve a RAM pointer by calling the <code>Syfala::Memory::initialize()</code> API function, which will give us a pointer to the base of a <strong>free portion of DDR memory</strong>, which has been pre-reserved when building the Embedded Linux for Syfala. It will also <strong>automatically write the address to the AXI bus</strong> and the <code>mem_zone_f</code> function argument that we have in our HLS code. Since we only have one <em>wavetable</em>, hence a single memory zone, we can leave things as is (without any offset) and just <strong>consider</strong> <code>mem.f_zone</code> as <strong>the start of our wavetable</strong>.</p>
+<p>Then, we can safely initialize the <em>wavetable</em>. Here, we write a single period of a <strong>very basic sinewave</strong>. </p>
+<pre><code class="language-cpp">// examples/cpp/templates/osc-synth-arm.cpp
+
+#define WAVETABLE_LEN 16384
+static float frequency = 440.f, gain = 0.25f;
+
+static void initialize_default_values(XSyfala&amp; dsp) {
+    // Initialize AXI-Lite based controls, 
+    // the same way that we did in our previous example.
+    XSyfala_Set_frequency(&amp;dsp, *reinterpret_cast&lt;u32*&gt;(&amp;frequency));
+    XSyfala_Set_gain(&amp;dsp, *reinterpret_cast&lt;u32*&gt;(&amp;gain));
+}
+static void initialize_wavetables(float* mem, int len) {
+    // Write a single period of a sinewave
+    for (int n = 0; n &lt; len; ++n) {
+         mem[n] = std::sin((float)(n)/len * M_PI * 2);
+    }
+}
+int main(int argc, char* argv[]) {
+    [...]
+    // The following function will set 'mem.f_zone' pointer 
+    // to the base of a free portion of DDR memory 
+    Memory::initialize(dsp, mem, 0, WAVETABLE_LEN);
+    // We also initialize 'frequency' and 'gain' parameters to their default value
+    initialize_default_values(dsp);
+    // and finally, initialize the wavetable.
+    initialize_wavetables(mem.f_zone, WAVETABLE_LEN);
+    [...]
+}
+</code></pre>
+<h4 id="osc-control-example">OSC control example</h4>
+<p>Since we're using the Embedded Linux in this example, we will take advantage of using the <code>liblo</code> <strong>Open Sound Control library</strong>, which is installed by default on our <strong>Alpine Linux distribution</strong>.</p>
+<pre><code class="language-cpp">// examples/cpp/templates/osc-synth-arm.cpp
+
+/**
+ * Start a new OSC server thread on port '8888', 
+ * register both '/osc/frequency' and '/osc/gain' float parameters 
+ * assign them the proper callback functions. 
+ */
+static void initialize_osc(XSyfala&amp; dsp) {
+    osc = lo_server_thread_new(&quot;8888&quot;, error_hdl);
+    lo_server_thread_add_method(osc, &quot;/osc/frequency&quot;, &quot;f&quot;, osc_frequency_hdl, &amp;dsp);
+    lo_server_thread_add_method(osc, &quot;/osc/gain&quot;, &quot;f&quot;, osc_gain_hdl, &amp;dsp);
+    lo_server_thread_start(osc);
+}
+
+static int osc_frequency_hdl (
+        const char* path,
+        const char* types,
+           lo_arg** argv, int argc,
+         lo_message data, void* udata
+){
+    XSyfala* dsp = static_cast&lt;XSyfala*&gt;(udata);
+    frequency = argv[0]-&gt;f;
+    printf(&quot;[OSC] Updating /osc/frequency with value: %f\n&quot;, frequency);
+    // Update on the AXI-Lite bus
+    XSyfala_Set_frequency(dsp, *reinterpret_cast&lt;u32*&gt;(&amp;frequency));
+    return 0;
+}
+
+static int osc_gain_hdl (
+        const char* path,
+        const char* types,
+           lo_arg** argv, int argc,
+         lo_message data, void* udata
+){
+    XSyfala* dsp = static_cast&lt;XSyfala*&gt;(udata);
+    gain = argv[0]-&gt;f;
+    printf(&quot;[OSC] Updating /osc/gain with value: %f\n&quot;, gain);
+    // Update on the AXI-Lite bus
+    XSyfala_Set_gain(dsp, *reinterpret_cast&lt;u32*&gt;(&amp;gain));
+    return 0;
+}
+
+int main() {
+    [...]
+    initialize_osc(dsp);
+}
+</code></pre>
+<h4 id="building-and-executing-the-example">Building and executing the example</h4>
+<p>Please read the <a href="../embedded-linux-getting-started/">linux-getting-started</a> tutorial in order to learn how to build and use the Embedded Linux. You can then build the example with the following command:  </p>
+<pre><code class="language-shell">syfala examples/cpp/templates/osc-synth-hls.cpp --arm-target examples/cpp/templates/osc-synth-arm.cpp --linux
+</code></pre>
+<p>Then you can copy the resulting build onto your <strong>Zybo SD card</strong> and use the following command to start the example:</p>
+<pre><code class="language-shell">syfala-load osc-synth-hls
+</code></pre>
+<h3 id="_1"></h3></div>
         
         
     </div>

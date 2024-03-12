@@ -150,7 +150,7 @@
         
         <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="first-level active"><a href="#syfala-command-line-interface-reference">Syfala command-line interface reference</a></li>
+        <li class="first-level active"><a href="#command-line-interface-reference">Command-line interface reference</a></li>
             <li class="second-level"><a href="#general-options">General options</a></li>
                 
             <li class="second-level"><a href="#commands">Commands</a></li>
@@ -177,38 +177,7 @@
 </div></div>
         <div class="col-md-9" role="main">
 
-<h1 id="syfala-command-line-interface-reference">Syfala command-line interface reference</h1>
-<pre><code class="language-shell">$ syfala &lt;command&gt; [command-options]
-
-$ syfala help
-$ syfala version
-$ syfala tidy
-$ syfala clean
-$ syfala reset
-$ syfala import &lt;path-to-file.zip&gt;
-$ syfala export &lt;name&gt;
-$ syfala report &lt;hls|any*&gt;
-$ syfala log
-$ syfala test
-$ syfala flash
-$ syfala start-gui
-$ syfala open-project &lt;hls|any*&gt;
-
-$ syfala &lt;file.dsp|file.cpp&gt; [general-options]
-                 [build-options]
-                 [design-options]
-                 [hls-options]
-                 [arm-options]
-                 [run-step]
-# examples:
-$ syfala examples/faust/bypass.dsp
-    --board Z10
-    --linux --midi --osc --http
-
-$ syfala examples/cpp/templates/gain-control-hls.cpp
-        --board Z20
-        --arm-target examples/cpp/gain-control-arm.cpp
-</code></pre>
+<h1 id="command-line-interface-reference">Command-line interface reference</h1>
 <h2 id="general-options">General options</h2>
 <table>
 <thead>

@@ -172,7 +172,7 @@
         <div class="col-md-9" role="main">
 
 <h1 id="syfala-toolchain-dependencies">Syfala toolchain dependencies</h1>
-<p>The Syfala toolchain is a compilation toolchain of Faust programs onto AMD-Xilinx FPGA targets. This document explains how to install and run the <strong>version 0.7.1</strong> of the toolchain  on a Linux machine. In practice, installing the Syfala toolchain means:</p>
+<p>The Syfala toolchain is a compilation toolchain of Faust programs onto AMD-Xilinx FPGA targets. This document explains how to install and run the <strong>version 0.8.0</strong> of the toolchain  on a Linux machine. In practice, installing the Syfala toolchain means:</p>
 <ul>
 <li>Installing the required <strong>linux-packages</strong>, depending on your Linux distribution.</li>
 <li>Installing the <strong>Faust</strong> compiler</li>
@@ -212,12 +212,11 @@ $ sudo make install
 <li>
 <p>Download the Linux installer <code>Xilinx_Unified_2022.2_1014_8888_Lin64.bin</code></p>
 </li>
-<li>
-<p>Execute <code>chmod a+x Xilinx_Unified_2022.2_1014_8888_Lin64.bin</code></p>
-</li>
-<li>
-<p>Execute <code>./Xilinx_Unified_2022.2_1014_8888_Lin64.bin</code></p>
-</li>
+</ul>
+<pre><code class="language-shell">chmod a+x Xilinx_Unified_2022.2_1014_8888_Lin64.bin
+./Xilinx_Unified_2022.2_1014_8888_Lin64.bin
+</code></pre>
+<ul>
 <li>
 <p>We suggest to use the "<strong>Download Image (Install Separately)</strong>" option. It creates a directory with a <strong>xsetup</strong> file to execute that you can reuse in case of failure during the installation</p>
 </li>
@@ -235,24 +234,22 @@ $ sudo make install
 <li>
 <p><strong>Setup a shell environment variable</strong> allowing to use the tools when necessary (add this to your <code>~/.bashrc</code>, <code>~/.zshrc</code> or whatever you're currently using, replacing <code>$XILINX_ROOT_DIR</code> by the directory you chose to install all the tools)</p>
 </li>
-<li>
-<p><code>shell
-    export XILINX_ROOT_DIR=$HOME/Xilinx</code></p>
-</li>
 </ul>
+<pre><code class="language-shell">export XILINX_ROOT_DIR=$HOME/Xilinx
+</code></pre>
 <h3 id="installing-cable-drivers-on-linux">Installing Cable Drivers on Linux</h3>
-<ul>
-<li>Go to: <code>$XILINX_ROOT_DIR/Vivado/2022.2/data/xicom/cable_drivers/lin64/install_script/install_drivers</code> directory</li>
-<li>Run <code>./install_drivers</code></li>
-<li>Run <code>sudo cp 52-xilinx-digilent-usb.rules /etc/udev/rules.d</code>, this allows <strong>JTAG</strong> connection through <strong>USB</strong>.</li>
-</ul>
+<pre><code class="language-shell">cd $XILINX_ROOT_DIR/Vivado/2022.2/data/xicom/cable_drivers/lin64/install_script/install_drivers
+./install_drivers
+# Allow JTAG-USB connection:
+sudo cp 52-xilinx-digilent-usb.rules /etc/udev/rules.d
+</code></pre>
 <h3 id="installing-digilent-board-files">Installing Digilent Board Files</h3>
 <ul>
 <li>Download the board files from <a href="https://github.com/Digilent/vivado-boards/archive/master.zip?_ga=2.76732885.1953828090.1655988025-1125947215.1655988024">github</a>:</li>
 <li>Open the folder extracted from the archive and navigate to its <code>new/board_files</code> folder. You will be copying all of this folder's subfolders</li>
-<li>For the 2020.2 version, go to <code>$XILINX_ROOT_DIR/Vivado/2020.2/data/boards/board_files</code></li>
+<li>For the <strong>2020.2 version</strong>, go to <code>$XILINX_ROOT_DIR/Vivado/2020.2/data/boards/board_files</code></li>
 <li>
-<p>For the 2022.2 version, go to <code>$XILINX_ROOT_DIR/Vivado/2022.2/data/xhub/boards/XilinxBoardStore/boards/Xilinx</code></p>
+<p>For the <strong>2022.2 version</strong>, go to <code>$XILINX_ROOT_DIR/Vivado/2022.2/data/xhub/boards/XilinxBoardStore/boards/Xilinx</code></p>
 </li>
 <li>
 <p><strong>Copy</strong> all of the folders found in vivado-boards <code>new/board_files</code>folder and <strong>paste</strong> them into this folder</p>
@@ -261,33 +258,29 @@ $ sudo make install
 <h3 id="installing-the-2022-patch-amd-xilinx-toolchain-v20202-only">Installing the 2022 patch (AMD-Xilinx toolchain v2020.2 only)</h3>
 <p>Vivado and Vitis tools that use HLS in the background are also affected by this issue. HLS tools set the ip_version in the format YYMMDDHHMM and this value is accessed as a signed integer (32-bit) that causes an overflow and generates the errors below (or something similar).</p>
 <ul>
-<li>
-<p>Follow this link: https://support.xilinx.com/s/article/76960?language=en_US</p>
-</li>
+<li>Follow this link: https://support.xilinx.com/s/article/76960?language=en_US</li>
 <li>
 <p>Download the file at the bottom of th page and unzip it in <code>$XILINX_ROOT_DIR</code></p>
 </li>
 <li>
-<p>run the following commands: </p>
-</li>
-<li>
-<p><code>shell
-  $ cd $XILINX_ROOT_DIR
-  $ export LD_LIBRARY_PATH=$PWD/Vivado/2020.2/tps/lnx64/python-3.8.3/lib/
-  $ Vivado/2020.2/tps/lnx64/python-3.8.3/bin/python3 y2k22_patch/patch.py</code></p>
+<p>Run the following commands: </p>
 </li>
 </ul>
+<pre><code class="language-shell">cd $XILINX_ROOT_DIR
+export LD_LIBRARY_PATH=$PWD/Vivado/2020.2/tps/lnx64/python-3.8.3/lib/
+Vivado/2022.2/tps/lnx64/python-3.8.3/bin/python3 y2k22_patch/patch.py
+</code></pre>
 <h2 id="cloning-the-syfala-repository">Cloning the Syfala repository</h2>
 <p>To clone and install the latest stable version of the Syfala toolchain, you can use the following commands:</p>
-<pre><code class="language-shell">$ git clone https://github.com/inria-emeraude/syfala 
-$ cd syfala
-$ ./syfala.tcl install
-$ syfala --help
+<pre><code class="language-shell">git clone https://github.com/inria-emeraude/syfala 
+cd syfala
+make install
+syfala --help
 </code></pre>
 <p>In order to use the Syfala toolchain to compile your first example, please report to the main <a href="https://github.com/inria-emeraude/syfala/blob/main/README.md">README</a> file located in the repository's root directory.</p>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <p>On <strong>Archlinux</strong>, if you see an error like this one </p>
-<pre><code>/lib/../lib64/crti.o: file not recognized: File format not recognized
+<pre><code class="language-shell">/lib/../lib64/crti.o: file not recognized: File format not recognized
 </code></pre>
 <p>you'll have to rename the <code>Vivado/2020.2/tps/lnx64/binutils-2.26</code> (Vitis will then search in the system libraries).</p>
 <h4 id="vitisjava-issues">Vitis/Java issues</h4>
