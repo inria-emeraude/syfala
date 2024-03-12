@@ -1,0 +1,37 @@
+site_name: Syfala Documentation
+site_description: A guide to the Syfala toolchain.
+copyright: Copyright &copy; 2023 <a href="https://team.inria.fr/emeraude/">Emeraude</a>
+nav:
+    - Home: index.md
+    - Manual:
+        - 'Overview': manual/manual.md
+        - 'Dependencies': manual/dependencies.md
+        - 'Reference': manual/reference.md
+
+theme: 
+  name: mkdocs
+  custom_dir: 'theme'
+  navigation_depth: 4
+
+site_dir: ../../docs
+
+extra:
+    social:
+        - type: github
+          link: https://github.com/inria-emeraude/syfala
+        - type: home
+          link: https://inria-emeraude.github.io/syfala/
+        - type: envelope
+          link: mailto:romain.michon@inria.fr
+
+plugins:
+    - search
+
+extra_javascript:
+  - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML
+
+markdown_extensions:
+    - mdx_math
+    - admonition
+    - markdown_include.include:
+        base_path: './docs'
