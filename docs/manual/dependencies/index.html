@@ -151,7 +151,7 @@
         <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
         <li class="first-level active"><a href="#syfala-toolchain-dependencies">Syfala toolchain dependencies</a></li>
-            <li class="second-level"><a href="#linux-targets">Linux targets</a></li>
+            <li class="second-level"><a href="#linux-platforms">Linux platforms</a></li>
                 
                 <li class="third-level"><a href="#ubuntu-dependencies">Ubuntu dependencies</a></li>
                 <li class="third-level"><a href="#archlinux-dependencies">Archlinux dependencies</a></li>
@@ -181,25 +181,25 @@
 <li>Installing <em>udev</em> rules in order to use the JTAG connection.</li>
 <li>Cloning the <strong>Syfala repository</strong>, and running a <strong>simple example</strong> to make sure everything is working properly.</li>
 </ul>
-<h2 id="linux-targets">Linux targets</h2>
+<h2 id="linux-platforms">Linux platforms</h2>
 <p>We recommend using <strong>Ubuntu</strong> (&gt;= 18.04 LTS) for installing and using the toolchain, since it is officially supported by AMD-Xilinx. While it is still possible to use other distributions, such as Archlinux, you may encounter unresolved bugs, which won't necessarily appear in our <em>Troubleshooting</em> section below. </p>
 <h3 id="ubuntu-dependencies">Ubuntu dependencies</h3>
-<pre><code class="language-shell">$ sudo apt-get update 
-$ sudo apt-get install git libncurses5 libtinfo-dev build-essential default-jre pkg-config g++-multilib gtk+2.0 locales
+<pre><code class="language-shell">sudo apt-get update 
+sudo apt-get install git libncurses5 libtinfo-dev build-essential default-jre pkg-config g++-multilib gtk+2.0 locales
 </code></pre>
 <h3 id="archlinux-dependencies">Archlinux dependencies</h3>
-<pre><code class="language-bash"># faust (required)
-$ sudo pacman -S faust
+<pre><code class="language-shell"># faust (required)
+sudo pacman -S faust
 
 # for xilinx vivado/vitis etc.
-$ yay -S ncurses5-compat-libs libxcrypt-compat libpng12 lib32-libpng12 xorg-xlsclients gtk2
+yay -S ncurses5-compat-libs libxcrypt-compat libpng12 lib32-libpng12 xorg-xlsclients gtk2
 </code></pre>
 <h2 id="faust">Faust</h2>
 <p>It is recommended to clone Faust from the official github repository: https://github.com/grame-cncm/faust</p>
-<pre><code class="language-shell">$ git clone https://github.com/grame-cncm/faust.git 
-$ cd faust
-$ make
-$ sudo make install
+<pre><code class="language-shell">git clone https://github.com/grame-cncm/faust.git 
+cd faust
+make -j8
+sudo make install
 </code></pre>
 <h2 id="vivado-vitis-vitis-hls-20222-version">Vivado, Vitis &amp; Vitis HLS (2022.2 version)</h2>
 <ul>
@@ -210,7 +210,7 @@ $ sudo make install
 <p>The AMD-Xilinx <a href="https://www.xilinx.com/support/download.html">download page</a> contains links for downloading the <strong>Vivado Design Suite - HLx Editions - Full Product</strong>. It is available for both Linux and Windows. </p>
 </li>
 <li>
-<p>Download the Linux installer <code>Xilinx_Unified_2022.2_1014_8888_Lin64.bin</code></p>
+<p>Download the Linux installer <code>Xilinx_Unified_2022.2_1014_8888_Lin64.bin</code> and execute the following commands:</p>
 </li>
 </ul>
 <pre><code class="language-shell">chmod a+x Xilinx_Unified_2022.2_1014_8888_Lin64.bin
@@ -277,7 +277,7 @@ cd syfala
 make install
 syfala --help
 </code></pre>
-<p>In order to use the Syfala toolchain to compile your first example, please report to the main <a href="https://github.com/inria-emeraude/syfala/blob/main/README.md">README</a> file located in the repository's root directory.</p>
+<p>In order to use the Syfala toolchain to compile your first example, please report to the main <a href="../../">README</a> file located in the repository's root directory.</p>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <p>On <strong>Archlinux</strong>, if you see an error like this one </p>
 <pre><code class="language-shell">/lib/../lib64/crti.o: file not recognized: File format not recognized
@@ -285,10 +285,10 @@ syfala --help
 <p>you'll have to rename the <code>Vivado/2020.2/tps/lnx64/binutils-2.26</code> (Vitis will then search in the system libraries).</p>
 <h4 id="vitisjava-issues">Vitis/Java issues</h4>
 <p>On recent systems (or with <strong>Archlinux</strong>), you might have problems compiling the host-side (<strong>ARM</strong>) application. The problem is caused by system libraries requiring newer versions of GCC than the one provided by Vitis. Replacing GCC target in Vitis' path <strong>by system GCC</strong> works:</p>
-<pre><code class="language-bash">$ cd $XILINX_ROOT_DIR/Vitis/2020.2/lib/lnx64.o/Default
-$ mv libstdc++.so.6 libstdc++.so.6.old
-$ rm -rf libstdc++.so (symlink)
-$ sudo ln -s /usr/lib/libstdc++.so.6 libstdc++.so.6
+<pre><code class="language-bash">cd $XILINX_ROOT_DIR/Vitis/2020.2/lib/lnx64.o/Default
+mv libstdc++.so.6 libstdc++.so.6.old
+rm -rf libstdc++.so (symlink)
+sudo ln -s /usr/lib/libstdc++.so.6 libstdc++.so.6
 </code></pre></div>
         
         

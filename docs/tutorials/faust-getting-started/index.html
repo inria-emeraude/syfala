@@ -217,7 +217,7 @@
 </ul>
 <h3 id="installing-the-toolchain">Installing the toolchain</h3>
 <h4 id="dependencies">Dependencies</h4>
-<p>Please follow the instructions in the file <a href="../../manual/dependencies/">doc/dependencies.md</a> in order to install the <strong>AMD-Xilinx</strong> <strong>toolchain</strong> and various other dependencies.</p>
+<p>Please follow the instructions in the file <a href="../../manual/dependencies/">dependencies.md</a> in order to install the <strong>AMD-Xilinx</strong> <strong>toolchain</strong> and various other dependencies.</p>
 <h4 id="installing-syfala">Installing Syfala</h4>
 <pre><code class="language-shell">git clone https://github.com/inria-emeraude/syfala.git syfala
 cd syfala
@@ -341,7 +341,7 @@ Lat. 13%
 <p>Syfala should now be building the user-interface after having retrieved the <code>.dsp</code> file's control parameters, and display it with a <strong>GTK interface</strong> when it's ready. You should now be able to play with the different <em>buttons</em>, <em>sliders</em> and <em>knobs</em> that have been defined in your Faust file.</p>
 <p>Now, GTK-based sliders and buttons are perfectly fine for testing your program, but you'll probably want at some point to have a nicer way to control its parameters, by using for instance <strong>MIDI</strong> or <strong>OSC</strong> interfaces. For now, in <em>baremetal</em> mode, it is not possible (yet) to plug a MIDI controller directly on the board's USB port and control your Faust parameters, because MIDI-USB baremetal drivers are unfortunately not yet implemented in syfala. The same goes for Ethernet-OSC.  To remedy this problem, we offer at the moment two solutions :</p>
 <ol>
-<li>The <strong>Embedded Linux</strong> for syfala (<a href="../embedded-linux-getting-started/">tutorials/linux/getting-started.md</a>)</li>
+<li>The <strong>Embedded Linux</strong> for syfala (<a href="../embedded-linux-getting-started/">tutorials/embedded-linux-getting-started.md</a>)</li>
 <li>On <strong>Linux</strong>, MIDI, OSC &amp; HTTP libraries are available, and ready-to-use with syfala.</li>
 <li><strong>MIDI</strong>, <strong>OSC</strong>, <strong>HTTP</strong> layers <strong>on top of the Serial interface</strong>.</li>
 <li>MIDI, OSC &amp; HTTP interfaces will be used on your machine, and translated/channeled into the <strong>Serial interface</strong> to be transmitted to the board. This is not ideal and will introduce some more control latency to the setup, but is easy to use.</li>

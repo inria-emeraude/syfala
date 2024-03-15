@@ -2,13 +2,14 @@
 
 ## Requirements
 
-- **Xilinx toolchain** version **2022.2**
-  - for *gcc-compatibility* reasons
+- **Xilinx toolchain** version 2022.2
 - `arm-none-eabi-gcc` **cross-compilation toolchain**
 - An available **SD card**
 - The following **Linux packages** installed on your machine: 
-  - `bison flex libssl-dev bc u-boot-tools cpio libyaml-dev curl kmod squashfs-tools qemu-user-static`
-  
+
+```shell
+bison flex libssl-dev bc u-boot-tools cpio libyaml-dev curl kmod squashfs-tools qemu-user-static
+```
 
 
 ## Building

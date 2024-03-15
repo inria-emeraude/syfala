@@ -1,8 +1,8 @@
-# Syfala Toolchain Documentation
+# syfala v0.8.0
 
 Automatic compilation of Faust and C++ audio DSP programs for AMD/Xilinx FPGA platforms.
 
-## Supported board models
+## Supported platforms
 
 - Digilent **Zybo Z7-10** - Zynq-7000 ARM/FPGA SoC Development Board
 
@@ -14,13 +14,13 @@ and more to come...
 
 ## Dependencies
 
-Please follow the instructions in the file [doc/dependencies.md](manual/dependencies.md) in order to install the **AMD-Xilinx** **toolchain** and various other dependencies.
+Please follow the instructions in the file [dependencies.md](manual/dependencies.md) in order to install the **AMD-Xilinx** **toolchain** and various other dependencies.
 
 ## Installing
 
-the command `make install` will install a **symlink** in **/usr/bin**. After this you'll be able to just run: 
+the command `make install` will install a **symlink** in **/usr/bin**. After this you'll be able to just run on your terminal: 
 
-`$ syfala myfaustprogram.dsp` 
+`syfala myfaustprogram.dsp` 
 
 You'll also have to **edit** your shell **resource** **file** (~/.**bashrc** / ~/.**zshrc**) and set the following environment variable: 
 
@@ -30,19 +30,25 @@ export XILINX_ROOT_DIR=/my/path/to/Xilinx/root/directory
 
 `XILINX_ROOT_DIR` is the root directory where all of the AMD-Xilinx tools (Vivado, Vitis, Vitis_HLS) are installed.
 
-## Getting started
+## Tutorials
 
-### Hardware setup (Digilent **Zybo-Z7-10/20** boards)
+### Getting started with syfala and Faust
 
-- Jumper **JP5** should be on *JTAG* 
+[tutorials/getting-started-faust.md](tutorials/faust-getting-started.md)
 
-- **Power select** jumper should be on *USB*  
+In this tutorial, we will cover the essential topics to get you started with the **Faust programming language**, **syfala**, and audio programming on **FPGAs**. 
 
-- **Switches** SW0, SW1, SW2, SW3 should be **down**  
+### Embedded Linux
 
-- The **audio input** is **LINE IN** (blue), not MIC IN  
+Please report to the [tutorials/embedded-linux-getting-started.md](tutorials/embedded-linux-getting-started.md) document in order to get you started with the Embedded Linux for Syfala
 
-- The **audio output** is the black **HPH OUT** jack  
+### Using syfala with C++ (advanced)
+
+[tutorials/cpp-tutorial-advanced.md](tutorials/cpp-tutorial-advanced.md)
+
+This tutorial will show you how to program a syfala DSP *kernel* using C++. It is intended for advanced users.
+
+## Quick getting-started
 
 ### Software
 
@@ -61,7 +67,7 @@ syfala examples/faust/virtualAnalog.dsp --board Z20
 syfala examples/faust/virtualAnalog.dsp --board GENESYS
 ```
 
-You can now **connect the board** to your computer with the proper **USB/Serial port cable** and run the `flash` command:
+Once the build is finished (depending on your computer, it usually takes between 15 and 30 minutes to complete), you can **connect the board** to your computer with the proper **USB/Serial port cable** and run the `flash` command:
 
 ```shell
 syfala flash
@@ -105,23 +111,17 @@ Before building another DSP program, please **make sure you have saved and expor
 syfala examples/my-new-dsp-build.dsp
 ```
 
-## Tutorials
+### Hardware (Digilent **Zybo-Z7-10/20** boards)
 
-### Getting started with syfala and Faust
+- Jumper **JP5** should be on *JTAG* 
 
-[tutorials/getting-started-faust.md](tutorials/faust-getting-started.md)
+- **Power select** jumper should be on *USB*  
 
-In this tutorial, we will cover the essential topics to get you started with the **Faust programming language**, **syfala**, and audio programming on **FPGAs**. 
+- **Switches** SW0, SW1, SW2, SW3 should be **down**  
 
-### Embedded Linux
+- The **audio input** is **LINE IN** (blue), not MIC IN  
 
-Please report to the [linux/getting-started.md](tutorials/embedded-linux-getting-started.md) document in order to get you started with the Embedded Linux for Syfala
-
-### Using syfala with C++ (advanced)
-
-[tutorials/cpp-tutorial-advanced.md](tutorials/cpp-tutorial-advanced.md)
-
-This tutorial will show you how to program a syfala DSP *kernel* using C++. It is intended for advanced users.
+- The **audio output** is the black **HPH OUT** jack  
 
 ## Going further
 

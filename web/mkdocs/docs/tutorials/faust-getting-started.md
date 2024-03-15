@@ -49,7 +49,7 @@ The **repository** itself is composed of a few different elements:
 
 #### Dependencies
 
-Please follow the instructions in the file [doc/dependencies.md](../manual/dependencies.md) in order to install the **AMD-Xilinx** **toolchain** and various other dependencies.
+Please follow the instructions in the file [dependencies.md](../manual/dependencies.md) in order to install the **AMD-Xilinx** **toolchain** and various other dependencies.
 
 #### Installing Syfala
 
@@ -227,7 +227,7 @@ Syfala should now be building the user-interface after having retrieved the `.ds
 
 Now, GTK-based sliders and buttons are perfectly fine for testing your program, but you'll probably want at some point to have a nicer way to control its parameters, by using for instance **MIDI** or **OSC** interfaces. For now, in *baremetal* mode, it is not possible (yet) to plug a MIDI controller directly on the board's USB port and control your Faust parameters, because MIDI-USB baremetal drivers are unfortunately not yet implemented in syfala. The same goes for Ethernet-OSC.  To remedy this problem, we offer at the moment two solutions :
 
-1. The **Embedded Linux** for syfala ([tutorials/linux/getting-started.md](embedded-linux-getting-started.md))
+1. The **Embedded Linux** for syfala ([tutorials/embedded-linux-getting-started.md](embedded-linux-getting-started.md))
    - On **Linux**, MIDI, OSC & HTTP libraries are available, and ready-to-use with syfala.
 2. **MIDI**, **OSC**, **HTTP** layers **on top of the Serial interface**.
    - MIDI, OSC & HTTP interfaces will be used on your machine, and translated/channeled into the **Serial interface** to be transmitted to the board. This is not ideal and will introduce some more control latency to the setup, but is easy to use.

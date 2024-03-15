@@ -9,25 +9,25 @@ The Syfala toolchain is a compilation toolchain of Faust programs onto AMD-Xilin
 - Installing *udev* rules in order to use the JTAG connection.
 - Cloning the **Syfala repository**, and running a **simple example** to make sure everything is working properly.
 
-## Linux targets
+## Linux platforms
 
 We recommend using **Ubuntu** (>= 18.04 LTS) for installing and using the toolchain, since it is officially supported by AMD-Xilinx. While it is still possible to use other distributions, such as Archlinux, you may encounter unresolved bugs, which won't necessarily appear in our *Troubleshooting* section below. 
 
 ### Ubuntu dependencies
 
 ```shell
-$ sudo apt-get update 
-$ sudo apt-get install git libncurses5 libtinfo-dev build-essential default-jre pkg-config g++-multilib gtk+2.0 locales
+sudo apt-get update 
+sudo apt-get install git libncurses5 libtinfo-dev build-essential default-jre pkg-config g++-multilib gtk+2.0 locales
 ```
 
 ### Archlinux dependencies
 
-```bash
+```shell
 # faust (required)
-$ sudo pacman -S faust
+sudo pacman -S faust
 
 # for xilinx vivado/vitis etc.
-$ yay -S ncurses5-compat-libs libxcrypt-compat libpng12 lib32-libpng12 xorg-xlsclients gtk2
+yay -S ncurses5-compat-libs libxcrypt-compat libpng12 lib32-libpng12 xorg-xlsclients gtk2
 ```
 
 ## Faust
@@ -35,10 +35,10 @@ $ yay -S ncurses5-compat-libs libxcrypt-compat libpng12 lib32-libpng12 xorg-xlsc
 It is recommended to clone Faust from the official github repository: https://github.com/grame-cncm/faust
 
 ```shell
-$ git clone https://github.com/grame-cncm/faust.git 
-$ cd faust
-$ make
-$ sudo make install
+git clone https://github.com/grame-cncm/faust.git 
+cd faust
+make -j8
+sudo make install
 ```
 
 ## Vivado, Vitis & Vitis HLS (2022.2 version)
@@ -47,7 +47,7 @@ $ sudo make install
 
 - The AMD-Xilinx [download page](https://www.xilinx.com/support/download.html) contains links for downloading the **Vivado Design Suite - HLx Editions - Full Product**. It is available for both Linux and Windows. 
 
-- Download the Linux installer `Xilinx_Unified_2022.2_1014_8888_Lin64.bin`
+- Download the Linux installer `Xilinx_Unified_2022.2_1014_8888_Lin64.bin` and execute the following commands:
 
 ```shell
 chmod a+x Xilinx_Unified_2022.2_1014_8888_Lin64.bin
@@ -113,7 +113,7 @@ make install
 syfala --help
 ```
 
-In order to use the Syfala toolchain to compile your first example, please report to the main [README](https://github.com/inria-emeraude/syfala/blob/main/README.md) file located in the repository's root directory.
+In order to use the Syfala toolchain to compile your first example, please report to the main [README](../index.md) file located in the repository's root directory.
 
 ## Troubleshooting
 
@@ -130,8 +130,8 @@ you'll have to rename the `Vivado/2020.2/tps/lnx64/binutils-2.26` (Vitis will th
 On recent systems (or with **Archlinux**), you might have problems compiling the host-side (**ARM**) application. The problem is caused by system libraries requiring newer versions of GCC than the one provided by Vitis. Replacing GCC target in Vitis' path **by system GCC** works:
 
 ```bash
-$ cd $XILINX_ROOT_DIR/Vitis/2020.2/lib/lnx64.o/Default
-$ mv libstdc++.so.6 libstdc++.so.6.old
-$ rm -rf libstdc++.so (symlink)
-$ sudo ln -s /usr/lib/libstdc++.so.6 libstdc++.so.6
+cd $XILINX_ROOT_DIR/Vitis/2020.2/lib/lnx64.o/Default
+mv libstdc++.so.6 libstdc++.so.6.old
+rm -rf libstdc++.so (symlink)
+sudo ln -s /usr/lib/libstdc++.so.6 libstdc++.so.6
 ```
