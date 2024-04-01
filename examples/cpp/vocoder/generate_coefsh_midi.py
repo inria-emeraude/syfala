@@ -11,9 +11,7 @@ release_time = 0.005  # 5 ms, shorter than the attack time
 attack_coeff = np.exp(-1.0 / (Fe * attack_time))
 release_coeff = np.exp(-1.0 / (Fe * release_time))
 
-
 M = 1 #subdivision of frequencies
-
 
 note_frequencies = 440 * 2 ** (np.arange(-48, 40,1/M) / 12)
 note_frequencies = note_frequencies[(note_frequencies >= 80) & (note_frequencies <= 12000)]
