@@ -43,7 +43,7 @@ sudo syfala vocoder/vocoder-osc.cpp --arm-target vocoder/vocoder-osc-arm.cpp --l
 We are a team of four students, music enthusiasts, and worked on this example as part of a group project for our school (IMT Atlantique).
 
 ## Team Members
-- Yann Miguet
+- Yann Miguet: Specialized in c++ development
 - Ulysse Lefeuvre
 - Lenz Filipski: Specialized in embedded systems.
 - Eliott Quéré: Signal processing enthusiast.
