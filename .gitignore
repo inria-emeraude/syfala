@@ -17,4 +17,5 @@
 *.cf
 *.out
 *.aux
+*.env
 syfala_log.txt

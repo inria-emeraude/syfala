@@ -48,3 +48,4 @@ Here is a list of person that have contributed to the Syfala project :
 - Jessica Zaki-Sewa
 - Jonas Hoepner
 - Benjamin Quiédeville
+- Daniel Habib
