@@ -73,9 +73,11 @@ $ syfala examples/cpp/templates/gain-control-hls.cpp
 | name            | arguments                                      | description                                                  |
 | --------------- | ---------------------------------------------- | ------------------------------------------------------------ |
 | `--multisample` | power of two integer (e.g. 16, 24, 32, *etc.*) | DSP block will compute a block of samples instead of a single one. This may improve overall throughput but will introduce audio i/o latency. |
-| `--sigma-delta` | none                                           | Builds the project with a *sigma-delta* dac configuration (*experimental*) |
+| `--sigma-delta` | integer (order, from 1 to 5)                   | Builds the project with a *sigma-delta* dac configuration (*experimental*) |
 | `--tdm`         | none                                           | Builds the project with *i2s TDM* (*experimental*)           |
 | `--ethernet`    | none                                           | (**linux only**) uses tcp/ip ethernet to convey input/output signals from & to faust |
+| `--bd`          | /path/to/file.tcl                              | Uses a custom block design .tcl file for the project         |
+| `--i2s`         | /path/to/file.vhd                              | Uses a custom I²S transceiver for the project                |
 
 ## HLS options
 

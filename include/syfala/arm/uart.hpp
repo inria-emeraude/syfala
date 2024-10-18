@@ -4,7 +4,7 @@
 #include <memory>
 #include <atomic>
 
-namespace Syfala::UART {
+namespace Syfala::ARM::UART {
 
 struct Message {
       int index = 0;

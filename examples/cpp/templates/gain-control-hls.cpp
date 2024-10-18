@@ -13,25 +13,21 @@
 
 static bool initialization = true;
 
-static void compute(sy_ap_int const input_0,
-                    sy_ap_int const input_1,
-                    sy_ap_int* output_0,
-                    sy_ap_int* output_1,
+static void compute(sy_ap_int const inputs[],
+                    sy_ap_int outputs[],
                     float gain)
 {
     // if you need to convert to float, use the following:
     // (audio inputs and outputs are 24-bit integers by default)
-    float f0 = Syfala::HLS::ioreadf(input_0) * gain;
-    float f1 = Syfala::HLS::ioreadf(input_1) * gain;
-    Syfala::HLS::iowritef(f0, output_0);
-    Syfala::HLS::iowritef(f1, output_1);
+    float f0 = Syfala::HLS::ioreadf(inputs[0]) * gain;
+    float f1 = Syfala::HLS::ioreadf(inputs[1]) * gain;
+    Syfala::HLS::iowritef(f0, outputs[0]);
+    Syfala::HLS::iowritef(f1, outputs[1]);
 }
 
 void syfala (
-        sy_ap_int audio_in_0,
-        sy_ap_int audio_in_1,
-        sy_ap_int* audio_out_0,
-        sy_ap_int* audio_out_1,
+        sy_ap_int audio_in[INPUTS],
+        sy_ap_int audio_out[OUTPUTS],
            int arm_ok,
          bool* i2s_rst,
         float* mem_zone_f,
@@ -41,6 +37,8 @@ void syfala (
           bool debug,
          float gain
 ) {
+#pragma HLS array_partition variable=audio_in type=complete
+#pragma HLS array_partition variable=audio_out type=complete
 #pragma HLS INTERFACE s_axilite port=arm_ok
 #pragma HLS INTERFACE s_axilite port=gain
 #pragma HLS INTERFACE m_axi port=mem_zone_f latency=30 bundle=ram
@@ -61,17 +59,14 @@ void syfala (
             /* Every other iterations:
              * either process the bypass & mute switches... */
             if (bypass) {
-                *audio_out_0 = audio_in_0;
-                *audio_out_1 = audio_in_1;
+                audio_out[0] = audio_in[0];
+                audio_out[1] = audio_in[1];
             } else if (mute) {
-                *audio_out_0 = 0;
-                *audio_out_1 = 0;
+                audio_out[0] = 0;
+                audio_out[1] = 0;
             } else {
                 /* ... or compute samples here */
-                compute(audio_in_0, audio_in_1,
-                        audio_out_0, audio_out_1,
-                        gain
-                );
+                compute(audio_in, audio_out, gain);
             }
         }
     }

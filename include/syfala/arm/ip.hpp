@@ -1,14 +1,13 @@
 #pragma once
 
 #include <syfala/utilities.hpp>
+#include <xsyfala.h>
 
 #if SYFALA_FAUST_TARGET
     #include <syfala/arm/faust/control.hpp>
 #endif
 
-#include <xsyfala.h>
-
-namespace Syfala::IP {
+namespace Syfala::ARM::DSP {
 /**
  * @brief Intializes and configures the Syfala DSP IP.
  * This has to be done before setting the 'arm_ok' flag,

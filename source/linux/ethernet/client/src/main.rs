@@ -47,14 +47,24 @@ using the IPv6 link local address of the server, you have to provide the scope i
 you can get the scope by running `ip addr` which gives you the scope id in the first column";
 
 #[derive(Parser, Debug)]
-#[command(name="Syfala Client", version, about="Streams audio via UDP", long_about = DESCRIPTION)]
+#[command(name="Syfala Client")]
+#[command(version)]
+#[command(about = "Streams audio via UDP")]
+#[command(long_about = DESCRIPTION)]
+
 struct Args {
-    /// The Server IP with port, e.g. [fe80::aaa:bbbb:cccc:dddd%2]:6910
-    #[arg(short='s', long, value_hint=clap::ValueHint::Hostname)]
+    // -----------------------------------------------------------------
+    /// The Server IP with port, e.g. 192.168.0.1:6910
+    #[arg(short, long)]
+    #[arg(value_hint = clap::ValueHint::Hostname)]
     server: SocketAddr,
+    // -----------------------------------------------------------------
     /// The name as which the client should register at the Audio Server
-    #[arg(short='n', long, default_value = "Syfala FPGA", value_hint=clap::ValueHint::Other)]
+    #[arg(short, long)]
+    #[arg(default_value = "Syfala FPGA")]
+    #[arg(value_hint = clap::ValueHint::Other)]
     name: String,
+    // -----------------------------------------------------------------
 }
 
 #[tokio::main]
@@ -66,44 +76,38 @@ async fn main() -> io::Result<()> {
         .with_thread_ids(false)
         .with_target(false)
         .finish();
-
     tracing::subscriber::set_global_default(subscriber).unwrap();
-
     let args = Args::parse();
-
     let config = ConnectionConfig {
-        uio: "uio1".to_string(),
-        mem: "/dev/mem".to_string(),
-        mem_in: 0x35000000,
-        mem_in_max_size: 1024 * 1024 * 8,
-        mem_out: 0x35000000 + 0x800000,
+                     uio: "uio1".to_string(),
+                     mem: "/dev/mem".to_string(),
+                  mem_in: 0x35500000,
+         mem_in_max_size: 1024 * 1024 * 8,
+                 mem_out: 0x35500000 + 0x800000,
         mem_out_max_size: 1024 * 1024 * 8,
     };
-    // AXI stuff
+    // AXI-related
     let mut axi = AxiLite::new(&config.uio);
-
     let channels_in = axi.get_input_channels();
     let channels_out = axi.get_output_channels();
     tracing::info!(
-        "channels in {}, channels out: {}",
-        channels_in,
-        channels_out
+        "Input channels: {}; Output channels: {}",
+        channels_in, channels_out
     );
-
     if channels_in == 0 && channels_out == 0 {
-        tracing::error!(
-            "Neither input nor output channels found! did you load do syfala-load yet?"
+        tracing::error! (
+            "Found zero input & output channels.
+            Please make sure 'syfala-load <mytarget>' is running."
         );
         return Ok(());
     }
-
     let axi = Arc::new(Mutex::new(axi));
 
-    // reconnect loop
+    // Reconnect loop
     loop {
         tokio::select! {
             _ = connect(axi.clone(), channels_in, channels_out, &config, &args.server, &args.name) => {
-                tracing::debug!("exiting connect");
+                tracing::debug!("Exiting connect");
             }
             _ =  signal::ctrl_c() => {
                 tracing::info!("Stopping...");
@@ -118,11 +122,16 @@ async fn main() -> io::Result<()> {
             }
         }
     }
-
     Ok(())
 }
 
-async fn connect(axi: Arc<Mutex<AxiLite>>, channels_in: usize, channels_out: usize, config: &ConnectionConfig, addr: &SocketAddr, name: &str) {
+async fn connect(axi: Arc<Mutex<AxiLite>>,
+     channels_in: usize,
+    channels_out: usize,
+          config: &ConnectionConfig,
+            addr: &SocketAddr,
+            name: &str
+){
     let mut tcp = match TcpHandler::new(addr, channels_out, channels_in, name).await {
         Ok(tcp) => tcp,
         Err(e) => {
@@ -130,33 +139,40 @@ async fn connect(axi: Arc<Mutex<AxiLite>>, channels_in: usize, channels_out: usi
             return
         }
     };
-    // await for server sending a UDP connection request
+    // Await for server sending a UDP connection request
     let mut connection_properties = match tcp.await_connect_request().await {
         Ok(connection_properties) => connection_properties,
         Err(e) => {
-            tracing::error!("Could not get first welcome packet {:?}", e);
+            tracing::error!("Could not get TCP handshake {:?}", e);
             return
         }
     };
-
-    // if link local ipv6 addresses are used, the scope of the interface has to be set as scope of server is not the same as locally
+    // If link local ipv6 addresses are used, the scope of the interface has to be set as
+    // scope of server is not the same as locally:
     // https://stackoverflow.com/questions/15242988/reason-to-mention-scope-id-in-link-local-address-of-ipv6
-    connection_properties.local =
-        if_local_ipv6_set_scope(connection_properties.local, &addr.to_string());
-    connection_properties.remote =
-        if_local_ipv6_set_scope(connection_properties.remote, &addr.to_string());
+    connection_properties.local = if_local_ipv6_set_scope(
+        connection_properties.local,
+        &addr.to_string()
+    );
+    connection_properties.remote = if_local_ipv6_set_scope(
+        connection_properties.remote,
+        &addr.to_string()
+    );
+    // Start UDP server
+    let mut udp = udp::UdpConnection::new(
+        config, axi.clone(),
+        connection_properties,
+        tcp.get_stats_tx()
+    ).await;
+    tracing::info!("UDP started");
 
-    // start udp server
-    let mut udp = udp::UdpConnection::new(config, axi.clone(), connection_properties, tcp.get_stats_tx()).await;
-    tracing::info!("UDP OK");
-
-    // run tcp and udp at same time
+    // Run TCP and UDP at the same time.
     tokio::select! {
         e = tcp.handle() => {
-            tracing::info!("tcp handler returned with: {:?}", e);
+            tracing::info!("TCP handler returned with: {:?}", e);
         },
         e = udp.handle() => {
-            tracing::error!("udp handler returned with: {:?}", e);
+            tracing::error!("UDP handler returned with: {:?}", e);
         }
     }
     axi.lock().unwrap().deactivate();

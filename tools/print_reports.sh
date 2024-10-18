@@ -105,6 +105,15 @@ else
         gui_exist=0 #0: donesn't exist
 fi
 #---------------------------------------------------
+check_exist(){
+    if [ -z "$1" ]; then #if empty
+        echo 0
+    else
+        echo $1
+    fi
+}
+#---------------------------------------------------
+
 if [[ $csynth_file_exist == "1" ]]
 then
     hls_csynth_date=$(grep -m 1 "* Date:" $HLS_CSYNTH_FILE | cut -d: -f2-)
@@ -181,16 +190,15 @@ fi
 if [[ $project_exist == "2" ]]
 then
     project_date=$(grep -m 1 "Date" $VIVADO_FILE | cut -d: -f2-)
+    vivado_lut_prct=$(check_exist $(grep -m 1 "LUTs" $VIVADO_FILE_LUT | rev | cut -d "|" -f2 | rev | cut -d "." -f1)) #get last field to be compatible with 2020 and 2022
+    vivado_ff_prct=$(check_exist $(grep -m 1 "Register" $VIVADO_FILE | cut -d "|" -f6 | cut -d "." -f1))
+    vivado_bram_prct=$(check_exist $(grep -m 1 "Block RAM" $VIVADO_FILE | cut -d "|" -f6 | cut -d "." -f1))
+    vivado_dsp_prct=$(check_exist $(grep -m 1 "DSPs" $VIVADO_FILE | cut -d "|" -f6 | cut -d "." -f1 || true))
 
-    vivado_lut_prct=$(grep -m 1 "LUTs" $VIVADO_FILE_LUT | rev | cut -d "|" -f2 | rev | cut -d "." -f1) #get last field to be compatible with 2020 and 2022
-    vivado_ff_prct=$(grep -m 1 "Register" $VIVADO_FILE | cut -d "|" -f6 | cut -d "." -f1)
-    vivado_bram_prct=$(grep -m 1 "Block RAM" $VIVADO_FILE | cut -d "|" -f6 | cut -d "." -f1)
-    vivado_dsp_prct=$(grep -m 1 "DSPs" $VIVADO_FILE | cut -d "|" -f6 | cut -d "." -f1)
-
-    vivado_lut_nb=$(grep -m 1 "LUTs" $VIVADO_FILE_LUT | cut -d "|" -f3)
-    vivado_ff_nb=$(grep -m 1 "Register" $VIVADO_FILE | cut -d "|" -f4)
-    vivado_bram_nb=$(grep -m 1 "Block RAM" $VIVADO_FILE | cut -d "|" -f4 | cut -d "." -f1)
-    vivado_dsp_nb=$(grep -m 1 "DSPs" $VIVADO_FILE | cut -d "|" -f4)
+    vivado_lut_nb=$(check_exist $(grep -m 1 "LUTs" $VIVADO_FILE_LUT | cut -d "|" -f3))
+    vivado_ff_nb=$(check_exist $(grep -m 1 "Register" $VIVADO_FILE | cut -d "|" -f4))
+    vivado_bram_nb=$(check_exist $(grep -m 1 "Block RAM" $VIVADO_FILE | cut -d "|" -f4 | cut -d "." -f1))
+    vivado_dsp_nb=$(check_exist $(grep -m 1 "DSPs" $VIVADO_FILE | cut -d "|" -f4))
 fi
 
 if [[ $app_exist == "2" ]]
@@ -575,10 +583,11 @@ printf "\
 ░▀░▀░▀▀▀░▀▀▀░ \033[1mSYNTH\033[0m\033[2B\033[19D\
 "
 
-
 move_cursor_abs $(($thisCaseHeight-2)) $((($normWidth/2)-53))
 tput setaf 1
-printf "\e[1mThe HLS resources usage is approximate, please use --accurate-use option to get an accurate ressource usage.\e[0m "
+if [[ $impl_file_exist == "0" ]]; then
+    printf "\e[1mThe HLS resources usage is approximate, please use --accurate-use option to get an accurate ressource usage.\e[0m "
+fi
 move_cursor_abs $(($thisCaseHeight-1)) 0
 }
 

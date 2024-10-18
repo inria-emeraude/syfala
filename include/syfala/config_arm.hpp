@@ -1,5 +1,11 @@
 #pragma once
 
+#include <cstdint>
+
+#ifndef __linux__
+    #include <xil_printf.h>
+#endif
+
 #include <syfala/config_common.hpp>
 
 #if (SYFALA_SAMPLE_WIDTH) == 16
@@ -135,3 +141,4 @@ static int controllerBoard[8] = {
 #define SYFALA_CONTROL_MIDI 0
 #define SYFALA_CONTROL_OSC 0
 #define SYFALA_CONTROL_HTTP 0
+#define FAUST_INTERFACE_NEW 0

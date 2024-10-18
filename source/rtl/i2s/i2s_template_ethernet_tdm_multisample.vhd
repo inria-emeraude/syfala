@@ -111,7 +111,7 @@ port (
 -------------------------------------------------------------------------------
     reset_n : in std_logic -- asynchronous active low reset
 );
-    --NEVER finish the port declaration with a channel-dependant var. (to avoid issues with the last ");"
+    -- NEVER finish the port declaration with a channel-dependant var. (to avoid issues with the last ");"
     -- when the line is duplicated with the script)
 end i2s_transceiver;
 

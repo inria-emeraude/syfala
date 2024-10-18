@@ -73,7 +73,7 @@ void iowritef(float f, sy_ap_int& output);
 }
 ```
 
-You should also be able, from this file, to access some useful *compile-time* data, such as the **current sample rate**, or **sample-width** which are defined with the following **macros**: 
+You should also be able, from this file, to access some useful *compile-time* data, such as the **current sample rate**, or **sample-width** which are defined with the following **macros**:
 
 ```cpp
 #define SYFALA_SAMPLE_RATE 48000
@@ -323,7 +323,7 @@ bool debug  = false;
 - Then, call the `syfala` function with all the proper arguments.
 
 ```cpp
-	// For each simulation iteration (set with the '--csim-iter' flag)   
+	// For each simulation iteration (set with the '--csim-iter' flag)
 	for (int i = 0; i < SYFALA_CSIM_NUM_ITER; i++) {
             if (i > 0) {
          // first iteration = initialization, inputs will be ignored
@@ -354,11 +354,11 @@ bool debug  = false;
 	}
 ```
 
-## Optimizing code 
+## Optimizing code
 
 For simple examples, such as our previous *stereo-gain kernel*, there's obviously not going to be an immediate and imperative need for optimization. Consequently, we will this time get our hands on something a little **more resource and computation hungry**.
 
-In audio digital signal processing, **FIR filters** are encountered on a very regular basis, and, depending on the number of coefficients that they have, they can be tricky to implement on FPGAs, especially if no optimizations are made. Let's have a look at our `examples/cpp/fir/fir.cpp` example:  
+In audio digital signal processing, **FIR filters** are encountered on a very regular basis, and, depending on the number of coefficients that they have, they can be tricky to implement on FPGAs, especially if no optimizations are made. Let's have a look at our `examples/cpp/fir/fir.cpp` example:
 
 ```cpp
 #include "coeffs.hpp"
@@ -461,6 +461,8 @@ float compute_fir() {
     [...]
 ```
 
+[ EXPLAIN UNROLL]
+
 If we try to run HLS with this code, we see that pretty much nothing happens (the results may even be  worse than before). That's because this particular accumulation loop cannot really be parallelized without using what we call a **balanced tree** (in our case, an 'adder tree'). By default, Vitis HLS does not automatically make this optimization for floating-point operations, but it can be enabled using the `--unsafe-math-optimizations` (or `--umo`) flag in the syfala command line:
 
 ```shell
@@ -499,9 +501,9 @@ Max. 2559 Cycles, 20,8333us
 Lat. 38%
 ```
 
-With **600 coefficients**, we're still okay on latency, but the **Lookup Table** (**LUT**) **number** is now getting dangerously **high**. 
+With **600 coefficients**, we're still okay on latency, but the **Lookup Table** (**LUT**) **number** is now getting dangerously **high**.
 
-Remember: the numbers shown on these reports are only **an estimate**, which means that this number could be in reality a bit higher, introducing the risk that our kernel might not actually fit on the Zybo Z7-10 board. 
+Remember: the numbers shown on these reports are only **an estimate**, which means that this number could be in reality a bit higher, introducing the risk that our kernel might not actually fit on the Zybo Z7-10 board.
 
 #### Accurate reports
 
@@ -579,7 +581,7 @@ Another method that can be used in order to balance latency and resource utiliza
 syfala examples/cpp/templates/gain-multisample.cpp --multisample 16 --hls
 ```
 
-For C++ targets, the code needs to be adapted a bit, since we now have **FIFO arrays** as inputs and outputs, we have to declare them as **C multidimensional arrays**, like the following: 
+For C++ targets, the code needs to be adapted a bit, since we now have **FIFO arrays** as inputs and outputs, we have to declare them as **C multidimensional arrays**, like the following:
 
 ```cpp
 void syfala (
@@ -646,7 +648,9 @@ static void compute(sy_ap_int const inputs[INPUTS][SYFALA_BLOCK_NSAMPLES],
 
 #### FIR example
 
-Let's get back to our FIR example, in order to see what can be done to optimize things a bit more. An unoptimized `multisample` example can be found in `examples/cpp/fir/fir-multisample.cpp`. 
+Let's get back to our FIR example, in order to see what can be done to optimize things a bit more. An unoptimized `multisample` example can be found in `examples/cpp/fir/fir-multisample.cpp`.
+
+[ EXPLAIN CODE]
 
 Let's see what kind of results we get with a **block of size 16 and 300 coefficients**:
 
@@ -670,7 +674,69 @@ Max. 2559 Cycles, 20,8333us
 Lat. 106%
 ```
 
-Compared to our unoptimized 'one-sample' FIR example with the **same number of coefficients**, and considering we also introduce **an I/O latency of 16 samples** (about 0.3 milliseconds), we can say with confidence that this is not really good, and that's essentially because - if we carefully look at the more advanced reports that Vitis HLS is giving us - **the samples are still processed sequentially**, which is not going to introduce a lot of changes compared to the single-sample version. Consequently, even if we unroll our accumulation loop as we did before, the results are also going to be more or less the same. 
+Compared to our unoptimized 'one-sample' FIR example with the **same number of coefficients**, and considering we also introduce **an I/O latency of 16 samples** (about 0.3 milliseconds), we can say with confidence that this is not really good, and that's essentially because - if we carefully look at the more advanced reports that Vitis HLS is giving us - **the samples are still processed sequentially**, which is not going to introduce a lot of changes compared to the single-sample version. Consequently, even if we unroll our accumulation loop as we did before, the results are also going to be more or less the same.
+
+Let's say, for the sake of the example, that we now have a block of **8 audio samples** and a **FIR with 12 coefficients**: our memory layout at time `t0` will look something like the following:
+
+```cpp
+const int ncoeffs = 12;
+const int nsamples = 8;
+
+float in[nsamples];
+float mem[ncoeffs+nsamples-1];
+float out[nsamples];
+
+mem(t0) = [in[7], in[6], in[5], in[4], in[3], in[2], in[1], in[0], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+```
+
+Now, if we want to compute the value of `out[n]`, we would normally do this:
+
+```cpp
+for (int s = 0; s < nsamples; ++s) 
+    for (int c = 0; c < ncoeffs; ++c) 
+         out[s] += mem[nsamples-1-s] * coeffs[c];
+
+// If we 'unroll' the loop:
+// -------------------------
+// s = 0, c = 0..11
+// -------------------------
+out[0] += mem[7] * coeffs[0];
+out[0] += mem[8] * coeffs[1];
+out[0] += mem[9] * coeffs[2];
+// ...
+out[0] += mem[18] * coeffs[11];
+// -------------------------
+// s = 1, c = 0..11
+// -------------------------
+out[1] += mem[6] * coeffs[0];
+out[1] += mem[7] * coeffs[1];
+out[1] += mem[8] * coeffs[2];
+// ...
+out[1] += mem[17] * coeffs[11];
+// etc.
+```
+
+|      | Config                | DSP      | FF        | LUT        | BRAM   | Latency   |
+| ---- | --------------------- | -------- | --------- | ---------- | ------ | --------- |
+| 1    | normal                | 25% (57) | 6% (6983) | 18% (9792) | 0% (0) | 177 (6%)  |
+| 2    | unroll inner          | same     | same      | same       | same   | same      |
+| 3    | unroll outer          | 2% (5)   | 2% (2596) | 6% (3390)  | same   | 918 (35%) |
+| 4    | inverted normal       | 2% (5)   | 1% (2064) | 4% (2167)  | same   | 214 (8%)  |
+| 5    | inverted unroll outer | 2% (5)   | 3% (3894) | 7% (3754)  | same   | 364 (13%) |
+| 6.   | inverted unroll inner | 2% (5)   | 2% (2326) | 4% (2315)  | same   | 187 (7%)  |
+
+Now, if we **invert the loops**, we get:
+
+```cpp
+for (int c = 0; c < ncoeffs; ++c)
+    for (int n = 0; n < nsamples; ++n)
+         out[n] += mem[nsamples-1-n+c] * coeffs[c];
+         
+out[0] += mem[7] * coeffs[0];
+out[1] += mem[6] * coeffs[0];
+out[2] += mem[5] * coeffs[0]; 
+// ...
+```
 
 [...]
 
@@ -694,13 +760,13 @@ Since the resources on a FPGA are far from being infinite, it is usually prefera
 - **Control-rate** computations.
 - etc.
 
-This is exactly what **syfala** does under the hood with **Faust programs**: control-rate expressions, resulting from the sliders/button being interacted with, are for instance made on the ARM, and shared through a memory bus called **AXI-Lite**. 
+This is exactly what **syfala** does under the hood with **Faust programs**: control-rate expressions, resulting from the sliders/button being interacted with, are for instance made on the ARM, and shared through a memory bus called **AXI-Lite**.
 
 The following example shows how we can implement a similar (though simpler) control-rate *gain* parameter, which we will be able update on the console and share with the DSP kernel.
 
 ### Basic AXI-Lite control example
 
-This example, which you can find in `examples/cpp/templates/gain-control-hls.cpp`, is almost exactly the same as our previous `gain.cpp` example. The only difference is that we want to make **variable** the `gain` parameter that we *hardcoded* to `0.5f` before. All we basically need to do here is to introduce a new floating-point argument `gain` **in the top-level function**, which will also be declared as an **AXI-Lite** interface port using the appropriate `pragma`: 
+This example, which you can find in `examples/cpp/templates/gain-control-hls.cpp`, is almost exactly the same as our previous `gain.cpp` example. The only difference is that we want to make **variable** the `gain` parameter that we *hardcoded* to `0.5f` before. All we basically need to do here is to introduce a new floating-point argument `gain` **in the top-level function**, which will also be declared as an **AXI-Lite** interface port using the appropriate `pragma`:
 
 ```cpp
 void syfala (
@@ -755,7 +821,7 @@ If we now go in the `build/syfala_ip/syfala/impl/ip/drivers/syfala_v1_0/src` dir
 - xsyfala_sinit.c
 ```
 
-We're not going to go into details about each file: the one that is truly interesting to us in the context of our example is the `xsyfala.h` **C header** . If we **open this file**, we see that the following **function prototypes** are declared: 
+We're not going to go into details about each file: the one that is truly interesting to us in the context of our example is the `xsyfala.h` **C header** . If we **open this file**, we see that the following **function prototypes** are declared:
 
 ```cpp
 void XSyfala_Set_arm_ok(XSyfala *InstancePtr, u32 Data);
@@ -806,7 +872,7 @@ static void update_gain(XSyfala& syfala) {
 }
 ```
 
-> **Note**: floating-point data have to be set using `reinterpret_cast<u32*>`, otherwise, it will be interpreted as an integer and truncated. 
+> **Note**: floating-point data have to be set using `reinterpret_cast<u32*>`, otherwise, it will be interpreted as an integer and truncated.
 
 In the `main()` function, all we have to do now is call our `update_gain()` function in the **main event loop**, passing it the `XSyfala` handle `struct`.
 
@@ -842,8 +908,314 @@ Finally, **to fully run syfala on our example**, including the ARM executable, w
 
 ```shell
 syfala examples/cpp/templates/gain-control-hls.cpp --arm-target examples/cpp/templates/gain-control-arm.cpp --board Z10
+syfala flash
+# ... and we can now use 'minicom' (or tio) to input gain values
 ```
 
-### Delay-line AXI example (DDR memory)
+#### AXI-Lite array arguments
 
-[...]
+It is also entirely possible to pass **array arguments** to the AXI-Lite bus. On the HLS side, it remains straightforward:
+
+```cpp
+void syfala (
+        sy_ap_int audio_in[INPUTS],
+        sy_ap_int audio_out[OUTPUTS],
+    	[...]
+        float my_control_parameters[64]
+) {
+#pragma HLS INTERFACE s_axilite port=my_control_parameters
+```
+
+In the `xsyfala.h` header, the **matching functions** generated by Vitis HLS will be the following:
+
+```cpp
+u32 XSyfala_Write_my_control_parameters_Words(XSyfala *InstancePtr, int offset, word_type* data, int length);
+u32 XSyfala_Read_my_control_parameters_Words(XSyfala *InstancePtr, int offset, word_type* data, int length);
+```
+
+Which you'll be able to access like in the following example:
+
+```cpp
+    XSyfala dsp;
+ 	// Instantiate and initialize a local array
+	float my_control_parameters[64];
+	for (int n = 0; n < 64; ++n) {
+         my_control_parameters[n] = n;
+    }
+	// Write all of the local array's data to the AXI-Lite bus
+	// using the appropriate function:
+	XSyfala_Write_my_control_parameters_Words (
+        &dsp, 0, reinterpret_cast<u32*>(my_control_parameters), 64
+    );
+```
+
+### DDR AXI + AXI-Lite control (Embedded Linux and OSC)
+
+Let's take a different example this time, and since we haven't really dealt with audio synthesis yet, we will implement a simple **wavetable-based sine oscillator**, for which its `frequency` and `gain` parameter will be **remotely controllable** with the **Open Sound Control** protocol, and its **wavetable allocated on the DDR** ram, **initialized on the ARM**, and, finally,**read from the DSP kernel**. You can find the HLS implementation in `examples/cpp/templates/osc-synth-hls.cpp` and the ARM (Linux) part in `examples/cpp/templates/osc-synth-arm.cpp`.
+
+```cpp
+// examples/cpp/templates/osc-synth-hls.cpp
+
+#define INPUTS 0
+#define OUTPUTS 2
+
+void syfala (
+    sy_ap_int audio_out[OUTPUTS],
+          int arm_ok,
+        bool* i2s_rst,
+       float* mem_zone_f,
+         int* mem_zone_i,
+         bool bypass,
+         bool mute,
+         bool debug,
+        float frequency,
+        float gain
+) {
+#pragma HLS INTERFACE s_axilite port=frequency
+#pragma HLS INTERFACE s_axilite port=gain
+#pragma HLS INTERFACE m_axi port=mem_zone_f latency=30 bundle=ram
+#pragma HLS INTERFACE m_axi port=mem_zone_i latency=30 bundle=ram
+```
+
+Our **DSP kernel HLS code**, above and below, is still pretty straightforward here: 
+
+- We add two read-only floating-point parameters `frequency` and `gain` to the top-level function arguments, 
+- Just like our previous example, we register them to the **AXI-Lite bus** with the proper `pragmas`.
+- Then, we're simply going to **update and compute the oscillator's phase**, and **read its wavetable** using the `mem_zone_f` **pointer** read/write argument. As you may have noticed, this specific argument is registered on the `m_axi` (**AXI**) bus with a different HLS `pragma`.
+
+```cpp
+          } else {
+                /* ... or compute samples here */
+                static float phase;
+                static int iphase;
+              	// Update increment value and the oscillator's phase
+                float incr = frequency/SYFALA_SAMPLE_RATE;
+                iphase = (int)(phase * 16384);
+                phase = fmodf(phase + incr, 1.f);
+                // Read the DDR wavetable at index [iphase]
+                float f = mem_zone_f[iphase];
+            #ifdef __CSIM__
+                printf("iphase: %d, f: %f\n", iphase, f);
+            #endif
+              	// Finally, apply gain factor
+                f *= gain;
+                Syfala::HLS::iowritef(f, audio_out[0]);
+                Syfala::HLS::iowritef(f, audio_out[1]);
+            }
+```
+
+> **Note**: we fundamentally 'assume' the `mem_zone_f` variable is directly pointing to the **wavetable's start,** which we are going to really make sure of in the code that is going to be **on the Linux/ARM-side of things.**
+
+#### Allocating/initializing the wavetable
+
+In the ARM code, we will first retrieve a RAM pointer by calling the `Syfala::Memory::initialize()` API function, which will give us a pointer to the base of a **free portion of DDR memory**, which has been pre-reserved when building the Embedded Linux for Syfala. It will also **automatically write the address to the AXI bus** and the `mem_zone_f` function argument that we have in our HLS code. Since we only have one *wavetable*, hence a single memory zone, we can leave things as is (without any offset) and just **consider** `mem.f_zone` as **the start of our wavetable**.
+
+Then, we can safely initialize the *wavetable*. Here, we write a single period of a **very basic sinewave**. 
+
+```cpp
+// examples/cpp/templates/osc-synth-arm.cpp
+
+#define WAVETABLE_LEN 16384
+static float frequency = 440.f, gain = 0.25f;
+
+static void initialize_default_values(XSyfala& dsp) {
+    // Initialize AXI-Lite based controls, 
+    // the same way that we did in our previous example.
+    XSyfala_Set_frequency(&dsp, *reinterpret_cast<u32*>(&frequency));
+    XSyfala_Set_gain(&dsp, *reinterpret_cast<u32*>(&gain));
+}
+static void initialize_wavetables(float* mem, int len) {
+    // Write a single period of a sinewave
+    for (int n = 0; n < len; ++n) {
+         mem[n] = std::sin((float)(n)/len * M_PI * 2);
+    }
+}
+int main(int argc, char* argv[]) {
+    [...]
+    // The following function will set 'mem.f_zone' pointer 
+    // to the base of a free portion of DDR memory 
+    Memory::initialize(dsp, mem, 0, WAVETABLE_LEN);
+    // We also initialize 'frequency' and 'gain' parameters to their default value
+    initialize_default_values(dsp);
+    // and finally, initialize the wavetable.
+    initialize_wavetables(mem.f_zone, WAVETABLE_LEN);
+    [...]
+}
+```
+
+#### OSC control example
+
+Since we're using the Embedded Linux in this example, we will take advantage of using the `liblo` **Open Sound Control library**, which is installed by default on our **Alpine Linux distribution**.
+
+```cpp
+// examples/cpp/templates/osc-synth-arm.cpp
+
+/**
+ * Start a new OSC server thread on port '8888', 
+ * register both '/osc/frequency' and '/osc/gain' float parameters 
+ * assign them the proper callback functions. 
+ */
+static void initialize_osc(XSyfala& dsp) {
+    osc = lo_server_thread_new("8888", error_hdl);
+    lo_server_thread_add_method(osc, "/osc/frequency", "f", osc_frequency_hdl, &dsp);
+    lo_server_thread_add_method(osc, "/osc/gain", "f", osc_gain_hdl, &dsp);
+    lo_server_thread_start(osc);
+}
+
+static int osc_frequency_hdl (
+        const char* path,
+        const char* types,
+           lo_arg** argv, int argc,
+         lo_message data, void* udata
+){
+    XSyfala* dsp = static_cast<XSyfala*>(udata);
+    frequency = argv[0]->f;
+    printf("[OSC] Updating /osc/frequency with value: %f\n", frequency);
+    // Update on the AXI-Lite bus
+    XSyfala_Set_frequency(dsp, *reinterpret_cast<u32*>(&frequency));
+    return 0;
+}
+
+static int osc_gain_hdl (
+        const char* path,
+        const char* types,
+           lo_arg** argv, int argc,
+         lo_message data, void* udata
+){
+    XSyfala* dsp = static_cast<XSyfala*>(udata);
+    gain = argv[0]->f;
+    printf("[OSC] Updating /osc/gain with value: %f\n", gain);
+    // Update on the AXI-Lite bus
+    XSyfala_Set_gain(dsp, *reinterpret_cast<u32*>(&gain));
+    return 0;
+}
+
+int main() {
+    [...]
+    initialize_osc(dsp);
+}
+```
+
+#### Building and executing the example
+
+Please read the [linux-getting-started](linux/getting-started.md) tutorial in order to learn how to build and use the Embedded Linux. You can then build the example with the following command:  
+
+```shell
+syfala examples/cpp/templates/osc-synth-hls.cpp --arm-target examples/cpp/templates/osc-synth-arm.cpp --linux
+```
+
+Then you can copy the resulting build onto your **Zybo SD card** and use the following command to start the example:
+
+```shell
+syfala-load osc-synth-hls
+```
+
+### Delay-line example (BRAM vs DDR)
+
+**Delay-lines** on a FPGA can be dealt with using different approaches for their implementation:
+
+1. On the Programmable Logic (PL), in Block-RAM (**BRAMs**).
+2. On a **shared**/**external** **DDR** memory.
+
+#### BRAM-based delay-lines
+
+In most cases, the **BRAM solution** offers better performances in terms of read/write **latency**, but is limited in terms of **the amount of samples it can store**. The following table highlights the **BRAM utilization** of our `examples/cpp/templates/delay-hls-bram.cpp` example, depending on the **board** that is used and the **number of samples** that we store.
+
+| Board model             | Delay-line size                        | DSP    | FF        | LUT        | BRAM           | Latency        |
+| ----------------------- | -------------------------------------- | ------ | --------- | ---------- | -------------- | -------------- |
+| Digilent Zybo Z7-10     | 24000 samples (half a second at 48kHz) | 3% (3) | 3% (1226) | 11% (2019) | **53%** (64)   | 1% (47 cycles) |
+| Digilent Zybo Z7-10     | 48000 samples                          | 3% (3) | 3% (1252) | 11% (2035) | **106%** (128) | 1% (47 cycles) |
+| Digilent Zybo Z7-**20** | 48000 samples                          | 1% (3) | 1% (1252) | 3% (2035)  | **45%** (128)  | 1% (47 cycles) |
+| Digilent Zybo Z7-20     | 131,000 samples                        | 1% (3) | 1% (1278) | 3% (2051)  | **91%** (256)  | 1% (47 cycles) |
+
+While the Digilent Zybo **Z7-20** board has more than twice the BRAM space than the **Z7-10** model, it still won't be enough to implement, for instance, **a delay-line of two-seconds for two audio channels**.   
+
+Here is our code for the BRAM-implemented delay line:
+
+```cpp
+// examples/cpp/templates/delay-hls-bram.cpp
+
+#define INPUTS 1
+#define OUTPUTS 2
+
+// Initialize BRAM memory (/2 second delay)
+static const int MEM_SIZE = SYFALA_SAMPLE_RATE/2;
+static float mem[MEM_SIZE];
+
+// Memory read/write indexes
+static int r = 0, w = MEM_SIZE-1;
+
+void syfala(...) {
+    [...]
+		} else {
+            /* ... or compute samples here */
+            // read input, write it into memory
+            float i0 = Syfala::HLS::ioreadf(audio_in[0]);
+            mem[w] = i0;
+            // read last sample in memory
+            float m0 = mem[r];
+            r = (r+1) % MEM_SIZE;
+            w = (w+1) % MEM_SIZE;
+            // Write non-delayed input on left channel
+            // Write delayed input on right channel
+            Syfala::HLS::iowritef(i0, audio_out[0]);
+            Syfala::HLS::iowritef(m0, audio_out[1]);
+		}
+	}	
+}
+```
+
+#### DDR-based delay-lines
+
+On Digilent Zybo Z7 boards, DDR memory size is much less of a problem, since there's a **DDR3L** memory controller with a capacity of 1GB, hence capable of storing plenty of samples, but is on the other hand slower to access, and a bit more resource-hungry:
+
+| Delay-line size | DSP    | FF        | LUT        | BRAM   | Latency         |
+| --------------- | ------ | --------- | ---------- | ------ | --------------- |
+| 24000 samples   | 3% (3) | 6% (2205) | 22% (3892) | 0% (0) | 4% (116 cycles) |
+| 48000 samples   | 3% (3) | 6% (2231) | 22% (3908) | 0% (0) | 4% (116 cycles) |
+
+The **DDR** version of the code is quite similar, except that the memory **is allocated outside of our HLS file**, and can only be reached using the pointer (`mem_zone_f`) that is passed in the top-level function arguments.
+
+```cpp
+// examples/cpp/templates/delay-hls.cpp
+
+#define INPUTS 1
+#define OUTPUTS 2
+
+static const int MEM_SIZE = SYFALA_SAMPLE_RATE;
+static int r = 0, w = MEM_SIZE-1;
+
+void syfala (
+    [...]
+   	float* mem_zone_f,
+    [...]
+) {
+#pragma HLS INTERFACE m_axi port=mem_zone_f latency=30 bundle=ram    
+	[...]
+		} else {
+            /* ... or compute samples here */
+            // read input, write it into memory
+            float i0 = Syfala::HLS::ioreadf(audio_in[0]);
+            mem_zone_f[w] = i0;
+            // read last sample in memory
+            float m0 = mem_zone_f[r];
+            r = (r + 1) % MEM_SIZE;
+            w = (w + 1) % MEM_SIZE;
+            // Write non-delayed input on left channel
+            // Write delayed input on right channel
+            Syfala::HLS::iowritef(i0, audio_out[0]);
+            Syfala::HLS::iowritef(m0, audio_out[1]);
+        }
+	}
+}
+```
+
+```cpp
+// examples/cpp/templates/delay-arm.cpp
+static constexpr int delay_size = SYFALA_SAMPLE_RATE;
+
+int main() {
+	[...]
+	Memory::initialize(x, mem, 0, delay_size);
+}
+```

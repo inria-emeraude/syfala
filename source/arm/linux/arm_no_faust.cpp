@@ -31,7 +31,6 @@
 #include <syfala/utilities.hpp>
 
 static bool running = true;
-int isTUI = false;
 
 static void sig_hdl (int signo) {
     switch (signo) {
@@ -44,7 +43,7 @@ static void sig_hdl (int signo) {
     }
 }
 
-using namespace Syfala;
+using namespace Syfala::ARM;
 
 
 static bool audio_reset(int argc, char* argv[]) {
@@ -69,7 +68,7 @@ int main(int argc, char* argv[])
 
     GPIO::initialize();
     Status::waiting("[status] Initializing peripherals & modules");
-    IP::initialize(x);
+    DSP::initialize(x);
     Memory::initialize(x, mem, 0, 0);
     SPI::initialize(spi, 0);
     // if CODEC(s) have already been initialized, do not reset audio
@@ -78,7 +77,7 @@ int main(int argc, char* argv[])
         printf("[audio] Initializing Audio Codec(s)\n");
         Audio::initialize();
     }
-    IP::set_arm_ok(&x, true);
+    DSP::set_arm_ok(&x, true);
     avahi::initialize_run(avahi_svc);
     system("ifconfig | grep 'inet addr'");
     Status::ok("[status] Application ready, now running...");
@@ -87,7 +86,7 @@ int main(int argc, char* argv[])
 #if SYFALA_AUDIO_DEBUG_UART
         float debug[2];
         memset(debug, 0, sizeof(debug));
-        IP::read_audio_out_arm(&x, 0, (u32*)debug, 2);
+        DSP::read_audio_out_arm(&x, 0, (u32*)debug, 2);
         for (int n = 0; n < 2; ++n) {
              printf("fpga float output: (%d): %f\r\n", n, debug[n]);
     }

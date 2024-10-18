@@ -5,7 +5,7 @@
 #include <syfala/config_arm.hpp>
 #include <limits>
 
-namespace Syfala::SPI {
+namespace Syfala::ARM::SPI {
 
 // Select SPI slave (value verified with oscilloscope)
 #define SS0_SPI_SELECT      0x00

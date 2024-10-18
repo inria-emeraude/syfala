@@ -22,7 +22,7 @@ In this tutorial, we will cover the essential topics to get started with the **F
 
 ## Faust
 
-Faust (Functional Audio Stream) is a **functional programming language** for sound synthesis and audio processing with a strong focus on the design  of synthesizers, musical instruments, audio effects, etc. created at the [GRAME-CNCM Research Department](https://www.grame.fr/recherche). 
+Faust (Functional Audio Stream) is a **functional programming language** for sound synthesis and audio processing with a strong focus on the design  of synthesizers, musical instruments, audio effects, etc. created at the [GRAME-CNCM Research Department](https://www.grame.fr/recherche).
 
 In order to get you started using Faust, we recommend that you follow this tutorial : https://faustdoc.grame.fr/manual/quick-start
 
@@ -129,7 +129,6 @@ syfala import export/my-faust-virtual-analog-build.zip
 #### Flashing
 
 Now we have our program fully compiled and exported, we can try it on our development Board. In order to do so, two options:
-
 1. Flash it **from USB** (with *JTAG*), by connecting an USB cable to the board's **UART port**.
 2. Flash it from a bootable **SD card**.
 
@@ -266,7 +265,7 @@ Starting from syfala 0.8, you can choose to build our **custom-made embedded Lin
 - **No latency cost** (the *DSP kernel* still dwells in the Programmable Logic)
 - **On-the-fly FPGA reprogramming** from Linux (with no need to reboot or re-login).
 - **On-board USB-MIDI control** (from the board's USB OTG port).
-- Direct **OSC/HTTP control**, pre-mapped to the Faust DSP program's user-defined GUI elements (sliders, buttons, checkboxes, etc.). 
+- Direct **OSC/HTTP control**, pre-mapped to the Faust DSP program's user-defined GUI elements (sliders, buttons, checkboxes, etc.).
 
 From the syfala command line interface, all you need to do is add the `--linux` flag:
 

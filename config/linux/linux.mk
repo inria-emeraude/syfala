@@ -2,13 +2,11 @@
 # LINUX
 # -----------------------------------------------------------------------------
 
-BUILD_LINUX_BUILD_DIR           := $(BUILD_LINUX_DIR)/build
-BUILD_LINUX_OUTPUT_DIR          := $(BUILD_LINUX_DIR)/output
-BUILD_LINUX_OUTPUT_BOOT_DIR     := $(BUILD_LINUX_OUTPUT_DIR)/boot
-BUILD_LINUX_BOOT_DIR            := $(BUILD_LINUX_BUILD_DIR)/boot
-BUILD_LINUX_ROOT_DIR		:= $(BUILD_LINUX_BUILD_DIR)/root
-BUILD_LINUX_OUTPUT_ROOT_DIR	:= $(BUILD_LINUX_OUTPUT_DIR)/root
-XILINX_GITHUB                   := https://github.com/Xilinx
+BUILD_LINUX_BUILD_DIR        := $(BUILD_LINUX_DIR)
+BUILD_LINUX_BOOT_DIR         := $(BUILD_LINUX_BUILD_DIR)/boot
+BUILD_LINUX_OUTPUT_BOOT_DIR  := $(BUILD_LINUX_BOOT_DIR)/output
+BUILD_LINUX_ROOT_DIR         := $(BUILD_LINUX_BUILD_DIR)/root
+XILINX_GITHUB                := https://github.com/Xilinx
 
 include $(MK_CONFIG_DIR)/linux/boot.mk
 include $(MK_CONFIG_DIR)/linux/root.mk

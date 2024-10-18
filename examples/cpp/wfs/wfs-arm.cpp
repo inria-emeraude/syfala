@@ -11,8 +11,6 @@
 #define OUTPUTS 32 // number of speakers...
 const static float speakers_dist = 0.0783f;
 
-int isTUI = false;
-
 static float c = 340.0;
 static float xref = 0;
 static float yref = 0;
@@ -26,7 +24,7 @@ static float y_pos[INPUTS];
 static float z_pos[INPUTS];
 static float ctrl[INPUTS*OUTPUTS*2];
 
-using namespace Syfala;
+using namespace Syfala::ARM;
 
 static XSyfala dsp;
 
@@ -58,13 +56,13 @@ static void update_state(){
     XSyfala_Write_ctrl_Words(&dsp,0,reinterpret_cast<u32*>(ctrl),INPUTS*OUTPUTS*2);
 }
 
-static void initialize_dsp(){
-    for (int i = 0; i < INPUTS; ++i){
+static void initialize_dsp() {
+    for (int i = 0; i < INPUTS; ++i) {
         x_pos[i] = 0;
         y_pos[i] = 1.5;
         z_pos[i] = 0;
     }
-    for (int o = 0; o < OUTPUTS; ++o){
+    for (int o = 0; o < OUTPUTS; ++o) {
         x_speakers_pos[o] = -speakers_dist*OUTPUTS/2 + speakers_dist/2 + o*speakers_dist;
         speakers_norm[o] = norm(xref,yref,zref,x_speakers_pos[o],0,0);
     }
@@ -107,9 +105,9 @@ int main(int argc, char* argv[]) {
     // i.e. before outputing any information on leds & stdout.
     GPIO::initialize();
     // Wait for all peripherals to be initialized
-    Status::waiting(RN("[status] Initializing peripherals & modules"));
+    Status::waiting("[status] Initializing peripherals & modules");
     Audio::initialize();
-    IP::initialize(dsp);
+    DSP::initialize(dsp);
 
     Memory::initialize(dsp, mem, 0, 0);
 
@@ -129,8 +127,8 @@ int main(int argc, char* argv[]) {
     initialize_dsp();
     initialize_osc();
 
-    IP::set_arm_ok(&dsp, true);
-    Status::ok(RN("[status] Application ready, now running..."));
+    DSP::set_arm_ok(&dsp, true);
+    Status::ok("[status] Application ready, now running...");
     // main event loop:
     while (true) {
         usleep(10000000);

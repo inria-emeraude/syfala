@@ -108,12 +108,11 @@ impl RingBuffer for AudioStreamOut {
                 .get_buf(self.read_index, end_read - self.read_index);
         }
         self.read_index = end_read;
-
-        buffer
+        return buffer;
     }
 
     fn len(&self) -> usize {
-        self.ring_size
+        return self.ring_size;
     }
 
     fn wealth(&self) -> usize {
@@ -121,17 +120,14 @@ impl RingBuffer for AudioStreamOut {
             let mut axi = self.axi.lock().unwrap();
             axi.get_output_write_index()
         };
-        assert!(
-            write_index < self.ring_size,
-            "got write index {} bigger than ring size {}",
-            write_index,
-            self.ring_size
+        assert!(write_index < self.ring_size,
+            "Write index ({}) is bigger than Ring Buffer size {}",
+            write_index, self.ring_size
         );
-        //println!("write index: {}", write_index);
         if write_index < self.read_index {
-            self.ring_size - self.read_index + write_index
+            return self.ring_size - self.read_index + write_index;
         } else {
-            write_index - self.read_index
+            return write_index - self.read_index;
         }
     }
 
@@ -154,7 +150,6 @@ impl RingBuffer for AudioStreamIn {
         }
         self.write_index += buf.len();
         self.write_index %= self.ring_size;
-
         {
             // setting read and write index on the FPGA
             let mut axi = self.axi.lock().unwrap();

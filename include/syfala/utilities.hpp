@@ -1,17 +1,19 @@
 #pragma once
 
+#include <cstdarg>
 #include <cstdint>
 #include <stdio.h>
 
 #if defined (__SYNTHESIS__) || defined (__CSIM__)
+
 #include <syfala/config_common.hpp>
+#include <ap_int.h>
 
 #if SYFALA_REAL_FIXED_POINT
     #include <ap_fixed.h>
     using sy_real_t = ap_fixed<32, 8, AP_RND_CONV, AP_SAT>;
     using sy_ap_int = ap_fixed<SYFALA_SAMPLE_WIDTH, 0, AP_RND_CONV, AP_SAT>;
 #else
-    #include <ap_int.h>
     using sy_real_t = float;
     using sy_ap_int = ap_int<SYFALA_SAMPLE_WIDTH>;
 #endif
@@ -55,47 +57,52 @@ static inline void iowritef(float f, sy_ap_int& output) {
 static inline void iowritef(float f, sy_ap_int* output) {
     *output = sy_ap_int(f * scale_factor());
 }
-
 }
 }
-
 #else
-    #include <syfala/config_arm.hpp>
+// ----------------------------------------------------------------------------
+#include <syfala/config_arm.hpp>
+// ----------------------------------------------------------------------------
+
+namespace Syfala::ARM {
+
+#define SYFALA_VERBOSE_INFO   1
+#define SYFALA_VERBOSE_DEBUG  2
+
+#ifdef __linux__
+    constexpr auto print = printf;
+#else
+    constexpr auto print = xil_printf;
 #endif
 
-extern int isTUI;
+inline void println(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    print(fmt, args);
+    print("\n");
+    va_end(args);
+}
 
-#ifdef __linux__ // ---------------------------------------
-    #define sy_print_fn printf
-#else // --------------------------------------------------
-    #define sy_print_fn xil_printf
-#endif // -------------------------------------------------
-/* utility macro, which prints and automatically adds
- *  \r\n at the end of the string message */
-#define sy_verbose(_S, _V,_T, ...)                    \
-    do {                                              \
-        isTUI=_T;                                     \
-        if(_T)sy_print_fn(_S, ##__VA_ARGS__);         \
-        else if (SYFALA_VERBOSE >= _V) {              \
-            if (_V < 2) sy_print_fn("\033[2K");       \
-            sy_print_fn( _S, ##__VA_ARGS__);          \
-            if (_V < 2) sy_print_fn("\r\n");          \
-       }                                              \
-    } while(0)
+#if (SYFALA_VERBOSE >= SYFALA_VERBOSE_INFO)
+    constexpr auto info = println;
+#else
+    constexpr void info(const char* fmt, ...) {}
+#endif
 
-/* Guideline of the verbose:
- *   Use sy_printf to print important message, try to limit to 1 line per modules (ex: [audio] 3 codecs founds)
- *   Use sy_info to print helpful but not essential messages, like those which allow you to know where you are in the code (ex: [ADAU1777] initialize codec)
- *   Use sy_debug for debug puprose, such as frame decoding, No \r\n in this case!
- * */
-#define sy_printf(_S, ...) sy_verbose(_S, 0,0, ##__VA_ARGS__)
-#define sy_info(_S, ...)   sy_verbose(_S, 1,0, ##__VA_ARGS__)
-#define sy_debug(_S, ...)  sy_verbose(_S, 2,0, ##__VA_ARGS__)
-#define sy_tuiprint(_S, ...) sy_verbose(_S, 0,1, ##__VA_ARGS__)
+#if (SYFALA_VERBOSE >= SYFALA_VERBOSE_DEBUG)
+    constexpr auto debug = println;
+#else
+    constexpr void debug(const char* fmt, ...) {}
+#endif
 
-/* utility macro, which prints and automatically adds
- *  \r\n at the end of the string message */
-#define RN(_str) _str "\r\n"
+#if (SYFALA_TUI)
+    constexpr auto TUIprint = println;
+#else
+    constexpr void TUIprint(const char* fmt, ...) {}
+#endif
+
+}
+#endif // ARM
 
 // --------------------------------------------------------
 #define FAUST_PRECOMPILED_EXAMPLE_ARM_TARGET                \

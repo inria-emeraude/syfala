@@ -49,15 +49,21 @@ Build options
 -------------------------------------------------------------------------------
 Design options
 -------------------------------------------------------------------------------
-    --multisample: <power of two number>
-                   DSP block will compute a block of samples instead of a single
-                   one. This may improve overall throughput but will introduce
-                   audio i/o latency.
-            --tdm: Builds the project with i2s TDM (experimental).
-    --sigma-delta: Builds the project with a sigma-delta-dac
-                   configuration (experimental).
-       --ethernet: (linux only) Uses TCP/IP ethernet to convey input/output signals
-                   from & to the DSP IP.
+        --multisample: <power of two number>
+                       DSP block will compute a block of samples instead of a single
+                       one. This may improve overall throughput but will introduce
+                       audio i/o latency.
+                --tdm: Builds the project with i2s TDM (experimental).
+        --sigma-delta: <order> from 1 to 5
+                       Builds the project with a sigma-delta-dac
+                       configuration (experimental).
+           --ethernet: (linux only) Uses TCP/IP ethernet to convey input/output signals
+                       from & to the DSP IP.
+ --no-ethernet-output: (linux only) Don't send the outputs back to the server.
+                 --bd: <path/to/file.tcl>
+                       Use a custom Vivado block design for this project. 
+                --i2s: <path/to/file.vhd>
+                       Use a custom i²s/transceiver for this project.
 
 -------------------------------------------------------------------------------
 HLS options

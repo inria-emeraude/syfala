@@ -13,9 +13,9 @@
 #define IIC_CODEC_INTERNAL  "/dev/i2c-0"
 #define IIC_CODEC_EXTERNAL  "/dev/i2c-1"
 
-using namespace Syfala;
+using namespace Syfala::ARM;
 
-int SSM2603::regwrite(uint8_t fd, uint16_t offset, uint16_t data){
+int Audio::Codecs::SSM2603::regwrite(uint8_t fd, uint16_t offset, uint16_t data){
     byte_t buffer[2];
     buffer[0] = offset << 1;
     buffer[0] = buffer[0] | ((data >> 8) & 0b1);
@@ -29,7 +29,7 @@ int SSM2603::regwrite(uint8_t fd, uint16_t offset, uint16_t data){
     assert(false);
 }
 
-int ADAU17xx::regwrite(int busno,
+int Audio::Codecs::ADAU17xx::regwrite(int busno,
                   unsigned long codec_addr,
                    unsigned int addr,
                    unsigned int data,
@@ -81,7 +81,7 @@ void Audio::initialize() {
         printf("[i2c] Bus access succesfully acquired\n");
     }
 #if SYFALA_BOARD_ZYBO
-    SSM2603::initialize(fd);
+    Audio::Codecs::SSM2603::initialize(fd);
 #elif SYFALA_BOARD_GENESYS
     ADAU1761::initialize();
 #endif

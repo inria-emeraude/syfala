@@ -37,8 +37,8 @@ namespace xscugic {
     constexpr auto run_self_test        = XScuGic_SelfTest;
 }
 
-using namespace Syfala;
-using namespace Syfala::UART;
+using namespace Syfala::ARM;
+using namespace Syfala::ARM::UART;
 
 static xuartps::handle x_uart;
 static xscugic::handle x_intc;
@@ -104,13 +104,13 @@ static void initialize_interrupt_controller(data& d) {
     using namespace xscugic;
     xscugic::config* cfg = xscugic::lookup_config(INTC_DEVICE_ID);
     if (cfg == nullptr) {
-        Status::fatal(RN("[uart] ERROR: Couldn't find XSCUGIC configuration"));
+        Status::fatal("[uart] ERROR: Couldn't find XSCUGIC configuration");
     }
     if (xscugic::initialize_config(&x_intc, cfg, cfg->CpuBaseAddress) != XST_SUCCESS) {
-        Status::fatal(RN("[uart] ERROR: Couldn't initialize XSCUGIC configuration"));
+        Status::fatal("[uart] ERROR: Couldn't initialize XSCUGIC configuration");
     }
     if (xscugic::run_self_test(&x_intc) != XST_SUCCESS) {
-        Status::fatal(RN("[uart] ERROR: XSCUGIC self test failed"));
+        Status::fatal("[uart] ERROR: XSCUGIC self test failed");
     }
     /* Connect the interrupt controller interrupt handler to the
      * hardware interrupt handling logic in the processor */
@@ -121,13 +121,13 @@ static void initialize_interrupt_controller(data& d) {
      * performs the specific interrupt processing for the device */
     if (xscugic::connect(&x_intc, UART_INTR_ID,
             (Xil_ExceptionHandler) xuartps::interrupt_handler, &x_uart) != XST_SUCCESS) {
-        Status::fatal(RN("[uart] ERROR: could not connect interrupt_handler"));
+        Status::fatal("[uart] ERROR: could not connect interrupt_handler");
     }
     /* Enable the interrupt for the device */
     xscugic::enable(&x_intc, UART_INTR_ID);
     Xil_ExceptionEnable();
     xuartps::receive(&x_uart, d.buffer, 8);
-    sy_printf("[uart] Interrupt controller successfully initialized.");
+    info("[uart] Interrupt controller successfully initialized.");
 }
 
 /** Initialize the UART driver so that it's ready to use
@@ -142,13 +142,13 @@ void UART::initialize(UART::data& d) {
     };
     xuartps::config* cfg = xuartps::lookup_config(UART_DEVICE_ID);
     if (cfg == nullptr) {
-        Status::fatal(RN("[uart] ERROR: couldn't find XUARTPS configuration"));
+        Status::fatal("[uart] ERROR: couldn't find XUARTPS configuration");
     }
     if (xuartps::initialize_config(&x_uart, cfg, cfg->BaseAddress) != XST_SUCCESS) {
-        Status::fatal(RN("[uart] ERROR: couldn't initialize XUARTPS configuration"));
+        Status::fatal("[uart] ERROR: couldn't initialize XUARTPS configuration");
     }
     if (xuartps::run_self_test(&x_uart) != XST_SUCCESS) {
-        Status::fatal(RN("[uart] ERROR: XUARTPS self-test failed"));
+        Status::fatal("[uart] ERROR: XUARTPS self-test failed");
     }
     initialize_interrupt_controller(d);
     xuartps::set_handler(&x_uart, interrupt_handler_fn, &d);
@@ -159,7 +159,7 @@ void UART::initialize(UART::data& d) {
     xuartps::set_oper_mode(&x_uart, XUARTPS_OPER_MODE_NORMAL);
     // Do we need this? unclear...
 //    XUartPs_EnableUart(&x_uart);
-    sy_printf("[uart] XUARTPS successfully initialized.");
+    println("[uart] XUARTPS successfully initialized.");
 }
 
 void UART::send(data& d, Message& m) {

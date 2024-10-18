@@ -25,36 +25,44 @@
 #include <syfala/arm/uart.hpp>
 #include <syfala/arm/ip.hpp>
 
-using namespace Syfala;
+using namespace Syfala::ARM;
 
-int isTUI = false;
+/** From our gain-control-hls.cpp file, Vitis HLS will generate
+  * the following function:
+  * void XSyfala_Set_gain(XSyfala *InstancePtr, u32 Data);
+  * Note: floating-point data have to be set using 'reinterpret_cast',
+  * otherwise, they will be truncated.
+*/
 
-constexpr auto set_gain = XSYFALA_SET(gain);
+static void update_gain(XSyfala& dsp) {
+    static float gain = 1.f;
+    printf("Enter gain value (from 0.f to 1.f)\r\n");
+    scanf("%f", &gain);
+    printf("Gain: %f\r\n", gain);
+    XSyfala_Set_gain(&dsp, *reinterpret_cast<u32*>(&gain));
+}
 
 int main(int argc, char* argv[])
 {
-    XSyfala x;
+    XSyfala dsp;
     UART::data uart;
     // UART & GPIO should be initialized first,
     // i.e. before outputing any information on leds & stdout.
     GPIO::initialize();
     UART::initialize(uart);
     // Wait for all peripherals to be initialized
-    Status::waiting(RN("[status] Initializing peripherals & modules"));
+    Status::waiting("[status] Initializing peripherals & modules");
     Audio::initialize();
-    IP::initialize(x);
-    IP::set_arm_ok(&x, true);
-    float gain = 1.f;
-    set_gain(&x, *reinterpret_cast<u32*>(&gain));
+    DSP::initialize(dsp);
+    DSP::set_arm_ok(&dsp, true);
+    Status::ok("[status] Application ready, now running...");
 
-    Status::ok(RN("[status] Application ready, now running..."));
     // main event loop:
     while (true) {
-       printf("Enter gain value (from 0.f to 1.f)\r\n");
-       scanf("%f", &gain);
-       printf("Gain: %f\r\n", gain);
-       set_gain(&x, *reinterpret_cast<u32*>(&gain));
+       // --------------------------------------------------------
+       update_gain(dsp);
        sleep(1);
+       // --------------------------------------------------------
     }
     return 0;
 }

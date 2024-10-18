@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-namespace Syfala::TUI {
+namespace Syfala::ARM::TUI {
 /**
  * @brief Initialize the TUI.
  */

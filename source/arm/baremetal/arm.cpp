@@ -34,10 +34,10 @@
 #include <syfala/arm/faust/control.hpp>
 #include <syfala/arm/tui.hpp>
 
-using namespace Syfala;
-using namespace Syfala::Faust;
+using namespace Syfala::ARM;
+using namespace Syfala::ARM::Faust;
 
-namespace Syfala::Control {
+namespace Syfala::ARM::Control {
 enum Type {
     Software,
     Hardware,
@@ -126,9 +126,9 @@ static inline void write(Faust::data& faust, XSyfala& ip) {
     // don't exist if the matching macros are equal to 0.
     #if (FAUST_REAL_CONTROLS == 1)
         u32 v = *reinterpret_cast<u32*>(faust.control.f);
-        IP::write_control_f(&ip, v);
+        DSP::write_control_f(&ip, v);
     #elif (FAUST_REAL_CONTROLS > 1)
-        IP::write_control_f(
+        DSP::write_control_f(
             &ip, 0, reinterpret_cast<u32*>(faust.control.f),
             Faust::ncontrols_f()
         );
@@ -209,7 +209,7 @@ static void send(Faust::data& faust, UART::data& uart, Control::Type ctrl_t) {
 // --------------------------------------------------------------------------------
 __attribute__((hot))
 static void control(Faust::data& faust,
-                        XSyfala& ip,
+                        XSyfala& dsp,
                      UART::data& uart,
                       SPI::data& spi,
                    Memory::data& mem,
@@ -217,29 +217,34 @@ static void control(Faust::data& faust,
                            bool force = false
 ){
     // If DSP IP is ready to receive new control values
-    if (IP::get_control_block(&ip) == SYFALA_CONTROL_RELEASE) {
+    if (DSP::get_control_block(&dsp) == SYFALA_CONTROL_RELEASE) {
             // 1. Block control buffers.
             // 2. Poll controllers (UART/SPI).
-        IP::set_control_block(&ip, SYFALA_CONTROL_BLOCK_HOST);
+        DSP::set_control_block(&dsp, SYFALA_CONTROL_BLOCK_HOST);
         if (poll(faust, uart, spi, ctrl_t) || force) {
             // 3. Compute int & float control expressions from controller inputs.
             // 4. Send updated values to IP.
             // 5. Allow DSP IP to read the control values once everything is written.
-            faust.dsp.control (
+        #if FAUSTMINORVERSION > 72
+            faust.dsp.control();
+        #else
+            faust.dsp.control(
                 faust.control.i,
                 faust.control.f,
-                mem.i_zone, mem.f_zone
+                mem.i_zone,
+                mem.f_zone
             );
-            write(faust, ip);
-            IP::set_control_block(&ip, SYFALA_CONTROL_RELEASE);
+        #endif
+            write(faust, dsp);
+            DSP::set_control_block(&dsp, SYFALA_CONTROL_RELEASE);
         } else {
-            IP::set_control_block(&ip, SYFALA_CONTROL_RELEASE);
+            DSP::set_control_block(&dsp, SYFALA_CONTROL_RELEASE);
       }
     }
     // If there are 'passive' controllers (bargraphs)
     if constexpr (Faust::npassives() > 0) {
     // Read and send back 'passive' control values.
-       read(faust, ip);
+       read(faust, dsp);
        send(faust, uart, ctrl_t);
     }
 }
@@ -256,7 +261,7 @@ static inline double get_elapsed_time(hdl& start, hdl& end) {
 
 static void print_elapsed_time(hdl& start, hdl& end) {
     double ms = get_elapsed_time(start, end);
-    sy_printf(RN("[bench] Control-loop time: %f milliseconds"), ms);
+    Syfala::ARM::debug("[bench] Control-loop time: %f milliseconds", ms);
 }
 }
 
@@ -290,7 +295,7 @@ static void process_sw() {
         // LD0: Flashing
         warning = true;
         if (flash_update) {
-            Status::warning(RN("[warning] Mute enabled"));
+            Status::warning("[warning] Mute enabled");
             sw[0] = flash;
         }
     } else {
@@ -301,7 +306,7 @@ static void process_sw() {
         // Warning LED
         warning = true;
         if (flash_update) {
-            Status::warning(RN("[warning] Bypass enabled: no audio inputs"));
+            Status::warning("[warning] Bypass enabled: no audio inputs");
             sw[1] = flash;
         }
     } else {
@@ -313,7 +318,7 @@ static void process_sw() {
             warning = true;
             if (flash_update) {
                 sw[2] = flash;
-                Status::error(RN("[status] SSM2603: Sample rate not supported"));
+                Status::error("[status] SSM2603: Sample rate not supported");
             }
         } else {
             sw[2] = GPIO::read_sw(2);
@@ -343,7 +348,7 @@ namespace Teensy {
 static void initialize(std::vector<Faust::controller> const& controllers) {
     int n = 0;
     for (Faust::controller const& c : controllers) {
-        sy_printf("[arduino] Adding controller %d (%s) (%f, %f, %f, %f)",
+        Syfala::ARM::info("[arduino] Adding controller %d (%s) (%f, %f, %f, %f)",
                n, c.id.c_str(), c.init, c.min, c.max, c.step);
         SPI::Teensy::initialize(c.id.c_str(), n, c.init, c.min, c.max, c.step);
         n++;
@@ -359,7 +364,7 @@ int main(int argc, char* argv[])
     Memory::data mem;
     Faust::data faust;
     SPI::data spi;
-    XSyfala ip;
+    XSyfala dsp;
     // UART & GPIO should be initialized first,
     // i.e. before outputing any information on LEDs & stdout (ttyPS).
     // QUICK FIX (Genesys): pour le moment on desactive l'init de l'uart (qui est automatique de toutes façon),
@@ -370,21 +375,21 @@ int main(int argc, char* argv[])
     GPIO::initialize();
     Control::Type ctrl_t = Control::Type::Undefined;
     // Wait for all peripherals to be initialized
-    Status::waiting(RN("[status] Initializing peripherals & modules"));
+    Status::waiting("[status] Initializing peripherals & modules");
     Audio::initialize();
     // First thing to do is to initialize the Syfala IP and tell it
     // not to compute anything until all ARM-side modules
     // are initialized and ready.
-    IP::initialize(ip);
-    Memory::initialize(ip, mem, FAUST_INT_ZONE, FAUST_FLOAT_ZONE);
+    DSP::initialize(dsp);
+    Memory::initialize(dsp, mem, FAUST_INT_ZONE, FAUST_FLOAT_ZONE);
     Faust::initialize(faust, mem.i_zone, mem.f_zone);
     SPI::initialize(spi, faust.control.ncontrollers());
     // Compute/initialize first control values to be written
     // on the axilite adapter.
-    control(faust, ip, uart, spi, mem, ctrl_t, true);
+    control(faust, dsp, uart, spi, mem, ctrl_t, true);
     // From this point, we can tell the DSP IP to start processing samples
-    IP::set_arm_ok(&ip, true);
-    Status::ok(RN("[status] Application ready, now running..."));
+    DSP::set_arm_ok(&dsp, true);
+    Status::ok("[status] Application ready, now running...");
 
 #if (SYFALA_BOARD_GENESYS)
     TUI::initialize();
@@ -404,21 +409,21 @@ int main(int argc, char* argv[])
         Control::Type t = Control::get_current_controller_type();
         if (ctrl_t != t) {
             // If changed, reinitialize the proper peripherals.
-            sy_printf("[control] controller changed");
+            Syfala::ARM::info("[control] controller changed");
             ctrl_t = t;
             if constexpr (SPI::controller() == SPI::Controller::Teensy) {
-                sy_printf("[control] Teensy controller");
+                Syfala::ARM::info("[control] Teensy controller");
                 Teensy::initialize(faust.control.controllers);
             }
         }
         // Poll, update & send back control data.
-        control(faust, ip, uart, spi, mem, ctrl_t);
+        control(faust, dsp, uart, spi, mem, ctrl_t);
         process_sw();
     #if SYFALA_DEBUG_AUDIO //--------------------------------------
         float outputs[FAUST_OUTPUTS];
-        IP::read_arm_debug(&ip, 0, (u32*)(outputs), FAUST_OUTPUTS);
+        DSP::read_arm_debug(&ip, 0, (u32*)(outputs), FAUST_OUTPUTS);
         for (int n = 0; n < FAUST_OUTPUTS; ++n) {
-             sy_printf("[xsyfala] audio_out_%d: %f\n", n, outputs[0]);
+             Syfala::ARM::debug("[xsyfala] audio_out_%d: %f\n", n, outputs[0]);
         }
     #endif //------------------------------------------------------
     }

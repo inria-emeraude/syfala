@@ -1,36 +1,25 @@
 
 CONFIG              += ETHERNET
 ETHERNET            := 1
-PREPROCESSOR_HLS    := TRUE
 PREPROCESSOR_I2S    := TRUE
 LINUX               := TRUE
 
-ifeq (TDM, $(filter TDM, $(CONFIG))) # --------------------------------------------
-    ifeq ($(shell expr $(MULTISAMPLE) \> 0), 1)
-        BD_TARGET   := $(SOURCE_BD_DIR)/ethernet_tdm_multisample.tcl
-        I2S_SOURCE  := $(SOURCE_I2S_DIR)/i2s_template_ethernet_tdm_multisample.vhd
-    else
-        BD_TARGET   := $(SOURCE_BD_DIR)/ethernet_tdm.tcl
-        I2S_SOURCE  := $(SOURCE_I2S_DIR)/i2s_template_ethernet_tdm.vhd
-    endif
-    CONSTRAINT_FILE  := $(SOURCE_CONSTRAINTS_DIR)/zybo_tdm.xdc
-else # ----------------------------------------------------------------------------
-    BD_TARGET   := $(SOURCE_BD_DIR)/ethernet.tcl
-    I2S_SOURCE  := $(SOURCE_I2S_DIR)/i2s_template_ethernet.vhd
-endif # ---------------------------------------------------------------------------
-
-$(call static_ok, - $(B)CONFIG_EXPERIMENTAL_ETHERNET$(N) is $(B)ON$(N))
-
+# Files to be included during HLS:
 ETHERNET_HLS_INCLUDES   += $(BUILD_SYFALA_CONFIG_H)
 ETHERNET_HLS_INCLUDES   += $(BUILD_SYFALA_UTILITIES_H)
 ETHERNET_HLS_SOURCE	:= $(SOURCE_HLS_DIR)/ethernet.cpp
+
+# HLS project directory:
 BUILD_ETHERNET_HLS_DIR	:= $(BUILD_DIR)/ethernet
 ETHERNET_HLS_TARGET	:= $(BUILD_ETHERNET_HLS_DIR)/ethernet.cpp
 ETHERNET_HLS_TOP_LEVEL	:= eth_audio
 ETHERNET_HLS_OUTPUT	:= $(BUILD_ETHERNET_HLS_DIR)/$(ETHERNET_HLS_TOP_LEVEL)/impl/vhdl/$(ETHERNET_HLS_TOP_LEVEL).vhd
-PROJECT_DEPENDENCIES    += $(ETHERNET_HLS_OUTPUT)
-#ALPINE_PACKAGES         += cargo
-ALPINE_PACKAGES		+= jack-dev
+
+# Add HLS output to Vivado project dependencies
+PROJECT_DEPENDENCIES += $(ETHERNET_HLS_OUTPUT)
+
+# The following packages should be added in the Embedded Linux:
+ALPINE_PACKAGES_EDGE_MAIN += cargo
 
 # -----------------------------------------------------------------------------------
 ETHERNET_HLS_COMMAND := cd $(BUILD_DIR);					    \
@@ -45,22 +34,12 @@ ETHERNET_HLS_COMMAND := cd $(BUILD_DIR);					    \
 	       exit;
 # -----------------------------------------------------------------------------------
 
-$(call static_info, NUM_CHANNELS_ETHERNET: $(ETHERNET_NUM_CHANNELS_OUTPUT))
-
 $(ETHERNET_HLS_OUTPUT): $(ETHERNET_HLS_INCLUDES) $(ETHERNET_HLS_SOURCE) $(HLS_TARGET_FILE)
 	@mkdir -p $(BUILD_ETHERNET_HLS_DIR)
 	@cp -r $(ETHERNET_HLS_SOURCE) $(ETHERNET_HLS_TARGET)
-	$(call shell_info, Running $(B)preprocessor$(N) on	\
-                           $(B)HLS$(N) target file		\
-                           ($(notdir $(ETHERNET_HLS_TARGET))))
-	@tclsh $(SCRIPT_PREPROCESSOR) --hls                     \
-                            $(ETHERNET_HLS_TARGET)		\
-                            $(shell $(get_nchannels_i))         \
-                            $(shell $(get_nchannels_o))         \
-                            0 0 0 0 0                           \
-                            $(MULTISAMPLE)                      \
-                            $(CONFIG_EXPERIMENTAL_ETHERNET_NO_OUTPUT)
 	$(call shell_info, Running $(B)Vitis_HLS$(N) on file    \
                            $(notdir $(ETHERNET_HLS_TARGET)))
 	@echo '$(ETHERNET_HLS_COMMAND)' | $(HLS_EXEC) -i
 	$(call shell_ok, High-level synthesis done)
+
+$(call static_ok, - $(B)CONFIG_EXPERIMENTAL_ETHERNET$(N) is $(B)ON$(N))

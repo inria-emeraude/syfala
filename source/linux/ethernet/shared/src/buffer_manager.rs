@@ -452,8 +452,8 @@ pub const fn calc_max_buffer(channels: usize, max_size: usize) -> usize {
         "max_size must be greater than channels!"
     );
     if channels > 0 {
-        max_size - max_size % channels
+        return max_size - max_size % channels;
     } else {
-        max_size
+        return max_size;
     }
 }

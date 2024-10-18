@@ -28,7 +28,7 @@
 #define IIC_ADAU1787_SLAVE_ADDR_2			0x2A
 #define IIC_ADAU1787_SLAVE_ADDR_3			0x2B
 
-namespace Syfala::ADAU17xx {
+namespace Syfala::ARM::Audio::Codecs::ADAU17xx {
 
 /*
  * @brief regwrite ADAU17xx codecs register write function
@@ -44,15 +44,15 @@ extern int regwrite(int busno, unsigned long codec_addr,
  * The following initialization functions are implemented in
  * source/arm/codecs, in their auto-generated respective .cpp files:
  */
-namespace Syfala::ADAU1761 {
+namespace Syfala::ARM::Audio::Codecs::ADAU1761 {
     extern int initialize(int bus, unsigned long codec_addr);
 }
 
-namespace Syfala::ADAU1777 {
+namespace Syfala::ARM::Audio::Codecs::ADAU1777 {
     extern int initialize(int bus, unsigned long codec_addr);
 }
 
-namespace Syfala::ADAU1787 {
+namespace Syfala::ARM::Audio::Codecs::ADAU1787 {
     extern int boot_sequence(int bus, unsigned long codec_addr);
     extern int initialize(int bus, unsigned long codec_addr);
 }
