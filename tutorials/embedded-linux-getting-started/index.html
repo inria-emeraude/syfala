@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A guide to the Syfala toolchain.">
+    
+    
+    <link rel="shortcut icon" href="../../img/favicon.ico">
+
+    
+    <title>Embedded Linux - Syfala Documentation</title>
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/v4-shims.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hack-font@3.3.0/build/web/hack.min.css">
+    <link href='//rsms.me/inter/inter.css' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,300,600,700&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+    <link href="../../css/base.min.css" rel="stylesheet">
+    <link href="../../css/cinder.min.css" rel="stylesheet">
+
+    
+        
+        <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.18.0/build/styles/nord.min.css">
+        
+    
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+            <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+        <![endif]-->
+
+    
+
+     
+</head>
+
+<body>
+
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            
+
+            <!-- Main title -->
+
+            
+              <a class="navbar-brand" href="../..">Syfala Documentation</a>
+            
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                
+                
+                    <li >
+                        <a href="../..">Home</a>
+                    </li>
+                
+                
+                
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Manual <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../../manual/dependencies/">Dependencies</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../../manual/reference/">Reference</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Tutorials <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../faust-getting-started/">Faust tutorial</a>
+</li>
+
+                        
+                            
+<li class="active">
+    <a href="./">Embedded Linux</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../cpp-tutorial-advanced/">C++ tutorial</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                            <i class="fas fa-search"></i> Search
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../faust-getting-started/">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="next" href="../cpp-tutorial-advanced/">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+    <div class="container">
+        
+        
+        <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="first-level active"><a href="#syfala-linux-getting-started">syfala-linux getting started</a></li>
+            <li class="second-level"><a href="#requirements">Requirements</a></li>
+                
+            <li class="second-level"><a href="#building">Building</a></li>
+                
+                <li class="third-level"><a href="#available-commands">Available commands</a></li>
+                <li class="third-level"><a href="#outputs">Outputs</a></li>
+            <li class="second-level"><a href="#usage">Usage</a></li>
+                
+                <li class="third-level"><a href="#formatting-the-sd-card">Formatting the SD card</a></li>
+                <li class="third-level"><a href="#flashing-boot-root-partitions">Flashing boot &amp; root partitions</a></li>
+                <li class="third-level"><a href="#booting">Booting</a></li>
+                <li class="third-level"><a href="#connecting">Connecting</a></li>
+                <li class="third-level"><a href="#loginusers">Login/users</a></li>
+                <li class="third-level"><a href="#faust-dsp-builds">Faust DSP builds</a></li>
+                <li class="third-level"><a href="#getting-the-devices-ip-port-from-avahi-for-network-based-control">Getting the device's IP &amp; port from avahi (for network-based control)</a></li>
+                <li class="third-level"><a href="#http-control">HTTP control</a></li>
+                <li class="third-level"><a href="#osc-control">OSC control</a></li>
+                <li class="third-level"><a href="#midi-control">MIDI control</a></li>
+                <li class="third-level"><a href="#wi-fi">Wi-Fi</a></li>
+                <li class="third-level"><a href="#autologin-autostart-dsp-target">Autologin / Autostart DSP target</a></li>
+    </ul>
+</div></div>
+        <div class="col-md-9" role="main">
+
+<h1 id="syfala-linux-getting-started">syfala-linux getting started</h1>
+<h2 id="requirements">Requirements</h2>
+<ul>
+<li><strong>Xilinx toolchain</strong> version &gt; 2022.2</li>
+<li>An available <strong>SD card</strong></li>
+<li>The following <strong>Linux packages</strong> installed on your machine: </li>
+</ul>
+<pre><code class="language-shell">gcc-arm-none-eabi gnutls-dev bison flex libssl-dev bc u-boot-tools cpio libyaml-dev curl kmod squashfs-tools qemu-user-static
+</code></pre>
+<h2 id="building">Building</h2>
+<h3 id="available-commands">Available commands</h3>
+<h4 id="from-scratch">From scratch</h4>
+<p><strong>First</strong>, a regular <strong>syfala project</strong> has to be built with the following options: </p>
+<pre><code class="language-shell">syfala examples/virtualAnalog.dsp --linux
+</code></pre>
+<p>The <code>--linux</code> option is used for <strong>compiling the host-side</strong> (<strong>ARM</strong>) <strong>application</strong> with the <strong>linux-specific source files</strong> (otherwise, it would be compiling the standard baremetal one).</p>
+<p>After <strong>synthesis</strong>, the script will detect that you don't currently have a linux build, which is required for building the application, and will download and build everything for you, you'll just have to flash it to your formatted SD card afterwards</p>
+<h3 id="outputs">Outputs</h3>
+<p>The build outputs are located in the<code>build-linux/output</code> directory, with two distinct <code>boot</code> and <code>root</code> subdirectories, which then will have to be be flashed on the first and second partitions of your SD card. </p>
+<h2 id="usage">Usage</h2>
+<h3 id="formatting-the-sd-card">Formatting the SD card</h3>
+<p>The <strong>SD card</strong> has to be formatted like so:</p>
+<ul>
+<li><strong>1st</strong> partition: <strong>FAT32</strong></li>
+<li><strong>2nd</strong> partition: <strong>ext4</strong> (Linux filesystem)</li>
+</ul>
+<p>There are many ways to achieve this, for instance:</p>
+<pre><code class="language-shell"># you can just replace &lt;/dev/...&gt; with your SD device, e.g: /dev/sda or /dev/mmcblk0
+sudo parted /dev/... --script -- mklabel msdos
+sudo parted /dev/... --script -- mkpart primary fat32 1MiB 128MiB
+sudo parted /dev/... --script -- mkpart primary ext4 128MiB 100%
+sudo parted /dev/... --script -- set 1 boot on
+sudo parted /dev/... --script -- set 1 lba on
+sudo mkfs.vfat /dev/device-partition-1 # e.g. /dev/sda1
+sudo mkfs.ext4 /dev/device-partition-2 # e.g. /dev/sda2
+sudo parted /dev/... --script print
+</code></pre>
+<h3 id="flashing-boot-root-partitions">Flashing boot &amp; root partitions</h3>
+<pre><code class="language-shell"># In case your SD device is /dev/sda
+# 1. Copying boot partition files
+sudo mount /dev/sda1 /mnt
+sudo cp -r build-linux/output/boot/* /mnt
+sync
+sudo umount /mnt
+# 2. Copying root partition contents
+sudo mount /dev/sda2 /mnt
+sudo cp -r ~/Repositories/syfala/dev/main/build-linux/root/alpine-3.19.1/alpine-root/* .
+# This might take a while...
+sync 
+sudo umount /mnt
+</code></pre>
+<h3 id="booting">Booting</h3>
+<p>Once flashed, just insert the SD card in your device's socket, <strong>make also sure it is configured to boot on SD</strong> (For the <strong>Zybo</strong> boards, you'll have to place a <strong>shorting jumper on SD</strong> instead of <em>JTAG</em>/<em>QSPI</em>).</p>
+<h3 id="connecting">Connecting</h3>
+<p>You can still connect through the <em>ttyUSB</em> <strong>Serial Port</strong>, or with <strong>SSH</strong>.</p>
+<ul>
+<li>for <strong>Serial Port</strong> connection, check that devices <code>/dev/ttyUSB0</code>and <code>/dev/ttyUSB1</code>are present on your host and use a serial communication program with following configuration: device <code>/dev/ttyUSB1</code>, 115200 8N1 (115200 bits/second, one start bit, eight (8) data bits, no (N) parity bit, and one (1) stop bit), no hardware flow control and no software flow control. If hardware flow control is enable, the serial connection will not behave properly. for instance when using minicom: </li>
+</ul>
+<pre><code class="language-shell">minicom -b 115200 -D/dev/ttyUSB1 -8
+</code></pre>
+<p>(check hardware flow control in minicom, ctrl-A Z). Linux booting console will appear. A login prompt will appear as soon as the booting process has completed:</p>
+<pre><code class="language-shell">Welcome to Alpine Linux 3.17
+Kernel 6.6.0-xilinx on an armv7l (/dev/ttyPS0)
+
+syfala login: 
+</code></pre>
+<ul>
+<li>for  <strong>SSH</strong> connection, make sure that you are connected on the same network as your device's, get its IP address by serial connection as explained above and log as root:</li>
+</ul>
+<pre><code class="language-shell">ssh root@192.168.0.1 . 
+</code></pre>
+<h3 id="loginusers">Login/users</h3>
+<p>The rootfs has the same structure as any Linux build. All DSP builds are located in the<code>/root/</code> directory</p>
+<ul>
+<li>The password required to <strong>login as root</strong> is <em>syfala</em></li>
+</ul>
+<h3 id="faust-dsp-builds">Faust DSP builds</h3>
+<p>All the <strong>DSP builds</strong> made with the <strong>syfala toolchain</strong> are placed in the <em>/root</em> directory by default. For instance, if you make a build from the <strong>virtualAnalog.dsp</strong> file , the <em>bitstream</em>/<em>application</em> outputs will be located in: </p>
+<ul>
+<li><em>/root/virtualAnalog/bitstream.bin</em></li>
+<li><em>/root/virtualAnalog/application.elf</em></li>
+</ul>
+<p>You can then use the </p>
+<pre><code class="language-shell">syfala-load &lt;target&gt; [--list | --help]
+</code></pre>
+<p>utility command (e.g. <code>syfala-load virtualAnalog</code>), which will take care of <strong>loading the bitstream</strong> and <strong>executing the app</strong> properly.</p>
+<p>You can also do all of that manually of course: first, <strong>load the bitstream</strong> by entering the following command line:</p>
+<pre><code class="language-shell">fpgautil -b /root/virtualAnalog/bitstream.bin
+</code></pre>
+<p>and then <strong>execute the Host application</strong> like you would normally do with a Linux binary:</p>
+<pre><code class="language-shell">cd /root/virtualAnalog
+./application.elf     
+</code></pre>
+<p>If you wish to <strong>add another build</strong> to the SD card, you just have to re-run the syfala toolchain normally on your computer, with the <code>--linux</code> option. <strong>Your previous builds won't be erased or modified.</strong></p>
+<pre><code class="language-shell">syfala examples/fm.dsp --linux
+</code></pre>
+<p>Once the build is complete,  you will have two distinct project directories in your<code>build-linux/root/alpine-3.19.1/alpine-root/</code> directory:</p>
+<ul>
+<li><code>root/virtualAnalog</code></li>
+<li><code>root/fm</code></li>
+</ul>
+<p>You will then have to <strong>re-flash your SD card</strong> to <strong>update the root partition</strong>, or directly copy the directory through <strong>ssh</strong> (e.g. with the <code>scp</code> command).</p>
+<h3 id="getting-the-devices-ip-port-from-avahi-for-network-based-control">Getting the device's IP &amp; port from avahi (for network-based control)</h3>
+<p>Once a DSP target is loaded with the <code>syfala-load</code> command, an <strong>avahi service</strong> is automatically started in a separate thread. If your desktop machine is on the same network as the FPGA board, and you have <strong>avahi</strong> installed &amp; running, you should be able to <strong>retrieve the FPGA board's IP address and port</strong> required for the HTTP/OSC controls. You can use the <code>avahi-browse</code> command in order to do so:</p>
+<pre><code class="language-shell">avahi-browse _syfala._tcp --resolve
+</code></pre>
+<h3 id="http-control">HTTP control</h3>
+<p>In order to build a target with <strong>HTTP support</strong>, you can add the <code>--http</code> flag to the command line:</p>
+<pre><code class="language-shell">syfala examples/fm.dsp --linux --http
+</code></pre>
+<p>After loading a DSP target with the <code>syfala-load</code> command (or manually), the host application <strong>will create a HTTP server</strong> allowing users to <strong>control the Faust DSP parameters remotely</strong> (given that you are on the same network as your FPGA board).</p>
+<p>At runtime, when executed, the <strong>application will print the device's current network IP</strong> (IPv4), and the <strong>port</strong> used by the HTTP server. You can then <strong>use any web browser</strong>, and control the application by entering the server's URL, for example <em>http://192.168.0.1:5510</em></p>
+<h3 id="osc-control">OSC control</h3>
+<p>In order to build a target with <strong>OSC support</strong>, you can add the <code>--osc</code> flag to the command line:</p>
+<pre><code class="language-shell">syfala examples/fm.dsp --linux --osc
+</code></pre>
+<p><strong>Note:</strong> your Faust <strong>.dsp file must also contain this line</strong> in order to enable OSC support:</p>
+<pre><code class="language-faust">declare options &quot;[osc:on]&quot;;
+</code></pre>
+<p>In parallel, the Host application will also create an <strong>Open Sound Control-compliant UDP server</strong>, and <strong>print its send/receive ports</strong> when executed. You can then control remotely the Faust DSP parameters by sending OSC messages like so:</p>
+<ul>
+<li><em>/virtualAnalog/lfoRange 2000</em></li>
+<li><em>/virtualAnalog/oscFreq 500</em></li>
+<li>...</li>
+</ul>
+<p>More on: https://faustdoc.grame.fr/manual/osc/</p>
+<h3 id="midi-control">MIDI control</h3>
+<p>In order to build a target with <strong>MIDI support</strong>, you can add the <code>--midi</code> flag to the command line:</p>
+<pre><code class="language-shell">syfala examples/fm.dsp --linux --midi
+</code></pre>
+<p><strong>Note:</strong> your Faust <strong>.dsp file must also contain this line</strong> in order to enable MIDI support:</p>
+<pre><code class="language-faust">declare options &quot;[midi:on]&quot;;
+</code></pre>
+<p>The <strong>Zybo boards</strong> have a <strong>Host USB port</strong>, located next to the switches. It can be used to <strong>connect a MIDI  device</strong> and map its controls accordingly. No additional driver configuration is needed, <strong>but the board needs to be powered from an external power supply source</strong>:</p>
+<blockquote>
+<p>The supply must use a center-positive 2.1mm internal-diameter plug and deliver between 4.5V to 5.5V DC. It should also be able to output at least 2.5 A (12.5 Watts) in order to support power-hungry Zynq projects and external peripherals. To use an external supply with a barrel jack, plug it into the power jack (J17), set jumper JP6 to “WALL”, and then set SW4 to “ON”. </p>
+</blockquote>
+<p>You'll also have to put a <strong>shorting jumper</strong> on <strong>JP2</strong> (<em>HOST</em>), next to the USB port.</p>
+<p>The <strong>Faust midi-mapping process</strong> is explained here: https://faustdoc.grame.fr/manual/midi/</p>
+<h3 id="wi-fi">Wi-Fi</h3>
+<p>Wi-Fi is handled by <em>iwd</em> (provided you have an USB dongle, or the appropriate additional hardware, which Zybo boards do not possess natively), the available commands are: </p>
+<pre><code class="language-shell"># List your available wifi device(s), look for wlan0
+iwctl device list
+# If you don't know the SSID of your network, you can run a scan and retrieve a list of all the detected networks:
+iwctl station wlan0 scan &amp;&amp; iwctl station wlan0 get-networks
+# To connect to a network (use connect-hidden if it is a private network):
+iwctl station wlan0 connect &lt;SSID&gt;
+</code></pre>
+<p>more on: https://wiki.alpinelinux.org/wiki/Wi-Fi</p>
+<h3 id="autologin-autostart-dsp-target">Autologin / Autostart DSP target</h3>
+<p>In order to <strong>autologin</strong> as root on the board, you have to edit the file <em>/etc/inittab</em> like the following:</p>
+<pre><code class="language-shell">#ttyPS0::respawn:/sbin/getty -L ttyPS0 115200 vt100
+# For autologin (as root): comment out the previous line and uncomment the next one:
+ttyPS0::respawn:/sbin/mingetty --autologin root --noclear ttyPS0 115200 vt100
+</code></pre>
+<p>To <strong>autostart a DSP target on boot</strong>, create a <em>.start</em> file in <em>/etc/local.d</em> , for example <em>/etc/local.d/virtualAnalog.start</em>:</p>
+<pre><code class="language-shell">#!/bin/sh
+syfala-load virtualAnalog
+</code></pre>
+<p>Execute <code>chmod 755 /etc/local.d/virtualAnalog</code> . That's it!</p></div>
+        
+        
+    </div>
+
+    
+      <footer class="col-md-12 text-center">
+          
+          
+            <hr>
+            <p>
+            <small>Copyright &copy; 2023 <a href="https://team.inria.fr/emeraude/">Emeraude</a></small><br>
+            
+            <small>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</small>
+            </p>
+          
+
+          
+          
+      </footer>
+    
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="../../js/bootstrap-3.0.3.min.js"></script>
+
+    
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.18.0/build/highlight.min.js"></script>
+        
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+
+    <script>var base_url = "../.."</script>
+    
+    <script src="../../js/base.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="../../search/main.js"></script>
+
+    <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                    <span class="sr-only">Close</span>
+                </button>
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+    </body>
+
+</html>
