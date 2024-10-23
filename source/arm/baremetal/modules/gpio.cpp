@@ -4,6 +4,7 @@
 #include <xgpio.h>
 #include <stdlib.h>
 #include <syfala/config_common.hpp>
+#include <syfala/utilities.hpp>
 
 namespace xgpio {
     constexpr auto initialize          = XGpio_Initialize;
@@ -12,7 +13,7 @@ namespace xgpio {
     constexpr auto discrete_write      = XGpio_DiscreteWrite;
 }
 
-namespace Syfala::GPIO {
+namespace Syfala::ARM::GPIO {
 
 struct data {
     XGpio led;
@@ -27,7 +28,7 @@ static data x;
 #define OK_LED        0b010
 #define ERROR_LED     0b100
 
-using namespace Syfala;
+using namespace Syfala::ARM;
 
 void GPIO::initialize() {
     // initialize input XGpio variable
@@ -40,9 +41,9 @@ void GPIO::initialize() {
     // set first channel tristate buffer to input (switch)
     xgpio::set_data_direction(&x.sw, 1, 0xF);
     // set second channel tristate buffer to input (btn)
-#if (SYFALA_BOARD_GENESYS)
-    xgpio::set_data_direction(&x.sw, 2, 0xF);
-#endif
+    if constexpr (SYFALA_BOARD_GENESYS) {
+        xgpio::set_data_direction(&x.sw, 2, 0xF);
+    }
 }
 
 void GPIO::write_sw_led(int sw0, int sw1, int sw2, int sw3) {
@@ -54,22 +55,24 @@ void GPIO::write_sw_led(int sw0, int sw1, int sw2, int sw3) {
     xgpio::discrete_write(&x.led, 1, mask);
 }
 
-bool GPIO::read_sw(int index) {
+bool Syfala::ARM::GPIO::read_sw(int index) {
     return xgpio::discrete_read(&x.sw, 1) & (1 << index);
 }
 /* read_btn
  * return a formatted button vector.
  * Normally, discrete_read return the btn vector as:
- * GENESY=0b000[UP][CENTER][DOWN][LEFT][RIGHT]
+ * GENESYS=0b000[UP][CENTER][DOWN][LEFT][RIGHT]
  * Zybo=0b000[0][3(UP)][2(DOWN)][1(LEFT)][0(RIGHT)]
  * In order to have something generic, we put the UP on the 5th bit for Zybo.
 */
 uint32_t GPIO::read_btn(void) {
-    u32 btn_vector=xgpio::discrete_read(&x.sw, 2);
-#if (SYFALA_BOARD_ZYBO) // --
-    btn_vector|=((btn_vector & 0b00001000)<<1); //Copy the 4th bit one bit higher.
-    btn_vector&=0b00010111; //Remove the 4th (old) bit.
-#endif // -------------------
+    u32 btn_vector = xgpio::discrete_read(&x.sw, 2);
+    if constexpr (SYFALA_BOARD_ZYBO) {
+        // 1. Copy the 4th bit one bit higher.
+        // 2. Remove the 4th (old) bit.
+        btn_vector |= ((btn_vector & 0b00001000) << 1);
+        btn_vector &= 0b00010111;
+    }
     return btn_vector;
 }
 void GPIO::write_ld5(int value) {
@@ -78,17 +81,17 @@ void GPIO::write_ld5(int value) {
 
 void Status::waiting(const char* message) {
     xgpio::discrete_write(&GPIO::x.led, 2, WAITING_LED);
-    xil_printf(message);
+    println(message);
 }
 
 void Status::warning(const char* message) {
     xgpio::discrete_write(&GPIO::x.led, 2, WARNING_LED);
-    xil_printf(message);
+    println(message);
 }
 
 void Status::error(const char* message) {
     xgpio::discrete_write(&GPIO::x.led, 2, ERROR_LED);
-    xil_printf(message);
+    println(message);
 }
 
 void Status::fatal(const char* message, int err) {
@@ -98,5 +101,5 @@ void Status::fatal(const char* message, int err) {
 
 void Status::ok(const char* message) {
     xgpio::discrete_write(&GPIO::x.led, 2, OK_LED);
-    xil_printf(message);
+    println(message);
 }

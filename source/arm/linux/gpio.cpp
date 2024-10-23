@@ -32,7 +32,7 @@
 #define RGB_LED_OK        0, 1, 0
 #define RGB_LED_ERROR     1, 0, 0
 
-using namespace Syfala;
+using namespace Syfala::ARM;
 
 static void set_rgb_led(int R, int G, int B) {
     struct gpiod_chip* chip = gpiod_chip_open_by_name(SYFALA_GPIO_AXI_LED_DEVICE);

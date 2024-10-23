@@ -1,4 +1,4 @@
-# Syfala project
+# syfala v0.10.0
 
 Automatic compilation of Faust and C++ audio DSP programs for AMD/Xilinx FPGA platforms.
 
@@ -25,7 +25,6 @@ and more to come...
 Here is a list of person that have contributed to the Syfala project :
 
 - Tanguy Risset
-
 - Yann Orlarey 
 - Romain Michon
 - Stephane Letz
@@ -47,3 +46,6 @@ Here is a list of person that have contributed to the Syfala project :
 - Jurek Weber
 - Aloïs Rautureau
 - Jessica Zaki-Sewa
+- Jonas Hoepner
+- Benjamin Quiédeville
+- Daniel Habib

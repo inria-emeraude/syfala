@@ -24,9 +24,7 @@
 #include <syfala/arm/gpio.hpp>
 #include <syfala/arm/uart.hpp>
 
-int isTUI = false;
-
-using namespace Syfala;
+using namespace Syfala::ARM;
 
 int main(int argc, char* argv[])
 {
@@ -36,9 +34,9 @@ int main(int argc, char* argv[])
     GPIO::initialize();
     UART::initialize(uart);
     // Wait for all peripherals to be initialized
-    Status::waiting(RN("[status] Initializing peripherals & modules"));
+    Status::waiting("[status] Initializing peripherals & modules");
     Audio::initialize();
-    Status::ok(RN("[status] Application ready, now running..."));
+    Status::ok("[status] Application ready, now running...");
     // main event loop:
     while (true) {}
     return 0;

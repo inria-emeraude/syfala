@@ -33,8 +33,6 @@ namespace eval rt {
     set nsamples_norm       [expr "max(16,int(pow(2,ceil(log($nsamples)/log(2)))))"]
 }
 
-
-
 namespace eval globals {
     variable project
     set project_path $::Syfala::BUILD_PROJECT_DIR
@@ -77,11 +75,6 @@ set ip_repositories [list $::globals::ip_path]
 if $::rt::ethernet {
     print_info "Added Ethernet IP to repositories"
     lappend ip_repositories $::Syfala::BUILD_ETH_IP_DIR/eth_audio
-}
-
-if $::rt::sigma_delta {
-    print_info "Adding sigma-delta IP to repositories"
-    lappend ip_repositories $::Syfala::BUILD_DIR/sigma_delta/sigma_delta
 }
 
 # Set IP repository paths, update catalog

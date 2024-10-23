@@ -1,0 +1,62 @@
+% [ir,Fs] = audioread("sdf.wav");
+% N = length(ir);
+% N2 = round(N/2+1);
+% order = 2000;
+% 
+% Y = fft(ir);
+% Ymp = 10 .^ (Y/20); % minimum-phase spectrum
+% Ymp = Ymp(1:N2); % nonnegative-frequency portion
+% wk = pi*(1:N2)/(N2);
+% 
+% [b,a] = invfreqz(Ymp,wk,order+1,order);
+% 
+% [h,w] = freqz(b,a,N2);
+% 
+% plot(wk,db([Ymp(:),h(:)]))
+
+x_del = zeros(1,order);
+y_del = zeros(1,order);
+
+dur = 10*Fs;
+x = zeros(1,dur);
+x(1) = 1;
+y = zeros(1,dur);
+
+for n = [1:dur],
+    xx = x(n)*b(1);
+    yy = 0;
+    for o = [1:order],
+        xx = xx + x_del(o)*b(o+1);
+        yy = yy - y_del(o)*a(o);
+    end;
+    y(n) = xx - yy;
+    x_del = [x(n),x_del(1:(order-1))];
+    y_del = [y(n),y_del(1:(order-1))];
+end;
+
+% [sos,g] = zp2sos(b(2:order),a,b(1));
+% 
+% fileID = fopen('coefs.lib','w');
+% fprintf(fileID,'b0 = (');
+% fprintf(fileID,'%.16f,',sos((1:20),1));
+% fprintf(fileID,');\n');
+% fprintf(fileID,'b1 = (');
+% fprintf(fileID,'%.16f,',sos((1:20),2));
+% fprintf(fileID,');\n');
+% fprintf(fileID,'b2 = (');
+% fprintf(fileID,'%.16f,',sos((1:20),3));
+% fprintf(fileID,');\n');
+% fprintf(fileID,'a1 = (');
+% fprintf(fileID,'%.16f,',sos((1:20),5));
+% fprintf(fileID,');\n');
+% fprintf(fileID,'a2 = (');
+% fprintf(fileID,'%.16f,',sos((1:20),6));
+% fprintf(fileID,');\n');
+% fclose(fileID);
+
+% P2 = abs(Y/N);
+% P1 = P2(1:N/2+1);
+% 
+% f = Fs/N*(0:(N/2));
+% %plot(f,P1) 
+% %plot(P1)

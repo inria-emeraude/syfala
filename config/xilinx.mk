@@ -15,7 +15,7 @@ endif
 
 # -----------------------------------------------------------------------------
 XILINX_VERSION      ?= 2022.2
-XILINX_SUPPORTED    := 2020.2 2022.2
+XILINX_SUPPORTED    := 2020.2 2022.2 2023.2 2024.1
 # checks Xilinx toolchain versions
 # -----------------------------------------------------------------------------
 ifneq ($(XILINX_VERSION), $(filter $(XILINX_VERSION), $(XILINX_SUPPORTED)))
@@ -67,11 +67,23 @@ endif
 
 # -----------------------------------------------------------------------------
 HLS_PATH        ?= $(XILINX_ROOT_DIR)/Vitis_HLS/$(XILINX_VERSION)
-HLS_EXEC        := $(HLS_PATH)/bin/vitis_hls
 # -----------------------------------------------------------------------------
 VIVADO_PATH     ?= $(XILINX_ROOT_DIR)/Vivado/$(XILINX_VERSION)
-VIVADO_EXEC     := $(VIVADO_PATH)/bin/vivado
-BOOTGEN_EXEC    := $(VIVADO_PATH)/bin/bootgen
 # -----------------------------------------------------------------------------
 VITIS_PATH      := $(XILINX_ROOT_DIR)/Vitis/$(XILINX_VERSION)
-VITIS_EXEC      := $(VITIS_PATH)/bin/xsct
+
+ifeq ($(FLATPAK), TRUE)
+    define flatrun
+        flatpak run --filesystem=$(MK_ROOT_DIR) \
+                    --command=$(1) com.github.corna.Vivado
+    endef
+    VIVADO_EXEC  := $(call flatrun,vivado)
+    BOOTGEN_EXEC := $(call flatrun,bootgen)
+    HLS_EXEC     := $(call flatrun,vitis_hls)
+    VITIS_EXEC   := $(call flatrun,xsct)
+else
+    VIVADO_EXEC  := $(VIVADO_PATH)/bin/vivado
+    BOOTGEN_EXEC := $(VIVADO_PATH)/bin/bootgen
+    HLS_EXEC     := $(HLS_PATH)/bin/vitis_hls
+    VITIS_EXEC   := $(VITIS_PATH)/bin/xsct
+endif

@@ -1,0 +1,16 @@
+[package]
+name = "hls2csv"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+csv = "1.3.0"
+clap = { version = "4.5.2", features = ["derive"] }
+serde = { version = "1.0.197", features = ["derive"] }
+chrono = "0.4.35"
+hostname = "0.3.1"
+dialoguer = "0.11.0"
+regex = "1.10.4"
+linecount = "0.1.0"

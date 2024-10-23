@@ -1,10 +1,10 @@
 # Syfala toolchain dependencies
 
-The Syfala toolchain is a compilation toolchain of Faust programs onto AMD-Xilinx FPGA targets. This document explains how to install and run the **version 0.8.0** of the toolchain  on a Linux machine. In practice, installing the Syfala toolchain means:
+The Syfala toolchain is a compilation toolchain of Faust programs onto AMD-Xilinx FPGA targets. This document explains how to install and run the **version 0.10.0** of the toolchain  on a Linux machine. In practice, installing the Syfala toolchain means:
 
 - Installing the required **linux-packages**, depending on your Linux distribution.
 - Installing the **Faust** compiler
-- Creating a **AMD-Xilinx account** and downloading/installing the **2022.2 version** (2020.2 is also still supported) of the AMD-Xilinx toolchain (providing softwares such as Vivado, Vitis, Vitis HLS).
+- Creating a **AMD-Xilinx account** and downloading/installing the **2024.1 version** (2022.2 and 2023.2 are also still supported) of the AMD-Xilinx toolchain (providing softwares such as Vivado, Vitis, Vitis HLS).
 - Installing the additional **Vivado Board Files** for Digilent Boards.
 - Installing *udev* rules in order to use the JTAG connection.
 - Cloning the **Syfala repository**, and running a **simple example** to make sure everything is working properly.
@@ -41,17 +41,17 @@ make -j8
 sudo make install
 ```
 
-## Vivado, Vitis & Vitis HLS (2022.2 version)
+## Vivado, Vitis & Vitis HLS (2024.1 version)
 
 - Open an account on https://www.xilinx.com/registration
 
 - The AMD-Xilinx [download page](https://www.xilinx.com/support/download.html) contains links for downloading the **Vivado Design Suite - HLx Editions - Full Product**. It is available for both Linux and Windows. 
 
-- Download the Linux installer `Xilinx_Unified_2022.2_1014_8888_Lin64.bin` and execute the following commands:
+- Download the Linux installer `FPGAs_AdaptiveSoCs_Unified_2024.1_0522_2023_Lin64.bin` and execute the following commands:
 
 ```shell
-chmod a+x Xilinx_Unified_2022.2_1014_8888_Lin64.bin
-./Xilinx_Unified_2022.2_1014_8888_Lin64.bin
+chmod a+x FPGAs_AdaptiveSoCs_Unified_2024.1_0522_2023_Lin64.bin
+./FPGAs_AdaptiveSoCs_Unified_2024.1_0522_2023_Lin64.bin
 ```
 
 - We suggest to use the "**Download Image (Install Separately)**" option. It creates a directory with a **xsetup** file to execute that you can reuse in case of failure during the installation
@@ -72,7 +72,7 @@ export XILINX_ROOT_DIR=$HOME/Xilinx
 ### Installing Cable Drivers on Linux
 
 ```shell
-cd $XILINX_ROOT_DIR/Vivado/2022.2/data/xicom/cable_drivers/lin64/install_script/install_drivers
+cd $XILINX_ROOT_DIR/Vivado/2024.1/data/xicom/cable_drivers/lin64/install_script/install_drivers
 ./install_drivers
 # Allow JTAG-USB connection:
 sudo cp 52-xilinx-digilent-usb.rules /etc/udev/rules.d
@@ -83,24 +83,9 @@ sudo cp 52-xilinx-digilent-usb.rules /etc/udev/rules.d
 - Download the board files from [github](https://github.com/Digilent/vivado-boards/archive/master.zip?_ga=2.76732885.1953828090.1655988025-1125947215.1655988024):
 - Open the folder extracted from the archive and navigate to its `new/board_files` folder. You will be copying all of this folder's subfolders
   - For the **2020.2 version**, go to `$XILINX_ROOT_DIR/Vivado/2020.2/data/boards/board_files`
-  - For the **2022.2 version**, go to `$XILINX_ROOT_DIR/Vivado/2022.2/data/xhub/boards/XilinxBoardStore/boards/Xilinx`
+  - For the **2022.2 version and above**, go to `$XILINX_ROOT_DIR/Vivado/202x.x/data/xhub/boards/XilinxBoardStore/boards/Xilinx`
 
 - **Copy** all of the folders found in vivado-boards `new/board_files `folder and **paste** them into this folder
-
-### Installing the 2022 patch (AMD-Xilinx toolchain v2020.2 only)
-
-Vivado and Vitis tools that use HLS in the background are also affected by this issue. HLS tools set the ip_version in the format YYMMDDHHMM and this value is accessed as a signed integer (32-bit) that causes an overflow and generates the errors below (or something similar).
-
-- Follow this link: https://support.xilinx.com/s/article/76960?language=en_US
-- Download the file at the bottom of th page and unzip it in `$XILINX_ROOT_DIR`
-
-- Run the following commands: 
-
-```shell
-cd $XILINX_ROOT_DIR
-export LD_LIBRARY_PATH=$PWD/Vivado/2020.2/tps/lnx64/python-3.8.3/lib/
-Vivado/2022.2/tps/lnx64/python-3.8.3/bin/python3 y2k22_patch/patch.py
-```
 
 ## Cloning the Syfala repository
 
@@ -123,15 +108,32 @@ On **Archlinux**, if you see an error like this one
 /lib/../lib64/crti.o: file not recognized: File format not recognized
 ```
 
-you'll have to rename the `Vivado/2020.2/tps/lnx64/binutils-2.26` (Vitis will then search in the system libraries).
+you'll have to rename the `Vivado/202x.x/tps/lnx64/binutils-2.26` (Vitis will then search in the system libraries).
 
-#### Vitis/Java issues
+### Vitis/Java issues
 
 On recent systems (or with **Archlinux**), you might have problems compiling the host-side (**ARM**) application. The problem is caused by system libraries requiring newer versions of GCC than the one provided by Vitis. Replacing GCC target in Vitis' path **by system GCC** works:
 
 ```bash
-cd $XILINX_ROOT_DIR/Vitis/2020.2/lib/lnx64.o/Default
+cd $XILINX_ROOT_DIR/Vitis/202x.x/lib/lnx64.o/Default
 mv libstdc++.so.6 libstdc++.so.6.old
 rm -rf libstdc++.so (symlink)
 sudo ln -s /usr/lib/libstdc++.so.6 libstdc++.so.6
 ```
+
+### Installing the 2022 patch (AMD-Xilinx toolchain v2020.2 only)
+
+Vivado and Vitis tools that use HLS in the background are also affected by this issue. HLS tools set the ip_version in the format YYMMDDHHMM and this value is accessed as a signed integer (32-bit) that causes an overflow and generates the errors below (or something similar).
+
+- Follow this link: https://support.xilinx.com/s/article/76960?language=en_US
+- Download the file at the bottom of th page and unzip it in `$XILINX_ROOT_DIR`
+
+- Run the following commands: 
+
+```shell
+cd $XILINX_ROOT_DIR
+export LD_LIBRARY_PATH=$PWD/Vivado/2020.2/tps/lnx64/python-3.8.3/lib/
+Vivado/2022.2/tps/lnx64/python-3.8.3/bin/python3 y2k22_patch/patch.py
+```
+
+## 

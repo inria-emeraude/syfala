@@ -20,7 +20,7 @@ namespace xspips {
     constexpr auto set_slave_select   = XSpiPs_SetSlaveSelect;
 }
 
-using namespace Syfala;
+using namespace Syfala::ARM;
 static xspips::handle x;
 
 void SPI::reset(SPI::data& d) {
@@ -110,28 +110,28 @@ void SPI::slow_transfer(SPI::data& d, int nbytes) {
 void SPI::initialize(SPI::data& d, int ncontrols) {
     xspips::config* c = xspips::lookup_config(XPAR_XSPIPS_0_DEVICE_ID);
     if (c == nullptr) {
-        Status::fatal(RN("[spi] Could not retrieve XSPIPS configuration"));
+        Status::fatal("[spi] Could not retrieve XSPIPS configuration");
     }
     if (xspips::initialize_config(&x, c, c->BaseAddress) != XST_SUCCESS) {
-        Status::fatal(RN("[spi] Could not initialize XSPIPS configuration"));
+        Status::fatal("[spi] Could not initialize XSPIPS configuration");
     }
     /* The SPI device is a slave by default and the clock phase
      * have to be set according to its master. In this example, CPOL is set
      * to quiescent high and CPHA is set to 1. */
     if (xspips::set_options(&x, XSPIPS_MASTER_OPTION | XSPIPS_FORCE_SSELECT_OPTION) != XST_SUCCESS) {
-        Status::fatal(RN("[spi] Could not set XSPIPS options"));
+        Status::fatal("[spi] Could not set XSPIPS options");
     }
     if (xspips::set_clk_prescaler(&x, XSPIPS_CLK_PRESCALE_256) != XST_SUCCESS) { // 64
-        Status::fatal(RN("[spi] Could not set XSPIPS clock prescaler"));
+        Status::fatal("[spi] Could not set XSPIPS clock prescaler");
     }
     xspips::set_slave_select(&x, SS0_SPI_SELECT);
     XSpiPs_Enable(&x);
     memset(d.values, 0, sizeof(d.values));
     memset(d.change, 0, sizeof(d.change));
     d.ncontrols = std::min(ncontrols, SPI::capacity());
-    sy_printf("[spi] Number of available controls: %d\r\n", d.ncontrols);
+    println("[spi] Number of available controls: %d\r\n", d.ncontrols);
     poll(d);
-    sy_printf("[spi] SPI module successfully initialized.");
+    println("[spi] SPI module successfully initialized.");
 }
 
 void SPI::Teensy::initialize(const char* label,

@@ -5,8 +5,6 @@ set CONFIG  [lindex $::argv 0]
 set BOARD   [lindex $::argv 1]
 set TARGET  [lindex $::argv 2]
 
-print_info "$TARGET"
-
 switch $BOARD {
 Z10 - Z20 {
     set arch "32-bit"
@@ -95,8 +93,10 @@ switch $CONFIG {
             $TARGET                                                     \
             $::Syfala::SOURCE_DIR/arm/baremetal/modules/audio.cpp       \
             $::Syfala::SOURCE_DIR/arm/baremetal/modules/gpio.cpp        \
+            $::Syfala::SOURCE_DIR/arm/baremetal/modules/memory.cpp      \
             $::Syfala::SOURCE_DIR/arm/baremetal/modules/uart.cpp        \
             $::Syfala::SOURCE_DIR/arm/baremetal/modules/ip.cpp          \
+            $::Syfala::SOURCE_DIR/arm/baremetal/modules/memory.cpp      \
         ]
         app config -name $APPLICATION_NAME -add include-path $drivers_path
         importsources -name $APPLICATION_NAME -path $drivers_path
@@ -130,6 +130,8 @@ switch $CONFIG {
     }
 }
 
+# In any case, add the source file directory as an include directory
+app config -name $APPLICATION_NAME -add include-path [file dirname $TARGET]
 
 foreach src $sources {
     importsources -name $APPLICATION_NAME \

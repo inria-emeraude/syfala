@@ -5,7 +5,7 @@
 #define FRAME_BUFFER_BASE_ADDR  0x35000000
 #define FRAME_BUFFER_LEN        0x08000000
 
-using namespace Syfala;
+using namespace Syfala::ARM;
 
 static size_t memlen(unsigned int izone,
                      unsigned int fzone) {
@@ -38,7 +38,7 @@ static int* get_reserved_addr(unsigned int izone,
 void Memory::initialize(XSyfala& x, data& d, int ilen, int flen) {
     d.i_zone = get_reserved_addr(ilen, flen);
     d.f_zone = reinterpret_cast<float*>(d.i_zone + ilen);
-    IP::set_mem_zone_i(&x, FRAME_BUFFER_BASE_ADDR);
-    IP::set_mem_zone_f(&x, FRAME_BUFFER_BASE_ADDR + (ilen * sizeof(int)));
-    sy_printf("[mem] Memory successfully initialized.");
+    DSP::set_mem_zone_i(&x, FRAME_BUFFER_BASE_ADDR);
+    DSP::set_mem_zone_f(&x, FRAME_BUFFER_BASE_ADDR + (ilen * sizeof(int)));
+    println("[mem] Memory successfully initialized.");
 }

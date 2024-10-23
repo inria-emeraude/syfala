@@ -1,2 +1,0 @@
-syfala ALL=(ALL) ALL
-syfala ALL= NOPASSWD: /usr/sbin/ls, /usr/sbin/zzz, /usr/sbin/ZZZ

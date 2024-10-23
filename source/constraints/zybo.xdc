@@ -46,7 +46,7 @@ set_property -dict { PACKAGE_PIN H15   IOSTANDARD LVCMOS33 } [get_ports { spi_cl
 set_property -dict { PACKAGE_PIN V13   IOSTANDARD LVCMOS33 } [get_ports { syfala_out_debug0  }]; #IO_L3N_T0_DQS_34 Sch=je[7]
 set_property -dict { PACKAGE_PIN U17   IOSTANDARD LVCMOS33 } [get_ports { syfala_out_debug1  }]; #IO_L9N_T1_DQS_34 Sch=je[8]
 set_property -dict { PACKAGE_PIN T17   IOSTANDARD LVCMOS33 } [get_ports { syfala_out_debug2  }]; #IO_L20P_T3_34 Sch=je[9]
-set_property -dict { PACKAGE_PIN Y17   IOSTANDARD LVCMOS33 } [get_ports { syfala_out_debug3 }]; #IO_L7N_T1_34 Sch=je[10]
+set_property -dict { PACKAGE_PIN Y17   IOSTANDARD LVCMOS33 } [get_ports { syfala_out_debug3  }]; #IO_L7N_T1_34 Sch=je[10]
 
 ##Pmod Header JD 3.3V
 set_property -dict { PACKAGE_PIN T14   IOSTANDARD LVCMOS33              } [get_ports  { CODEC1_sd_rx }];

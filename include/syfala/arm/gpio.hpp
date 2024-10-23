@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-namespace Syfala::GPIO {
+namespace Syfala::ARM::GPIO {
 /**
  * @brief Initialize General Purpose I/Os,
  * including on-board LEDs & switches.
@@ -11,7 +11,7 @@ extern void initialize();
 /**
  * @brief Reads and returns current value of SW(index)
  */
- 
+
 extern bool read_sw(int index);
 /**
  * @brief Reads and returns current value of all buttons
@@ -33,7 +33,7 @@ extern void write_ld5(int value);
 extern void write_ld5(int r, int g, int b);
 }
 
-namespace Syfala::Status {
+namespace Syfala::ARM::Status {
 /**
  * @brief Sets the status LED (LD5 on Zybo boards)
  * as 'waiting' (blue color), prints 'message' to stdout (ttyPS0).

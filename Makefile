@@ -2,7 +2,7 @@
 # -----------------------------------------------------------------------------
 
 SYFALA_VERSION_MAJOR    := 0
-SYFALA_VERSION_MINOR    := 8
+SYFALA_VERSION_MINOR    := 10
 SYFALA_VERSION_PATCH    := 0
 SYFALA_VERSION          := $(SYFALA_VERSION_MAJOR).$(SYFALA_VERSION_MINOR)
 SYFALA_VERSION_FULL     := $(SYFALA_VERSION).$(SYFALA_VERSION_PATCH)
@@ -29,9 +29,8 @@ ifeq ($(call file_exists, $(MK_ENV)), 1)
     $(call static_info, Found '$(B)makefile.env$(N)' - including definitions)
 endif
 
-$(call static_info, Running $(B)syfala$(N) toolchain    \
-    ($(B)v$(SYFALA_VERSION_FULL)$(N)) on $(B)$(OS)$(N)  \
-    ($(OS_VERSION) $(OS_LTS)))
+$(call static_info, Running $(B)syfala$(N) toolchain \
+    ($(B)v$(SYFALA_VERSION_FULL)$(N)) on $(B)$(OS_PRETTY_NAME)$(N))
 
 $(call static_info, Commit #$(SYFALA_COMMIT_HASH))
 $(call static_info, Running $(B)from$(N): $(PWD))
@@ -111,10 +110,108 @@ ifeq ($(CONFIG_EXPERIMENTAL_SIGMA_DELTA), TRUE) # ---------
     include $(MK_CONFIG_DIR)/designs/sigma-delta.mk
 else # ----------------------------------------------------
     SIGMA_DELTA := 0
+    SIGMA_DELTA_ORDER := 0
 endif # ---------------------------------------------------
 
-MULTISAMPLE ?= 0
+ifeq (ETHERNET, $(filter ETHERNET, $(CONFIG)))
+    ifeq (MULTISAMPLE, $(filter MULTISAMPLE, $(CONFIG)))
+        ifeq (TDM, $(filter TDM, $(CONFIG)))
+            # -------------------------------------------------------------------
+            # ETHERNET + TDM + MULTISAMPLE
+            # -------------------------------------------------------------------
+            BD_TARGET  ?= $(SOURCE_BD_DIR)/ethernet_tdm_multisample.tcl
+            I2S_SOURCE ?= $(SOURCE_I2S_DIR)/i2s_ethernet_tdm_multisample.vhd
+            PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/base_design.tcl
+            PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/syfala_ip.tcl
+            PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/transceiver_tdm.tcl
+            PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/multisample_bd.tcl
+            PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/ethernet_base.tcl
+        else
+            # -------------------------------------------------------------------
+            # ETHERNET + MULTISAMPLE
+            # -------------------------------------------------------------------
+            BD_TARGET  ?= $(SOURCE_BD_DIR)/ethernet_multisample.tcl
+            I2S_SOURCE ?= $(SOURCE_I2S_DIR)/i2s_ethernet_multisample.vhd
+            PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/base_design.tcl
+            PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/syfala_ip.tcl
+            PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/transceiver_i2s.tcl
+            PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/multisample_bd.tcl
+            PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/ethernet_base.tcl
+        endif # -----------------------------------------------------------------
+    else ifeq (TDM, $(filter TDM, $(CONFIG)))
+        # -------------------------------------------------------------------
+        # ETHERNET + TDM
+        # -------------------------------------------------------------------
+        BD_TARGET  ?= $(SOURCE_BD_DIR)/ethernet_tdm.tcl
+        I2S_SOURCE ?= $(SOURCE_I2S_DIR)/i2s_ethernet_tdm.vhd
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/base_design.tcl
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/syfala_ip.tcl
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/transceiver_tdm.tcl
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/onesample.tcl
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/ethernet_base.tcl
+    else
+        # -------------------------------------------------------------------
+        # ETHERNET
+        # -------------------------------------------------------------------
+        BD_TARGET  ?= $(SOURCE_BD_DIR)/ethernet.tcl
+        I2S_SOURCE ?= $(SOURCE_I2S_DIR)/i2s_ethernet.vhd
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/base_design.tcl
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/syfala_ip.tcl
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/transceiver_i2s.tcl
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/onesample.tcl
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/ethernet_base.tcl
+    endif
+else ifeq (TDM, $(filter TDM, $(CONFIG)))
+    ifeq (MULTISAMPLE, $(filter MULTISAMPLE, $(CONFIG)))
+        # -------------------------------------------------------------------
+        # TDM + MULTISAMPLE
+        # -------------------------------------------------------------------
+        BD_TARGET  ?= $(SOURCE_BD_DIR)/tdm_multisample.tcl
+        I2S_SOURCE ?= $(SOURCE_I2S_DIR)/i2s_tdm_multisample.vhd
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/base_design.tcl
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/syfala_ip.tcl
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/transceiver_tdm.tcl
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/multisample_bd.tcl
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/spi.tcl
+    else
+        # -------------------------------------------------------------------
+        # TDM
+        # -------------------------------------------------------------------
+        BD_TARGET  ?= $(SOURCE_BD_DIR)/tdm.tcl
+        I2S_SOURCE ?= $(SOURCE_I2S_DIR)/i2s_tdm.vhd
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/base_design.tcl
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/syfala_ip.tcl
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/transceiver_tdm.tcl
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/onesample.tcl
+        PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/spi.tcl
+    endif
+else ifeq (MULTISAMPLE, $(filter MULTISAMPLE, $(CONFIG)))
+    # -------------------------------------------------------------------
+    # MULTISAMPLE
+    # -------------------------------------------------------------------
+    BD_TARGET  ?= $(SOURCE_BD_DIR)/multisample.tcl
+    I2S_SOURCE ?= $(SOURCE_I2S_DIR)/i2s_multisample.vhd
+    PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/base_design.tcl
+    PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/syfala_ip.tcl
+    PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/transceiver_i2s.tcl
+    PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/multisample_bd.tcl
+    PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/spi.tcl
+else ifeq (SIGMA_DELTA, $(filter SIGMA_DELTA, $(CONFIG)))
+    I2S_SOURCE ?= $(SOURCE_I2S_DIR)/i2s_standard.vhd
+else
+    # -------------------------------------------------------------------
+    # ONE-SAMPLE
+    # -------------------------------------------------------------------
+    BD_TARGET  ?= $(SOURCE_BD_DIR)/standard.tcl
+    I2S_SOURCE ?= $(SOURCE_I2S_DIR)/i2s_standard.vhd
+    PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/base_design.tcl
+    PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/syfala_ip.tcl
+    PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/transceiver_i2s.tcl
+    PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/onesample.tcl
+    PROJECT_DEPENDENCIES += $(SOURCE_BD_DIR)/modules/spi.tcl
+endif # -------------------------------------------------------------------------
 
+MULTISAMPLE     ?= 0
 ARM_BENCHMARK   ?= 0
 CTRL_MIDI       ?= 0
 CTRL_OSC        ?= 0
@@ -167,6 +264,7 @@ $(BUILD_SYFALA_ARM_CONFIG_H): $(SYFALA_ARM_CONFIG_H)
 	$(call set_arm_config_definition,SYFALA_CONTROL_OSC,$(CTRL_OSC))
 	$(call set_arm_config_definition,SYFALA_CONTROL_HTTP,$(CTRL_HTTP))
 	$(call set_arm_config_definition,SYFALA_VERBOSE,$(VERBOSE))
+	$(call set_arm_config_definition,FAUST_INTERFACE_NEW,$(FAUST_INTERFACE_NEW))
 ifneq ($(TARGET_TYPE), faust)
 	$(call set_arm_config_definition,SYFALA_FAUST_TARGET,0)
 endif
@@ -211,7 +309,7 @@ PREFIX ?= /usr
 
 install:
 	$(call shell_info, Installing symlink in $(PREFIX)/bin/syfala)
-	@sudo ln -fs $(PWD)/syfala.tcl $(PREFIX)/bin/syfala
+	@$(sudo) ln -fs $(PWD)/syfala.tcl $(PREFIX)/bin/syfala
 	$(call shell_info, You can now use the command 'syfala --help' to	\
 			   check if\n \t script has been properly installed)
 
@@ -254,7 +352,7 @@ reset: clean
 # -----------------------------------------------------------------------------
 reset-linux:
 	$(call shell_info, Removing $(B)build-linux$(N) directory)
-	$(call remove_dir_confirm, $(BUILD_LINUX_DIR), sudo)
+	$(call remove_dir_confirm, $(BUILD_LINUX_DIR), $(sudo))
 
 # -----------------------------------------------------------------------------
 .PHONY: reset-linux-root
@@ -265,7 +363,7 @@ reset-linux-root:
 	$(call shell_info, Removing $(B)build-linux root$(N) directories)
 	$(call remove_dir_confirm, $(BUILD_LINUX_ROOT_DIR)              \
                                    $(BUILD_LINUX_OUTPUT_ROOT_DIR),      \
-                                   sudo                                 \
+                                   $(sudo)                                 \
         )
 
 # -----------------------------------------------------------------------------
@@ -289,7 +387,7 @@ help:
 # -----------------------------------------------------------------------------
 version:
 	$(call shell_info, Running syfala toolchain script                  \
-	    (v$(SYFALA_VERSION_FULL)) on $(OS_VERSION) $(OS_LTS))
+	    (v$(SYFALA_VERSION_FULL)) on $(OS_PRETTY_NAME))
 
 # -----------------------------------------------------------------------------
 .PHONY: log
@@ -337,38 +435,8 @@ endif # ----------------------------------------------
 # -----------------------------------------------------------------------------
 hls-target-file: $(HLS_TARGET_FILE)
 
-ifeq ($(PREPROCESSOR_HLS), TRUE)
-# Run the preprocessor.tcl script file on the HLS target file, it will set
-# several things:
-# - the number of input/output ports (top-level arguments).
-# - the number of real/int & passive control arrays passed from/to the ARM
-#   through the AXI Lite protocol.
-
-HLS_TARGET_FILE_PREPROCESSED := $(BUILD_IP_DIR)/syfala_ip_preprocessed.cpp
-HLS_DEPENDENCIES += $(HLS_TARGET_FILE_PREPROCESSED)
-ADD_FILES_CMD    += add_files $(HLS_TARGET_FILE_PREPROCESSED)
-
-$(HLS_TARGET_FILE_PREPROCESSED): $(HLS_TARGET_FILE)
-	@cp -r $(HLS_TARGET_FILE) $(HLS_TARGET_FILE_PREPROCESSED)
-	$(call shell_info, Running $(B)preprocessor$(N) on  \
-		       $(B)HLS$(N) target file ($(notdir $(HLS_TARGET_FILE_PREPROCESSED))))
-	$(call check_print_nchannels)
-	$(call check_print_ncontrols)
-	@tclsh $(SCRIPT_PREPROCESSOR) --hls		\
-			$(HLS_TARGET_FILE_PREPROCESSED)	\
-			$(shell $(get_nchannels_i))	\
-			$(shell $(get_nchannels_o))	\
-			$(shell $(get_ncontrols_f))	\
-			$(shell $(get_ncontrols_i))	\
-			$(shell $(get_ncontrols_p))	\
-			$(shell $(get_mem_i))		\
-			$(shell $(get_mem_f))		\
-			$(MULTISAMPLE)			\
-			0
-else # ------------------------------------------------
-    HLS_DEPENDENCIES += $(HLS_TARGET_FILE)
-    ADD_FILES_CMD   += add_files $(HLS_TARGET_FILE)
-endif #------------------------------------------------
+HLS_DEPENDENCIES += $(HLS_TARGET_FILE)
+ADD_FILES_CMD   += add_files $(HLS_TARGET_FILE)
 
 # -----------------------------------------------------------------------------
 .PHONY: hls-includes
@@ -383,14 +451,13 @@ HLS_INCLUDES        += $(BUILD_SYFALA_CONFIG_H)
 HLS_INCLUDES        += $(BUILD_SYFALA_UTILITIES_H)
 HLS_DEPENDENCIES    += $(HLS_INCLUDES)
 
-hls-includes: $(HLS_INCLUDES)
-
 define set_config_definition # ------------------------------------------------
     $(call shell_info, Setting #define $(B)$(1)$(N) $(2))
     @sed -i 's/^#define\s$(1)\s[^ ]\+/#define $(1) $(2)/g' $(BUILD_SYFALA_CONFIG_H)
 endef # -----------------------------------------------------------------------
 
-$(HLS_INCLUDES): $(SYFALA_CONFIG_H) $(SYFALA_UTILITIES_H)
+hls-includes: $(HLS_INCLUDES)
+$(HLS_INCLUDES): $(SYFALA_CONFIG_H) $(SYFALA_UTILITIES_H) $(HLS_TARGET_FILE)
 	$(call shell_info, Preparing $(B)HLS$(N) sources...)
 	@mkdir -p $(BUILD_INCLUDE_DIR)/syfala
 	@cp -r $(SYFALA_CONFIG_H) $(BUILD_SYFALA_CONFIG_H)
@@ -403,7 +470,10 @@ $(HLS_INCLUDES): $(SYFALA_CONFIG_H) $(SYFALA_UTILITIES_H)
 	$(call set_config_definition,SYFALA_BLOCK_NSAMPLES,$(MULTISAMPLE))
 	$(call set_config_definition,SYFALA_CSIM_NUM_ITER,$(HLS_CSIM_NUM_ITER))
 	$(call set_config_definition,SYFALA_DEBUG_AUDIO,$(DEBUG_AUDIO))
+	$(call set_config_definition,FAUST_VEC,$(FAUST_VEC))
 	$(call set_config_definition,SYFALA_ETHERNET_NO_OUTPUT,$(CONFIG_EXPERIMENTAL_ETHERNET_NO_OUTPUT))
+	$(call set_config_definition,SYFALA_ETHERNET_NCHANNELS_TO_I2S,$(shell $(get_nchannels_i)))
+	$(call set_config_definition,SYFALA_ETHERNET_NCHANNELS_FROM_I2S,$(shell $(get_nchannels_o)))
 
 ifneq ($(TARGET_TYPE), faust)
 	$(call set_config_definition,SYFALA_CONTROL_BLOCK,0)
@@ -418,20 +488,21 @@ HLS_REPORT      := $(BUILD_IP_DIR)/syfala/syn/report/syfala_csynth.rpt
 HLS_TOP_LEVEL   := syfala
 ADD_FILES_CMD   += -cflags "$(HLS_FLAGS_INCLUDE)";
 
+HLS_DIRECTIVES += config_interface -m_axi_max_widen_bitwidth 512;
+HLS_DIRECTIVES += config_interface -m_axi_alignment_byte_size 64;
+
 ifeq ($(HLS_DIRECTIVES_UNSAFE_MATH_OPTIMIZATIONS), TRUE) # ---------
     HLS_DIRECTIVES += config_compile -unsafe_math_optimizations=true
     #; config_array_partition -complete_threshold=1
 endif # ------------------------------------------------------------
 
-ifeq ($(HLS_ROUTING_AND_PLACEMENT), TRUE) # ---------
+ifeq ($(HLS_ROUTING_AND_PLACEMENT), TRUE)
     HLS_FLOW += -flow impl
-endif # ------------------------------------------------------------
+endif
 
-ifdef HLS_SOURCE_FILES # -----------------------------
+ifdef HLS_SOURCE_FILES # -------------------------------------------
     ADD_FILES_CMD  += add_files "$(HLS_SOURCE_FILES)";
-endif # ----------------------------------------------
-
-hls: $(HLS_OUTPUT)
+endif # ------------------------------------------------------------
 
 # -------------------------------------------------------------------------------
 HLS_COMMAND := cd $(BUILD_DIR);                                                 \
@@ -448,10 +519,59 @@ HLS_COMMAND := cd $(BUILD_DIR);                                                 
 	       exit;
 # -------------------------------------------------------------------------------
 
+hls: $(HLS_OUTPUT)
 $(HLS_OUTPUT): $(HLS_DEPENDENCIES)
 	$(call shell_info, Running $(B)Vitis_HLS$(N) on file $(notdir $(HLS_TARGET_FILE)))
 	@echo '$(HLS_COMMAND)' | $(HLS_EXEC) -i
 	$(call shell_ok, High-level synthesis done)
+
+# -----------------------------------------------------------------------------
+.PHONY: hls-export
+# -----------------------------------------------------------------------------
+HLS_EXPORT_OUTPUT := $(DSP_TARGET_NAME)-hls-export.zip
+hls-export: $(HLS_EXPORT_OUTPUT)
+
+HLS_ADDITIONAL_INCLUDES += $(wildcard $(dir $(HLS_SOURCE_MAIN))*.h)
+HLS_ADDITIONAL_INCLUDES += $(wildcard $(dir $(HLS_SOURCE_MAIN))*.hpp)
+
+# -------------------------------------------------------------------------------
+HLS_COMMAND_EXPORT := \
+	       \n open_project -reset project;                                  \
+               \n add_files syfala_ip_preprocessed.cpp -cflags "-Iinclude";	\
+	       \n set_top $(HLS_TOP_LEVEL);                                     \
+	       \n open_solution -reset $(HLS_TOP_LEVEL) -flow_target vivado;	\
+	       \n set_part $(BOARD_PART);					\
+	       \n create_clock -period $(HLS_CLOCK_PERIOD);			\
+	       \n $(HLS_DIRECTIVES);						\
+	       \n config_export $(HLS_FLOW) -format ip_catalog -rtl vhdl;	\
+	       \n exit;
+# -------------------------------------------------------------------------------
+
+HLS_SCRIPT := $(BUILD_IP_DIR)/make_project.tcl
+
+HLS_EXPORT_MAKEFILE :=                  \
+    \nVITIS_HLS ?= vitis_hls            \
+    \nall:                              \
+    \n\t$$(VITIS_HLS) make_project.tcl   \
+    \n\t$$(VITIS_HLS) -p project
+
+$(HLS_SCRIPT):
+	$(call shell_info, Generating HLS script)
+	echo '$(HLS_COMMAND_EXPORT)' > $(HLS_SCRIPT)
+
+$(HLS_EXPORT_OUTPUT): $(HLS_DEPENDENCIES) $(HLS_SCRIPT)
+	$(call shell_info, Exporting HLS project to $(HLS_EXPORT_OUTPUT))
+	cp -r $(BUILD_INCLUDE_DIR) $(BUILD_IP_DIR)
+	cp -r $(HLS_ADDITIONAL_INCLUDES) $(BUILD_IP_DIR)/include
+	cp -r $(BUILD_IP_DIR) $(BUILD_DIR)/$(DSP_TARGET_NAME)
+	echo '$(HLS_EXPORT_MAKEFILE)' > $(BUILD_DIR)/$(DSP_TARGET_NAME)/Makefile
+	cd $(BUILD_DIR) && \
+	    zip -q -r $(HLS_EXPORT_OUTPUT) $(DSP_TARGET_NAME)/	\
+		-x $(DSP_TARGET_NAME)/syfala/\*			\
+		-x $(DSP_TARGET_NAME)/hls.app			\
+		-x $(DSP_TARGET_NAME)/syfala_ip.cpp
+	mv $(BUILD_DIR)/$(HLS_EXPORT_OUTPUT) .
+	rm -rf $(BUILD_DIR)/$(DSP_TARGET_NAME)
 
 # -----------------------------------------------------------------------------
 .PHONY: hls-csim-target
@@ -461,27 +581,32 @@ $(HLS_OUTPUT): $(HLS_DEPENDENCIES)
 
 BUILD_CSIM_DIR  := $(BUILD_DIR)/csim
 HLS_CSIM_TARGET := $(BUILD_CSIM_DIR)/csim_main.cpp
+HLS_CSIM_INCLUDE_SRC := $(TESTS_DIR)/csim/csim_template_utilities.hpp
+HLS_CSIM_INCLUDE_DST := $(BUILD_CSIM_DIR)/csim_template_utilities.hpp
 
 hls-csim-target: $(HLS_CSIM_TARGET)
 
+define set_csim_definition # --------------------------------------------------
+    $(call shell_info, Setting #define $(B)$(1)$(N) $(2))
+    @sed -i 's/^#define\s$(1)\s[^ ]\+/#define $(1) $(2)/g' $(HLS_CSIM_INCLUDE_DST)
+endef # -----------------------------------------------------------------------
+
 # TODO: check HLS_CSIM_SOURCE
 
-$(HLS_CSIM_TARGET): $(HLS_CSIM_SOURCE) $(HLS_TARGET_FILE_PREPROCESSED)
-	$(call shell_info, Running $(B)preprocessor$(N) on \
-			   $(B)CSIM$(N) target file ($(notdir $(HLS_CSIM_TARGET))))
+$(HLS_CSIM_INCLUDE_DST): $(HLS_CSIM_INCLUDE_SRC) $(HLS_TARGET_FILE)
+	$(call shell_info, Creating $(B)CSIM build includes$(N))
 	@mkdir -p $(BUILD_CSIM_DIR)
+	@cp -r $(HLS_CSIM_INCLUDE_SRC) $(HLS_CSIM_INCLUDE_DST)
+	$(call shell_info, Setting $(B)CSIM definitions$(N))
+	$(call set_csim_definition,SYFALA_NUM_INPUTS,$(shell $(get_nchannels_i)))
+	$(call set_csim_definition,SYFALA_NUM_OUTPUTS,$(shell $(get_nchannels_o)))
+	$(call set_csim_definition,SYFALA_NCONTROLS_F,$(shell $(get_ncontrols_f)))
+	$(call set_csim_definition,SYFALA_NCONTROLS_I,$(shell $(get_ncontrols_i)))
+	$(call set_csim_definition,SYFALA_NCONTROLS_P,$(shell $(get_ncontrols_p)))
+
+$(HLS_CSIM_TARGET): $(HLS_CSIM_SOURCE) $(HLS_CSIM_INCLUDE_DST)
+	$(call shell_info, Creating $(B)CSIM build files$(N))
 	@cp -r $(HLS_CSIM_SOURCE) $(HLS_CSIM_TARGET)
-	@tclsh $(SCRIPT_PREPROCESSOR) --hls	    \
-	    	       $(HLS_CSIM_TARGET)	    \
-	    	       $(shell $(get_nchannels_i))  \
-	    	       $(shell $(get_nchannels_o))  \
-	    	       $(shell $(get_ncontrols_f))  \
-	    	       $(shell $(get_ncontrols_i))  \
-	    	       $(shell $(get_ncontrols_p))  \
-		       $(shell $(get_mem_i))	    \
-		       $(shell $(get_mem_f))	    \
-	    	       $(MULTISAMPLE)               \
-                       0
 
 # -----------------------------------------------------------------------------
 .PHONY: hls-csim
@@ -495,18 +620,22 @@ HLS_CSIM_OUTPUTS_DIR := $(MK_ROOT_DIR)/reports/$(DSP_TARGET_NAME)
 
 hls-csim: $(HLS_CSIM_RUN)
 
+# Add config_common.hpp & utilities.hpp header files
+# Add the __CSIM__ def to utilities.hpp, which will allow <ap_int/ap_fixed> includes:
 CSIM_FILES += add_files $(BUILD_SYFALA_CONFIG_H);
 CSIM_FILES += add_files $(BUILD_INCLUDE_DIR)/syfala/utilities.hpp
 CSIM_FILES += -cflags "-I$(BUILD_INCLUDE_DIR) -D__CSIM__";
 
-CSIM_FILES += add_files $(HLS_TARGET_FILE_PREPROCESSED)
+# Add the preprocessed HLS file, include its source directory and add the __CSIM__ definition:
+CSIM_FILES += add_files $(HLS_TARGET_FILE)
 CSIM_FILES += -cflags "-I$(BUILD_INCLUDE_DIR) -I$(dir $(HLS_SOURCE_MAIN)) -D__CSIM__"
 
+# Finally, include the testbench file, with all the required includes and definitions:
 CSIM_TB += add_files -tb $(HLS_CSIM_TARGET)
-CSIM_TB += -cflags "-I$(BUILD_INCLUDE_DIR) -I$(BUILD_IP_DIR) -D__CSIM__"
+CSIM_TB += -cflags "-I$(BUILD_INCLUDE_DIR) -I$(BUILD_IP_DIR) -I$(dir $(HLS_CSIM_SOURCE)) -D__CSIM__"
 
-CSIM_ARGV += $(HLS_CSIM_INPUTS_DIR)
 CSIM_ARGV += $(HLS_CSIM_OUTPUTS_DIR)
+CSIM_ARGV += $(HLS_CSIM_INPUTS_DIR)
 
 # -------------------------------------------------------------------------------
 CSIM_COMMAND := cd $(BUILD_DIR);						\
@@ -565,14 +694,14 @@ endif # --------------------------------------------------------------
 ifeq ($(PREPROCESSOR_I2S), TRUE) # ----------------------------------
 $(I2S_TARGET): $(I2S_SOURCE) $(I2S_DEPENDENCIES)
 	@mkdir -p $(BUILD_RTL_DIR)
-	$(call shell_info, Running $(B)preprocessor$(N) on          \
+	$(call shell_info, Running $(B)preprocessor$(N) on              \
 	    $(B)I2S$(N) template ($(notdir $(I2S_TARGET))))
-	@tclsh $(SCRIPT_PREPROCESSOR) --i2s $(I2S_SOURCE)           \
-                                            $(I2S_TARGET)           \
+	@tclsh $(SCRIPT_PREPROCESSOR) --i2s $(I2S_SOURCE)               \
+                                            $(I2S_TARGET)               \
 					    $(shell $(get_nchannels_i)) \
 					    $(shell $(get_nchannels_o)) \
-					    $(SAMPLE_WIDTH)         \
-					    $(SAMPLE_RATE)          \
+					    $(SAMPLE_WIDTH)             \
+					    $(SAMPLE_RATE)              \
 					    $(MULTISAMPLE)
 else # --------------------------------------------------------------
 $(I2S_TARGET): $(I2S_SOURCE) $(I2S_DEPENDENCIES)
@@ -623,7 +752,7 @@ VIVADO_CMD_ARGUMENTS	+= $(SAMPLE_WIDTH)
 VIVADO_CMD_ARGUMENTS	+= $(BD_TARGET)
 VIVADO_CMD_ARGUMENTS	+= $(ETHERNET)
 VIVADO_CMD_ARGUMENTS	+= $(CONFIG_EXPERIMENTAL_ETHERNET_NO_OUTPUT)
-VIVADO_CMD_ARGUMENTS	+= $(SIGMA_DELTA)
+VIVADO_CMD_ARGUMENTS	+= $(SIGMA_DELTA_ORDER)
 # ------------------------------------------------------------------------
 
 PROJECT_OUTPUT  := $(BUILD_PROJECT_DIR)/syfala_project.gen/sources_1/bd/main/hdl/main_wrapper.vhd
@@ -795,7 +924,7 @@ endif
 ifeq ($(call dev_exists, $(SD_DEVICE_BOOT_PARTITION)), 1)
 flash-boot: $(BAREMETAL_BOOT_BIN)
 	$(call shell_info, Mounting $(SD_DEVICE_BOOT_PARTITION))
-	@sudo mount $(SD_DEVICE_BOOT_PARTITION) /mnt
+	@$(sudo) mount $(SD_DEVICE_BOOT_PARTITION) /mnt
 	$(call shell_info, Cleaning up $(SD_DEVICE_BOOT_PARTITION))
 	@rm -rf /mnt/*
 	$(call shell_info, Copying boot files)
@@ -804,7 +933,7 @@ flash-boot: $(BAREMETAL_BOOT_BIN)
 	$(call shell_info, Now syncing...)
 	@sync
 	$(call shell_info, Unmounting $(SD_DEVICE_BOOT_PARTITION))
-	@sudo umount /mnt
+	@$(sudo) umount /mnt
 else
     $(call static_info, Could not find boot partition ($(SD_DEVICE_BOOT_PARTITION)))
     SD_DEVICE_BOOT_PARTITION := null

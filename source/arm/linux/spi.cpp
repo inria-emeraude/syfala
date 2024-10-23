@@ -7,7 +7,7 @@
 #include <iio.h>
 #include <syfala/arm/gpio.hpp>
 
-using namespace Syfala;
+using namespace Syfala::ARM;
 
 static iio_device* dev = nullptr;
 static iio_buffer* buf = nullptr;

@@ -2,7 +2,8 @@
 #include <string.h>
 #include <syfala/utilities.hpp>
 
-using namespace Syfala::Faust;
+using namespace Syfala::ARM;
+using namespace Syfala::ARM::Faust;
 /**
  * @brief Adds new controller with no specific information about its bounds &
  * default value (buttons, checkboxes...)
@@ -15,7 +16,7 @@ static void add_controller(handle& h, float* zone, const char* name, direction i
           .io = io
     };
     h.controllers.push_back(c);
-    sy_printf("[faust] Added controller '%s' at index %d\r\n", name, h.ncontrollers());
+    println("[faust] Added controller '%s' at index %d", name, h.ncontrollers());
 }
 /**
  * @brief Adds new controller with the following information:
@@ -40,7 +41,7 @@ static void add_controller(handle& h, float* zone, const char* name,
         .io   = io,
     };
     h.controllers.push_back(c);
-    sy_printf("[faust] Added controller '%s' at index %d\r\n", name, h.ncontrollers());
+    println("[faust] Added controller '%s' at index %d\r\n", name, h.ncontrollers());
 }
 
 static bool streq(const char* a, const char* b) {
@@ -59,7 +60,7 @@ static bool streq(const char* a, const char* b) {
  */
 void handle::declare(float* zone, const char* key, const char* val) {
     // Detect metadata format
-    sy_printf("[faust] Retrieved metadata: [%s:%s]\r\n", key, val);
+    println("[faust] Retrieved metadata: [%s:%s]\r\n", key, val);
     if (streq(key, "switch")
      || streq(key, "knob")
      || streq(key, "slider")) {

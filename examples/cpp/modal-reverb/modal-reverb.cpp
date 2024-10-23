@@ -13,21 +13,21 @@ int cnt_sample = 0;
 float div_nmodes = (1.0f/NMODES);
 float w[NMODES*NCHANS][3] = {{0.0f}};
 
-static void compute(sy_ap_int const input_0[],
-                    sy_ap_int output_0[],
-                    sy_ap_int output_1[])
-{
+static void compute(
+        sy_ap_int const inputs[INPUTS][SYFALA_BLOCK_NSAMPLES],
+              sy_ap_int outputs[OUTPUTS][SYFALA_BLOCK_NSAMPLES]
+){
     float x[SYFALA_BLOCK_NSAMPLES] = {0.0f};
     float y[NCHANS][SYFALA_BLOCK_NSAMPLES] = {{0.0f}};
 
     // input...
     for (int n = 0; n < SYFALA_BLOCK_NSAMPLES; ++n) {
         // click generator
-        // float impulse = 0.0f;
-        // if(cnt_sample == 0) impulse = 1.0f;
-        // cnt_sample = (cnt_sample + 1)%period;
-        // x[n] = impulse;
-        x[n] = Syfala::HLS::ioreadf(input_0[n]);
+//         float impulse = 0.0f;
+//         if (cnt_sample == 0) impulse = 1.0f;
+//         cnt_sample = (cnt_sample + 1) % period;
+//         x[n] = impulse;
+        x[n] = Syfala::HLS::ioreadf(inputs[0][n]);
     }
 
     // biquads implemented as direct form 2
@@ -45,18 +45,18 @@ static void compute(sy_ap_int const input_0[],
         }
     }
 
-    for (int n = 0; n < SYFALA_BLOCK_NSAMPLES; ++n) {
-        Syfala::HLS::iowritef(y[0][n], output_0[n]);
-        Syfala::HLS::iowritef(y[1][n], output_1[n]);
+    for (int c = 0; c < SYFALA_BLOCK_NSAMPLES; ++c) {
+        for (int n = 0; n < SYFALA_BLOCK_NSAMPLES; ++n) {
+             Syfala::HLS::iowritef(y[c][n], outputs[c][n]);
+        }
     }
 }
 
 static bool initialization = true;
 
 void syfala (
-        sy_ap_int audio_in_0[SYFALA_BLOCK_NSAMPLES],
-        sy_ap_int audio_out_0[SYFALA_BLOCK_NSAMPLES],
-        sy_ap_int audio_out_1[SYFALA_BLOCK_NSAMPLES],
+        sy_ap_int audio_in[INPUTS][SYFALA_BLOCK_NSAMPLES],
+        sy_ap_int audio_out[OUTPUTS][SYFALA_BLOCK_NSAMPLES],
            int arm_ok,
          bool* i2s_rst,
         float* mem_zone_f,
@@ -65,9 +65,10 @@ void syfala (
           bool mute,
           bool debug
 ) {
-#pragma HLS INTERFACE ap_fifo port=audio_in_0
-#pragma HLS INTERFACE ap_fifo port=audio_out_0
-#pragma HLS INTERFACE ap_fifo port=audio_out_1
+#pragma HLS INTERFACE ap_fifo port=audio_in
+#pragma HLS INTERFACE ap_fifo port=audio_out
+#pragma HLS array_partition variable=audio_in type=complete
+#pragma HLS array_partition variable=audio_out type=complete
 #pragma HLS INTERFACE s_axilite port=arm_ok
 #pragma HLS INTERFACE m_axi port=mem_zone_f latency=30 bundle=ram
 #pragma HLS INTERFACE m_axi port=mem_zone_i latency=30 bundle=ram
@@ -88,17 +89,17 @@ void syfala (
              * either process the bypass & mute switches... */
             if (bypass) {
                 for (int n = 0; n < SYFALA_BLOCK_NSAMPLES; ++n) {
-                     audio_out_0[n] = audio_in_0[n];
-                     audio_out_1[n] = audio_in_0[n];
+                     audio_out[0][n] = audio_in[0][n];
+                     audio_out[1][n] = audio_in[0][n];
                 }
             } else if (mute) {
                 for (int n = 0; n < SYFALA_BLOCK_NSAMPLES; ++n) {
-                     audio_out_0[n] = 0;
-                     audio_out_1[n] = 0;
+                     audio_out[0][n] = 0;
+                     audio_out[1][n] = 0;
                 }
             } else {
                 /* ... or compute samples here */
-                compute(audio_in_0, audio_out_0, audio_out_1);
+                compute(audio_in, audio_out);
             }
         }
     }

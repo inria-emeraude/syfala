@@ -34,11 +34,10 @@ typedef struct {
 #define MIN_GAIN 1
 #define MAX_GAIN 15
 
-int isTUI = false;
 
 static Ctrl ctrl;
 
-using namespace Syfala;
+using namespace Syfala::ARM;
 
 static XSyfala dsp;
 
@@ -164,17 +163,17 @@ int main(int argc, char* argv[]) {
     // i.e. before outputing any information on leds & stdout.
     GPIO::initialize();
     // Wait for all peripherals to be initialized
-    Status::waiting(RN("[status] Initializing peripherals & modules"));
+    Status::waiting("[status] Initializing peripherals & modules");
     Audio::initialize();
-    IP::initialize(dsp);
+    DSP::initialize(dsp);
 
     Memory::initialize(dsp, mem, 0, 0);
 
     initialize_dsp();
     initialize_osc();
 
-    IP::set_arm_ok(&dsp, true);
-    Status::ok(RN("[status] Application ready, now running..."));
+    DSP::set_arm_ok(&dsp, true);
+    Status::ok("[status] Application ready, now running...");
     // main event loop:
     while (true) {
         usleep(10000000);

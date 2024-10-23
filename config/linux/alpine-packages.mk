@@ -41,17 +41,12 @@ ALPINE_PACKAGES += hwdata-usb
 ALPINE_PACKAGES += usbutils
 ALPINE_PACKAGES += util-linux
 ALPINE_PACKAGES += gzip
-ALPINE_PACKAGES += procps-dev
+ALPINE_PACKAGES += procps-compat-dev
 ALPINE_PACKAGES += mingetty
 ALPINE_PACKAGES += git
 ALPINE_PACKAGES += libgpiod-dev
 ALPINE_PACKAGES += linux-tools-iio
-ALPINE_PACKAGES += linux-firmware
 ALPINE_PACKAGES += htop
 
-ALPINE_PACKAGES_EDGE_MAIN += llvm16
-ALPINE_PACKAGES_EDGE_TESTING += faust-dev a2jmidid libiio-dev
-
-ifeq (ETHERNET, $(filter ETHERNET, $(CONFIG)))
-    ALPINE_PACKAGES_EDGE_MAIN += cargo
-endif
+ALPINE_PACKAGES_EDGE_MAIN += cargo llvm16
+ALPINE_PACKAGES_EDGE_TESTING += faust-dev libiio-dev

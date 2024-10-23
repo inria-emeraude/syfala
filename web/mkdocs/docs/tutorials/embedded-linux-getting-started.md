@@ -2,13 +2,12 @@
 
 ## Requirements
 
-- **Xilinx toolchain** version 2022.2
-- `arm-none-eabi-gcc` **cross-compilation toolchain**
+- **Xilinx toolchain** version > 2022.2
 - An available **SD card**
 - The following **Linux packages** installed on your machine: 
 
 ```shell
-bison flex libssl-dev bc u-boot-tools cpio libyaml-dev curl kmod squashfs-tools qemu-user-static
+gcc-arm-none-eabi gnutls-dev bison flex libssl-dev bc u-boot-tools cpio libyaml-dev curl kmod squashfs-tools qemu-user-static
 ```
 
 
@@ -66,7 +65,7 @@ sync
 sudo umount /mnt
 # 2. Copying root partition contents
 sudo mount /dev/sda2 /mnt
-sudo cp -r build-linux/output/root/* /mnt
+sudo cp -r ~/Repositories/syfala/dev/main/build-linux/root/alpine-3.19.1/alpine-root/* .
 # This might take a while...
 sync 
 sudo umount /mnt
@@ -87,7 +86,7 @@ minicom -b 115200 -D/dev/ttyUSB1 -8
 (check hardware flow control in minicom, ctrl-A Z). Linux booting console will appear. A login prompt will appear as soon as the booting process has completed:
 ```shell 
 Welcome to Alpine Linux 3.17
-Kernel 5.15.0-xilinx on an armv7l (/dev/ttyPS0)
+Kernel 6.6.0-xilinx on an armv7l (/dev/ttyPS0)
 
 syfala login: 
 ```
@@ -97,17 +96,16 @@ ssh root@192.168.0.1 .
 ```
 ### Login/users
 
-The rootfs has the same structure as any Linux build. The scripts adds a **default user named syfala**, which has its *home* directory in */home/syfala*.
+The rootfs has the same structure as any Linux build. All DSP builds are located in the`/root/` directory
 
 - The password required to **login as root** is *syfala*
-- The password required to **login as syfala** is *syfala*
 
 ### Faust DSP builds
 
-All the **DSP builds** made with the **syfala toolchain** are placed in the */home/syfala* directory by default. For instance, if you make a build from the **virtualAnalog.dsp** file , the *bitstream*/*application* outputs will be located in: 
+All the **DSP builds** made with the **syfala toolchain** are placed in the */root* directory by default. For instance, if you make a build from the **virtualAnalog.dsp** file , the *bitstream*/*application* outputs will be located in: 
 
-- */home/syfala/virtualAnalog/bitstream.bin*
-- */home/syfala/virtualAnalog/application.elf*
+- */root/virtualAnalog/bitstream.bin*
+- */root/virtualAnalog/application.elf*
 
 You can then use the 
 
@@ -120,13 +118,13 @@ utility command (e.g. `syfala-load virtualAnalog`), which will take care of **lo
 You can also do all of that manually of course: first, **load the bitstream** by entering the following command line:
 
 ```shell
-fpgautil -b /home/syfala/virtualAnalog/bitstream.bin
+fpgautil -b /root/virtualAnalog/bitstream.bin
 ```
 
 and then **execute the Host application** like you would normally do with a Linux binary:
 
 ```shell
-cd /home/syfala/virtualAnalog
+cd /root/virtualAnalog
 ./application.elf	  
 ```
 
@@ -136,10 +134,10 @@ If you wish to **add another build** to the SD card, you just have to re-run the
 syfala examples/fm.dsp --linux
 ```
 
-Once the build is complete,  you will have two distinct project directories in your`build-linux/output/root/home/syfala` directory:
+Once the build is complete,  you will have two distinct project directories in your`build-linux/root/alpine-3.19.1/alpine-root/` directory:
 
-- `/home/syfala/virtualAnalog`
-- `/home/syfala/fm`
+- `root/virtualAnalog`
+- `root/fm`
 
 You will then have to **re-flash your SD card** to **update the root partition**, or directly copy the directory through **ssh** (e.g. with the `scp` command).
 

@@ -4,7 +4,7 @@
 
 #define IIC_SCLK_RATE 400000
 
-namespace Syfala::Audio {
+namespace Syfala::ARM::Audio {
 /**
  * @brief Initialize Audio module.
  * This means initializing & configuring the i2c drivers,
@@ -97,28 +97,42 @@ extern int regwrite(uint8_t*, int ,uint8_t* , int, uint16_t , uint8_t);
  * All these functions are largely inspired by this sparkfun lib:
  * https://github.com/sparkfun/SparkFun_I2C_Mux_Arduino_Library/blob/master/src/SparkFun_I2C_Mux_Arduino_Library.cpp
  */
-namespace Syfala::IICMUX {
+namespace Syfala::ARM::IICMUX {
+   /**
+    * @brief Writes a 8-bit value to mux, overwrites any other bits.
+    * This allows to enable/disable multiple ports at the same time.
+    * @param portBits
+    * @return
+    */
     extern int setPort(uint8_t portBits);
-    extern uint8_t getPort(void);
-    extern int isConnected(void);
+    /**
+     * @brief Gets the current port state.
+     * @return byte that may have multiple bits set.
+     */
+    extern uint8_t getPort();
+    /**
+     * @brief Tests for device ack to I2C address,
+     * then tests if device behaves as we expect.
+     * @return true if device is present.
+     */
+    extern int isConnected();
 }
-
 
 /*
  * Lib for the PCA9956 LED driver
  * All these functions are largely inspired by this arduino lib:
  * https://github.com/yuskegoto/PCA9956/tree/main
  */
-namespace Syfala::LEDdriver {
+namespace Syfala::ARM::LEDdriver {
     extern int regwrite(uint8_t,uint8_t);
     extern uint8_t regread();
     extern int initialize();
     extern int ledOn(uint8_t LEDNo);
     extern int ledOff(uint8_t LEDNo);
     extern int ledBlink(uint8_t LEDNo);
-    extern void allOn(void);
-    extern void allOff(void);
-    extern void allBlink(void);
+    extern void allOn();
+    extern void allOff();
+    extern void allBlink();
     extern int ledSetBrightness(uint8_t LEDNo, uint8_t brightness);
     extern int setBlink(uint8_t freq);
     extern void saveState(uint8_t*);
@@ -126,13 +140,11 @@ namespace Syfala::LEDdriver {
 }
 
 
-namespace Syfala::motherBoard {
-    extern int initializeUI(void);
-    extern void ledCodecsAllOn(void);
-    extern void ledCodecsAllOff(void);
-    extern void ledCodecsAllBlink(void);
-    extern void searchIIC(void);
-    extern void printADAUTab(uint8_t *);
-
-
+namespace Syfala::ARM::motherBoard {
+    extern int initializeUI();
+    extern void ledCodecsAllOn();
+    extern void ledCodecsAllOff();
+    extern void ledCodecsAllBlink();
+    extern void searchIIC();
+    extern void printADAUTab(uint8_t*);
 }

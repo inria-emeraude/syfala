@@ -10,22 +10,20 @@
 # - spl/u-boot.img
 # -----------------------------------------------------------------------------
 
-UBOOT_DIR	:= $(BUILD_LINUX_BOOT_DIR)/u-boot-xlnx-xilinx-v2022.2
-UBOOT_ZIP	:= $(BUILD_LINUX_BOOT_DIR)/xilinx-uboot-v2022.2.zip
-UBOOT_SOURCES	:= $(XILINX_GITHUB)/u-boot-xlnx/archive/refs/tags/xilinx-v2022.2.zip
+UBOOT_DIR	:= $(BUILD_LINUX_BOOT_DIR)/u-boot-xlnx-xilinx-v$(XILINX_VERSION)
+UBOOT_ZIP	:= $(BUILD_LINUX_BOOT_DIR)/xilinx-uboot-v$(XILINX_VERSION).zip
+UBOOT_SOURCES	:= $(XILINX_GITHUB)/u-boot-xlnx/archive/refs/tags/xilinx-v$(XILINX_VERSION).zip
 UBOOT_BIN_SRC	:= $(UBOOT_DIR)/spl/boot.bin
 UBOOT_BIN_DST	:= $(BUILD_LINUX_OUTPUT_BOOT_DIR)/boot.bin
 UBOOT_DTB_SRC	:= $(UBOOT_DIR)/u-boot.img
 UBOOT_DTB_DST	:= $(BUILD_LINUX_OUTPUT_BOOT_DIR)/u-boot.img
 
-ifeq ($(LINUX), TRUE)
 ifeq ($(BOARD_FAMILY), ZYNQ_7000) # -----------------------------------------
     UBOOT_CFG_TARGET := "xilinx_zynq_virt_defconfig"
 else # ----------------------------------------------------------------------
     $(call static_error, No Linux support for board model $(BOARD), aborting)
     $(error syfala)
 endif # ---------------------------------------------------------------------
-endif
 
 $(UBOOT_DIR):
 	@mkdir -p $(BUILD_LINUX_BOOT_DIR)
@@ -54,11 +52,18 @@ $(UBOOT_BIN_DST): $(UBOOT_DIR)
 .PHONY: kernel
 # -----------------------------------------------------------------------------
 
-KERNEL_VERSION	    := 5.15.0-xilinx
-KERNEL_XTAG         := xilinx-v2022.2
+ifeq ($(XILINX_VERSION), 2022.2)
+    KERNEL_VERSION := 5.15.0-xilinx
+else ifeq ($(XILINX_VERSION), 2023.2)
+    KERNEL_VERSION := 6.1.0-xilinx
+else ifeq ($(XILINX_VERSION), 2024.1)
+    KERNEL_VERSION := 6.6.0-xilinx
+endif
+
+KERNEL_XTAG     := xilinx-v$(XILINX_VERSION)
 KERNEL_SRC	    := $(XILINX_GITHUB)/linux-xlnx/archive/refs/tags/$(KERNEL_XTAG).zip
-KERNEL_ZIP	    := $(BUILD_LINUX_BOOT_DIR)/xilinx-kernel-v2022.2.zip
-KERNEL_SRC_DIR	    := $(BUILD_LINUX_BOOT_DIR)/linux-xlnx-xilinx-v2022.2
+KERNEL_ZIP	    := $(BUILD_LINUX_BOOT_DIR)/xilinx-kernel-v$(XILINX_VERSION).zip
+KERNEL_SRC_DIR	    := $(BUILD_LINUX_BOOT_DIR)/linux-xlnx-xilinx-v$(XILINX_VERSION)
 KERNEL_UIMAGE_SRC   := $(KERNEL_SRC_DIR)/arch/arm/boot/uImage
 KERNEL_UIMAGE_DST   := $(BUILD_LINUX_OUTPUT_BOOT_DIR)/uImage
 KERNEL_CONFIG_DST   := $(KERNEL_SRC_DIR)/arch/arm/configs
@@ -69,7 +74,7 @@ endif # ----------------------------------------------------------------
 
 $(KERNEL_SRC_DIR):
 	@mkdir -p $(BUILD_LINUX_BOOT_DIR)
-	$(call shell_info, Downloading $(B)Linux Kernel$(N) sources)
+	$(call shell_info, Downloading $(B)Linux Kernel$(N) sources: $(KERNEL_SRC))
 	@curl -L $(KERNEL_SRC) -o $(KERNEL_ZIP)
 	$(call shell_info, Extracting $(B)Linux Kernel$(N) sources)
 	@unzip -q $(KERNEL_ZIP) -d $(BUILD_LINUX_BOOT_DIR)
@@ -102,10 +107,39 @@ KERNEL_MODULES_CMD_EV = $(eval KERNEL_MODULES=$(KERNEL_MODULES_CMD_SH))
 kernel-modules: $(KERNEL_MODULES_TAR)
 
 $(KERNEL_MODULES_TAR): $(KERNEL_UIMAGE_DST)
-	$(call shell_info, Extracting Kernel modules)
 	$(KERNEL_MODULES_CMD_EV)
+	$(call shell_info, Extracting Kernel modules: $(KERNEL_MODULES))
 	@cd $(KERNEL_SRC_DIR) &&    \
 	    tar -zcf modules.tar $(KERNEL_MODULES) --owner=0 --group=0
+
+# -----------------------------------------------------------------------------
+.PHONY: dts-source
+# -----------------------------------------------------------------------------
+
+DEVICE_TREE_BUILD_SCRIPT := $(SOURCE_LINUX_DIR)/device-tree/build_dts.tcl
+DEVICE_TREE_SOURCE_DIR := $(SOURCE_LINUX_DIR)/device-tree/source
+DEVICE_TREE_SOURCE := $(DEVICE_TREE_SOURCE_DIR)/source.dts
+
+XILINX_DEVICE_TREE_URL := $(XILINX_GITHUB)/device-tree-xlnx/archive/refs/tags/xilinx_v2023.2.zip
+XILINX_DEVICE_TREE_DIR := $(BUILD_LINUX_BOOT_DIR)/device-tree-xlnx
+XILINX_DEVICE_TREE_ZIP := $(BUILD_LINUX_BOOT_DIR)/device-tree-xlnx.zip
+
+$(XILINX_DEVICE_TREE_DIR):
+	@curl -L $(XILINX_DEVICE_TREE_URL)      \
+              -o $(XILINX_DEVICE_TREE_ZIP)
+	@unzip -q $(XILINX_DEVICE_TREE_ZIP)     \
+               -d $(XILINX_DEVICE_TREE_DIR)
+
+dts-source: $(DEVICE_TREE_SOURCE)
+
+$(DEVICE_TREE_SOURCE): $(DEVICE_TREE_BUILD_SCRIPT)  \
+                       $(HW_PLATFORM)               \
+                       $(XILINX_DEVICE_TREE_DIR)
+	@mkdir -p $(DEVICE_TREE_SOURCE_DIR)
+	$(VITIS_EXEC) -eval                         \
+	    "source $(DEVICE_TREE_BUILD_SCRIPT);    \
+	     build_dts $(HW_PLATFORM) $(XILINX_DEVICE_TREE_DIR) $(DEVICE_TREE_SOURCE_DIR)"
+
 
 # -----------------------------------------------------------------------------
 .PHONY: device-tree
@@ -113,7 +147,7 @@ $(KERNEL_MODULES_TAR): $(KERNEL_UIMAGE_DST)
 
 BUILD_DT_DIR := $(BUILD_LINUX_BOOT_DIR)/device-tree
 DTS_DIR := $(BUILD_DT_DIR)/dts
-DTS_SRC := $(SOURCE_LINUX_DIR)/device-tree/system.dts
+DTS_SRC := $(SOURCE_LINUX_DIR)/device-tree/zybo-z7.dts
 DTS_DST := $(DTS_DIR)/system.dts
 DTB_SRC := $(BUILD_DTS_DIR)/system.dtb
 DTB_DST := $(BUILD_LINUX_OUTPUT_BOOT_DIR)/system.dtb

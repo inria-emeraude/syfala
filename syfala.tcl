@@ -30,6 +30,7 @@ namespace eval runtime {
     variable make_debug     0
     variable faust2vhdl     0
     variable reset_check    1
+    variable force          0
     set mkenv_parameters    [list]
     set cli_parameters      [list]
     variable mode           "command"
@@ -42,6 +43,8 @@ namespace eval p {
         "FAUST_DSP_TARGET"      \
         "FAUST_FIXED_POINT"     \
         "FAUST_MCD"             \
+        "FAUST_FPGA_MEM"        \
+        "FAUST_VEC"             \
         "HLS_SOURCE_MAIN"       \
         "HLS_CSIM_SOURCE"       \
         "HLS_CSIM_NUM_ITER"     \
@@ -54,6 +57,7 @@ namespace eval p {
         "CONFIG_EXPERIMENTAL_ETHERNET_NO_OUTPUT"    \
         "CONFIG_EXPERIMENTAL_SIGMA_DELTA"           \
         "CONFIG_EXPERIMENTAL_TDM"                   \
+        "SIGMA_DELTA_ORDER"                         \
         "INPUTS"                \
         "OUTPUTS"               \
         "MULTISAMPLE"           \
@@ -122,9 +126,13 @@ proc parameter_type {p} {
 }
 
 proc reset_yn {p} {
-    print_info "[emph Warning], adding/removing or re-setting parameter [emph $p] would require
+    if $::runtime::force {
+        set confirm "y"
+    } else {
+        print_info "[emph Warning], adding/removing or re-setting parameter [emph $p] would require
 re-setting the project, would you like to continue? \[y/[emph N]\]"
-    set confirm [gets stdin]
+        set confirm [gets stdin]
+    }
     switch $confirm {
         y - Y - yes - Yes - YES {
             file delete -force "build"
@@ -370,6 +378,9 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
             set_parameter "EXPORT_TARGET" $target
             add_target "export"
         }
+        --export-hls {
+            add_target "hls-export"
+        }
         flash - --flash {
             set platform [get_argument_value index]
             switch $platform {
@@ -419,11 +430,12 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
         -x - --xilinx-root {
             set_parameter "XILINX_ROOT" [get_argument_value index]
         }
-
         --xversion {
             set_parameter "XILINX_VERSION" [get_argument_value index]
         }
-
+        --flatpak {
+            set_parameter "FLATPAK" TRUE
+        }
         --unsafe-math-optimizations - --umo {
             set_parameter "HLS_DIRECTIVES_UNSAFE_MATH_OPTIMIZATIONS" TRUE
         }
@@ -454,7 +466,9 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
             set_parameter "VERBOSE" $level
         }
         --sigma-delta {
+            set order [get_argument_value index]
             set_parameter "CONFIG_EXPERIMENTAL_SIGMA_DELTA" TRUE
+            set_parameter "SIGMA_DELTA_ORDER" $order
         }
         --tdm {
             set_parameter "CONFIG_EXPERIMENTAL_TDM" TRUE
@@ -482,11 +496,20 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
         --mcd {
             set_parameter "FAUST_MCD" [get_argument_value index]
         }
+        --fvec {
+            set_parameter "FAUST_VEC" 1
+        }
         --multisample {
             set_parameter "MULTISAMPLE" [get_argument_value index]
         }
         --no-ctrl-block - --ncb {
             set_parameter "CONTROL_BLOCK" 0
+        }
+        --block-design - --bd {
+            set_parameter "BD_TARGET" [get_argument_value index]
+        }
+        --transceiver - --i2s {
+            set_parameter "I2S_SOURCE" [get_argument_value index]
         }
         --shield {
             set target [get_argument_value index]
@@ -533,6 +556,9 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
                 }
             }
         }
+        -y {
+            set ::runtime::force 1
+        }
         COMMENT {
         # -----------------------------------------------------------------------------------------
         # BUILD STEPS
@@ -578,6 +604,9 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
         }
         -m - --memory {
             set_parameter "MEMORY_TARGET" [get_argument_value index]
+        }
+        --faust-mem {
+            set_parameter "FAUST_FPGA_MEM" [get_argument_value index]
         }
         --sample-rate {
             set_parameter "SAMPLE_RATE" [get_argument_value index]

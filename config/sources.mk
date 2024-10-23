@@ -88,7 +88,8 @@ BD_STD			:= $(SOURCE_BD_DIR)/standard.tcl
 BD_MULTISAMPLE		:= $(SOURCE_BD_DIR)/multisample.tcl
 BD_FAUST2VHDL		:= $(SOURCE_BD_DIR)/faust2vhdl.tcl
 BD_TDM			:= $(SOURCE_BD_DIR)/tdm.tcl
-BD_SIGMA_DELTA		:= $(SOURCE_BD_DIR)/sigma-delta.tcl
+BD_TDM_MULTISAMPLE      := $(SOURCE_BD_DIR)/tdm_multisample.tcl
+BD_SIGMA_DELTA		:= $(SOURCE_BD_DIR)/sigma-delta-new-2.tcl
 
 # -----------------------------------------------------------------------------
 # Build
@@ -108,6 +109,5 @@ SYFALA_UTILITIES_H          := $(INCLUDE_DIR)/syfala/utilities.hpp
 BUILD_SYFALA_CONFIG_H       := $(BUILD_INCLUDE_DIR)/syfala/config_common.hpp
 BUILD_SYFALA_ARM_CONFIG_H   := $(BUILD_INCLUDE_DIR)/syfala/config_arm.hpp
 BUILD_SYFALA_UTILITIES_H    := $(BUILD_INCLUDE_DIR)/syfala/utilities.hpp
-
 
 HLS_TARGET_FILE := $(BUILD_IP_DIR)/syfala_ip.cpp

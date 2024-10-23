@@ -27,8 +27,7 @@ void syfala (
     bool bypass,
     bool mute,
     bool debug,
-    float ctrl[INPUTS*OUTPUTS*2],
-    int update
+    float ctrl[INPUTS*OUTPUTS*2]
 ) {
 #pragma HLS INTERFACE ap_fifo port=audio_in
 #pragma HLS INTERFACE ap_fifo port=audio_out
@@ -36,7 +35,6 @@ void syfala (
 #pragma HLS array_partition variable=audio_out type=complete
 #pragma HLS INTERFACE s_axilite port=arm_ok
 #pragma HLS INTERFACE s_axilite port=ctrl
-#pragma HLS INTERFACE s_axilite port=update
 #pragma HLS INTERFACE m_axi port=mem_zone_f latency=30 bundle=ram
 #pragma HLS INTERFACE m_axi port=mem_zone_i latency=30 bundle=ram
 

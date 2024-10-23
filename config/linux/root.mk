@@ -2,9 +2,9 @@
 # ROOT
 # -----------------------------------------------------------------------------
 ALPINE_VERSION_MAJOR	:= 3
-ALPINE_VERSION_MINOR	:= 17
-ALPINE_VERSION_PATCH	:= 3
-ALPINE_VERSION_DATE	:= 20221214
+ALPINE_VERSION_MINOR	:= 19
+ALPINE_VERSION_PATCH	:= 1
+ALPINE_VERSION_DATE	:= 20231111
 ALPINE_VERSION		:= $(ALPINE_VERSION_MAJOR).$(ALPINE_VERSION_MINOR)
 ALPINE_VERSION_FULL	:= $(ALPINE_VERSION).$(ALPINE_VERSION_PATCH)
 ALPINE_BUILD_DIR	:= $(BUILD_LINUX_ROOT_DIR)/alpine-$(ALPINE_VERSION_FULL)
@@ -18,14 +18,14 @@ ALPINE_UBOOT_URL	:= $(ALPINE_TARGET_URL)/releases/armv7/$(ALPINE_UBOOT)
 ALPINE_UBOOT_FILE	:= $(ALPINE_BUILD_DIR)/$(ALPINE_UBOOT)
 ALPINE_UBOOT_DIR	:= $(ALPINE_BUILD_DIR)/alpine-uboot
 # -----------------------------------------------------------------------------
-ALPINE_APK_TOOLS	:= apk-tools-static-2.12.10-r1.apk
+ALPINE_APK_TOOLS	:= apk-tools-static-2.14.4-r0.apk
 ALPINE_APK_TOOLS_URL	:= $(ALPINE_TARGET_URL)/main/armv7/$(ALPINE_APK_TOOLS)
 ALPINE_APK_TOOLS_FILE	:= $(ALPINE_BUILD_DIR)/$(ALPINE_APK_TOOLS)
 ALPINE_APK_TOOLS_DIR	:= $(ALPINE_BUILD_DIR)/alpine-tools
 # -----------------------------------------------------------------------------
-ALPINE_FIRMWARE		:= linux-firmware-other-$(ALPINE_VERSION_DATE)-r1.apk
+ALPINE_FIRMWARE         := linux-firmware-other-$(ALPINE_VERSION_DATE)-r4.apk
 ALPINE_FIRMWARE_FILE	:= $(ALPINE_BUILD_DIR)/$(ALPINE_FIRMWARE)
-ALPINE_FIRMWARE_URL	:= $(ALPINE_TARGET_URL)/main/armv7/$(ALPINE_FIRMWARE)
+ALPINE_FIRMWARE_URL     := $(ALPINE_TARGET_URL)/main/armv7/$(ALPINE_FIRMWARE)
 # -----------------------------------------------------------------------------
 ALPINE_ADDITIONAL_FIRMWARE += linux-firmware-ath9k_htc-$(ALPINE_VERSION_DATE)-r1.apk
 ALPINE_ADDITIONAL_FIRMWARE += linux-firmware-brcm-$(ALPINE_VERSION_DATE)-r1.apk
@@ -75,7 +75,7 @@ $(ALPINE_SOURCES):
 	@curl -o $(ALPINE_UBOOT_FILE)				    \
 	      -L $(ALPINE_UBOOT_URL)
 	$(call shell_info, Downloading alpine apk-tools)
-	@curl -o $(ALPINE_APK_TOOLS_FILE)			    \
+	curl -o $(ALPINE_APK_TOOLS_FILE)			    \
 	      -L $(ALPINE_APK_TOOLS_URL)
 	$(call shell_info, Downloading Linux firmware)
 	@curl -o $(ALPINE_FIRMWARE_FILE)			    \
@@ -115,7 +115,7 @@ $(ALPINE_BASE): $(ALPINE_SOURCES)
 	@cp -r $(RESOLV_SOURCE) $(RESOLV_TARGET)
 	@cp -r $(ETC_NETWORK_INTERFACES_SOURCE) $(ETC_NETWORK_INTERFACES_TARGET)
 	$(call shell_info, Installing $(B)alpine-base$(N) package)
-	@sudo chroot $(ALPINE_ROOT_DIR) /sbin/apk.static    \
+	sudo chroot $(ALPINE_ROOT_DIR) /sbin/apk.static     \
 		--repository $(ALPINE_TARGET_URL)/main	    \
 		--update-cache				    \
 		--allow-untrusted			    \
@@ -126,8 +126,8 @@ $(ALPINE_BASE): $(ALPINE_SOURCES)
 .PHONY: alpine-modules
 # -----------------------------------------------------------------------------
 
-ALPINE_MODULES_DIR	    := $(ALPINE_ROOT_DIR)/lib/modules/$(KERNEL_VERSION)
-ALPINE_MODULES_KERNEL_DIR   := $(ALPINE_MODULES_DIR)/kernel
+ALPINE_MODULES_DIR := $(ALPINE_ROOT_DIR)/lib/modules/$(KERNEL_VERSION)
+ALPINE_MODULES_KERNEL_DIR := $(ALPINE_MODULES_DIR)/kernel
 
 alpine-modules: $(ALPINE_MODULES_KERNEL_DIR)
 
@@ -143,6 +143,8 @@ $(ALPINE_MODULES_KERNEL_DIR): $(ALPINE_BASE) $(KERNEL_MODULES_TAR)
 
 # -----------------------------------------------------------------------------
 .PHONY: alpine-fw
+# TODO: ideally, we'd have to reference all modules here, because the
+# ALPINE_FW is actually empty...
 # -----------------------------------------------------------------------------
 
 alpine-fw: $(ALPINE_FW)
@@ -165,16 +167,16 @@ $(ALPINE_FW): $(ALPINE_MODULES) $(ALPINE_FIRMWARE_FILE) $(ALPINE_ADDITIONAL_FIRM
 # -----------------------------------------------------------------------------
 
 CH_ALPINE_REPOSITORIES_FILE := /etc/apk/repositories
-ALPINE_REPOSITORIES_FILE    := $(ALPINE_ROOT_DIR)$(CH_ALPINE_REPOSITORIES_FILE)
+ALPINE_REPOSITORIES_FILE := $(ALPINE_ROOT_DIR)$(CH_ALPINE_REPOSITORIES_FILE)
 
 alpine-repositories: $(ALPINE_REPOSITORIES_FILE)
 
 $(ALPINE_REPOSITORIES_FILE): $(ALPINE_BASE)
 	$(call shell_info, Setting up Alpine Linux repositories)
 	@mkdir -p $(ALPINE_ROOT_DIR)/etc/apk
-	$(call chroot, echo "$(ALPINE_REPOSITORY_MAIN)"	    \
+	$(call chroot, echo "$(ALPINE_REPOSITORY_MAIN)"		\
                           > $(CH_ALPINE_REPOSITORIES_FILE))
-	$(call chroot,echo $(ALPINE_REPOSITORY_COMMUNITY)   \
+	$(call chroot, echo $(ALPINE_REPOSITORY_COMMUNITY)       \
                          >> $(CH_ALPINE_REPOSITORIES_FILE))
 
 # -----------------------------------------------------------------------------
@@ -245,45 +247,27 @@ endif # ------------------------------------------------
 # TODO: fix: run avahi-daemon with the '--no-drop-root' flag, or else it won't start...
 	@sudo sed -i "s/avahi-daemon\s-D.*/avahi-daemon -D --no-drop-root/g" \
 	      $(ALPINE_ROOT_DIR)/etc/init.d/avahi-daemon
-# INITTAB ----------------------------------------------------
-	@sudo cp -r $(ALPINE_INITTAB_SRC) $(ALPINE_INITTAB_DST)
 # SND-SEQ LOAD -----------------------------------------------
 	$(call chroot, echo snd-seq >> /etc/modules)
 	$(call chroot, echo snd-dummy >> /etc/modules)
+# INITTAB ----------------------------------------------------
+	@sudo cp -r $(ALPINE_INITTAB_SRC) $(ALPINE_INITTAB_DST)
 
 # -----------------------------------------------------------------------------
-.PHONY: alpine-home-syfala
+.PHONY: alpine-home
 # -----------------------------------------------------------------------------
-
-ALPINE_HOME_SYFALA := $(ALPINE_ROOT_DIR)/home/syfala
-
-ifeq ($(call dir_exists, $(ALPINE_HOME_SYFALA)), 0) # -------------------
-    $(call static_info, Adding $(ALPINE_HOME_SYFALA) to dependencies)
-    ALPINE_HOME_SYFALA_CH := $(ALPINE_HOME_SYFALA)
-else # ------------------------------------------------------------------
-    $(call static_info, $(ALPINE_HOME_SYFALA) removed from dependencies)
-endif # -----------------------------------------------------------------
-
-alpine-home-syfala: $(ALPINE_HOME_SYFALA)
-
-$(ALPINE_HOME_SYFALA): alpine-packages
-ifeq ($(call dir_exists, $(ALPINE_HOME_SYFALA)), 0)
+alpine-home: alpine-packages
 	$(call shell_info, Setting up $(B)users and permissions$(N))
 	$(call chroot, sed -i 's/^SAVE_ON_STOP=.*/SAVE_ON_STOP="no"/g' /etc/conf.d/iptables)
 	$(call chroot, sed -i 's/^IPFORWARD=.*/IPFORWARD="yes"/g' /etc/conf.d/iptables)
 	$(call chroot, sed -i "s/^#PermitRootLogin.*/PermitRootLogin yes/g" /etc/ssh/sshd_config)
 	$(call chroot, echo "root:syfala" | /usr/sbin/chpasswd)
 	$(call chroot, setup-hostname syfala)
-	$(call chroot, adduser -D -h /home/syfala -s /bin/ash  -g "syfala" syfala)
-	$(call chroot, echo "syfala:syfala" | /usr/sbin/chpasswd)
-	$(call chroot, echo "syfala ALL=(ALL) ALL" > /etc/sudoers.d/syfala && chmod 0440 /etc/sudoers.d/syfala)
 	$(call chroot, chown root:root /usr/bin/sudo && chmod 4755 /usr/bin/sudo)
 # Allow ttyPS0 to login as root
 	$(call chroot, echo ttyPS0 >> /etc/securetty)
 	$(call shell_info, Adding users to 'audio' group)
-	$(call chroot, addgroup syfala audio)
 	$(call chroot, addgroup root audio)
-endif
 
 # -----------------------------------------------------------------------------
 .PHONY: alpine-fpgautil
@@ -317,20 +301,19 @@ $(ALPINE_FPGA_BIT2BIN_DST): $(ALPINE_FPGA_BIT2BIN_SRC)
 .PHONY: alpine-syfala-load
 # -----------------------------------------------------------------------------
 
-ALPINE_SYFALA_LOAD_SRC := $(SOURCE_LINUX_DIR)/files/syfala-load.c
-ALPINE_SYFALA_LOAD_DST := /usr/bin/syfala-load.c
+ALPINE_SYFALA_LOAD_SRC_DIR := $(SOURCE_LINUX_DIR)/syfala-load
+ALPINE_SYFALA_LOAD_DST_DIR := $(ALPINE_ROOT_DIR)/root
 ALPINE_SYFALA_LOAD_BIN := $(ALPINE_ROOT_DIR)/usr/bin/syfala-load
+
+ALPINE_SYFALA_LOAD_SOURCES += $(ALPINE_SYFALA_LOAD_SRC_DIR)/src/main.rs
 
 alpine-syfala-load: $(ALPINE_SYFALA_LOAD_BIN)
 
-$(ALPINE_SYFALA_LOAD_BIN): $(ALPINE_SYFALA_LOAD_SRC)
+$(ALPINE_SYFALA_LOAD_BIN): $(ALPINE_SYFALA_LOAD_SOURCES)
 	$(call shell_info, Compiling $(B)syfala-load$(N) utility)
-	@sudo cp -r $(ALPINE_SYFALA_LOAD_SRC) $(ALPINE_ROOT_DIR)$(ALPINE_SYFALA_LOAD_DST)
-	$(call chroot, gcc -O3 $(ALPINE_SYFALA_LOAD_DST)    \
-			    -o /usr/bin/syfala-load	    \
-                            -lprocps                        \
-        )
-	@rm -rf $(ALPINE_ROOT_DIR)$(ALPINE_SYFALA_LOAD_DST)
+	@sudo cp -rf $(ALPINE_SYFALA_LOAD_SRC_DIR) $(ALPINE_SYFALA_LOAD_DST_DIR)
+	$(call chroot, cargo install --path /root/syfala-load --root /usr -j 8)
+	@sudo rm -rf $(ALPINE_SYFALA_LOAD_DST_DIR)
 
 # -----------------------------------------------------------------------------
 # Linux TARGET compilation
@@ -343,7 +326,7 @@ ARM_LINUX_CPP_MODULES   += $(SOURCE_ARM_LINUX_DIR)/ip.cpp
 ARM_LINUX_CPP_MODULES   += $(SOURCE_ARM_LINUX_DIR)/memory.cpp
 ARM_LINUX_CPP_MODULES   += $(SOURCE_ARM_LINUX_DIR)/spi.cpp
 
-ALPINE_DSP_DIR_CH   := /home/syfala/$(DSP_TARGET_NAME)
+ALPINE_DSP_DIR_CH   := /root/$(DSP_TARGET_NAME)
 ALPINE_DSP_DIR      := $(ALPINE_ROOT_DIR)$(ALPINE_DSP_DIR_CH)
 
 ALPINE_DSP_APPLICATION_SOURCES += $(SOURCE_ARM_LINUX_DIR)/Makefile
@@ -355,6 +338,9 @@ ifeq ($(TARGET_TYPE), faust) # ----------------------------------------------
 else ifeq ($(TARGET_TYPE), cpp) # -------------------------------------------
     ifdef HOST_MAIN_SOURCE
         ALPINE_DSP_APPLICATION_SOURCES += $(HOST_MAIN_SOURCE)
+        ALPINE_DSP_APPLICATION_CUSTOM_INCLUDES += $(wildcard $(dir $(HOST_MAIN_SOURCE))*.hpp)
+        ALPINE_DSP_APPLICATION_CUSTOM_INCLUDES += $(wildcard $(dir $(HOST_MAIN_SOURCE))*.h)
+        NINCLUDES := $(words $(ALPINE_DSP_APPLICATION_CUSTOM_INCLUDES))
     else
         ALPINE_DSP_APPLICATION_SOURCES += $(SOURCE_ARM_LINUX_DIR)/arm_no_faust.cpp
     endif
@@ -374,7 +360,7 @@ alpine-bitstream: $(ALPINE_DSP_BITSTREAM)
 $(ALPINE_DSP_BITSTREAM): $(BITSTREAM) $(ALPINE_FPGA_BIT2BIN_DST)
 	$(call shell_info, Copying DSP $(B)bitstream$(N))
 	@sudo mkdir -p $(ALPINE_DSP_DIR)
-	@sudo cp -r $(BITSTREAM) $(ALPINE_DSP_DIR)/system.bit
+	@sudo cp $(BITSTREAM) $(ALPINE_DSP_DIR)/system.bit
 	$(call chroot, python3 /usr/bin/fpga-bit-to-bin.py	    \
 			    -f $(ALPINE_DSP_DIR_CH)/system.bit	    \
 			       $(ALPINE_DSP_DIR_CH)/bitstream.bin   \
@@ -418,7 +404,6 @@ ALPINE_DSP_APPLICATION_DEPENDENCIES += $(ALPINE_DSP_APPLICATION_XSOURCES)
 ALPINE_DSP_APPLICATION_DEPENDENCIES += $(BUILD_SYFALA_UTILITIES_H)
 ALPINE_DSP_APPLICATION_DEPENDENCIES += $(BUILD_SYFALA_ARM_CONFIG_H)
 ALPINE_DSP_APPLICATION_DEPENDENCIES += $(BUILD_HOST_INCLUDES)
-ALPINE_DSP_APPLICATION_DEPENDENCIES += $(ALPINE_HOME_SYFALA_CH)
 
 ifeq ($(TARGET_TYPE), faust)
     ALPINE_DSP_APPLICATION_DEPENDENCIES += $(FAUST_CONTROL_SOURCE)
@@ -428,20 +413,21 @@ $(ALPINE_DSP_APPLICATION): $(ALPINE_DSP_APPLICATION_DEPENDENCIES)
 	$(call shell_info, Copying/updating include directory)
 	@sudo cp -r $(BUILD_DIR)/include $(ALPINE_DSP_DIR)/src
 	@sudo cp -r $(INCLUDE_DIR)/syfala/arm/linux $(ALPINE_DSP_APPLICATION_INCLUDE_DIR)/syfala/arm
+ifeq ($(shell expr $(NINCLUDES) \> 0), 1)
+	@sudo cp  $(ALPINE_DSP_APPLICATION_CUSTOM_INCLUDES) $(ALPINE_DSP_DIR)/src
+endif
 	$(call shell_info, Compiling DSP control application)
 	$(call chroot, make -C $(ALPINE_DSP_DIR_CH)/src clean)
 	$(call chroot, make -C $(ALPINE_DSP_DIR_CH)/src -j8)
 	@mkdir -p $(BUILD_DIR)/linux
 	@cp -r $(ALPINE_DSP_DIR) $(BUILD_DIR)/linux
 
-# -----------------------------------------------------------------------------
-ifeq (ETHERNET, $(filter ETHERNET, $(CONFIG)))
-# -----------------------------------------------------------------------------
-
+# -----------------------------------------------------------------------------------
 ALPINE_ETHERNET_CLIENT := $(ALPINE_ROOT_DIR)/usr/bin/syfala-ethernet
+# -----------------------------------------------------------------------------------
 
 ALPINE_ETHERNET_SOURCE_DIR := $(SOURCE_DIR)/linux/ethernet
-ALPINE_ETHERNET_TARGET_DIR := $(ALPINE_ROOT_DIR)/home/syfala/ethernet
+ALPINE_ETHERNET_TARGET_DIR := $(ALPINE_ROOT_DIR)/home/ethernet
 
 ALPINE_ETHERNET_SOURCES += $(ALPINE_ETHERNET_SOURCE_DIR)/Cargo.toml
 ALPINE_ETHERNET_SOURCES += $(ALPINE_ETHERNET_SOURCE_DIR)/Cross.toml
@@ -458,13 +444,12 @@ ALPINE_ETHERNET_JSON_SOURCE	:= $(BUILD_ETHERNET_HLS_DIR)/eth_audio/eth_audio_dat
 ALPINE_ETHERNET_JSON_TARGET	:= $(ALPINE_DSP_DIR)/eth_audio_data.json
 ALPINE_ETHERNET_JSON_TARGET_CH	:= $(ALPINE_DSP_DIR_CH)/eth_audio_data.json
 
-$(ALPINE_ETHERNET_JSON_TARGET): $(ALPINE_HOME_SYFALA_CH) $(ETHERNET_HLS_OUTPUT) $(ALPINE_ETHERNET_JSON_SOURCE)
+$(ALPINE_ETHERNET_JSON_TARGET): $(ALPINE_DSP_APPLICATION) $(ETHERNET_HLS_OUTPUT) $(ALPINE_ETHERNET_JSON_SOURCE)
 	$(call shell_info, Installing Ethernet Audio register map)
 	@sudo mkdir -p $(ALPINE_DSP_DIR)
 	@sudo cp -r $(ALPINE_ETHERNET_JSON_SOURCE) $(ALPINE_DSP_DIR)/
 
 ALPINE_ETHERNET_DEPENDENCIES += $(ALPINE_ETHERNET_SOURCES)
-ALPINE_ETHERNET_DEPENDENCIES += $(ALPINE_HOME_SYFALA_CH)
 ALPINE_ETHERNET_DEPENDENCIES += $(ALPINE_ETHERNET_JSON_TARGET)
 
 $(ALPINE_ETHERNET_TARGET_DIR): $(ALPINE_ETHERNET_DEPENDENCIES)
@@ -474,44 +459,25 @@ $(ALPINE_ETHERNET_TARGET_DIR): $(ALPINE_ETHERNET_DEPENDENCIES)
 
 $(ALPINE_ETHERNET_TARGETS): $(ALPINE_ETHERNET_TARGET_DIR)
 
-# HLS_ETHERNET_DATA_JSON_IGNORE=1
-
-$(ALPINE_ETHERNET_CLIENT): $(ALPINE_ETHERNET_TARGET_DIR)
+$(ALPINE_ETHERNET_CLIENT): $(ALPINE_ETHERNET_TARGET_DIR) alpine-packages
 	$(call shell_info, Compiling Ethernet client application (this could take a while...))
 	$(call chroot,								\
 	    export HLS_ETHERNET_DATA_JSON=$(ALPINE_ETHERNET_JSON_TARGET_CH)	\
-	    && export CARGO_TARGET_DIR=/home/syfala				\
-	    && cd /home/syfala/ethernet/client					\
+	    && export CARGO_TARGET_DIR=/home					\
+	    && cd /home/ethernet/client						\
 	    && cargo --config "net.git-fetch-with-cli = true" build --release	\
 	)
 	$(call shell_ok, Installing Ethernet client application in /usr/bin/syfala-ethernet)
-	@sudo cp -r $(ALPINE_ROOT_DIR)/home/syfala/release/client	\
+	@sudo cp -r $(ALPINE_ROOT_DIR)/home/release/client	\
 		    $(ALPINE_ETHERNET_CLIENT)
 
-LINUX_ROOT_DEPENDENCIES += $(ALPINE_ETHERNET_CLIENT)
-endif
-
-# -----------------------------------------------------------------------------
-ifeq ($(SMC23_SYNTH_DEMO), TRUE)
-# -----------------------------------------------------------------------------
-SMC23_SYNTH_DEMO_EXEC   := $(ALPINE_ROOT_DIR)/usr/bin/smc23
-SMC23_SYNTH_DEMO_SOURCE := $(SOURCE_LINUX_DIR)/files/smc23.cpp
-SMC23_SYNTH_DEMO_TARGET := $(ALPINE_ROOT_DIR)/home/syfala/smc23.cpp
-
-$(SMC23_SYNTH_DEMO_TARGET): $(SMC23_SYNTH_DEMO_SOURCE) $(ALPINE_HOME_SYFALA_CH)
-	$(call shell_info, Copying $(B)smc23.cpp$(N) source)
-	@cp -r $(SMC23_SYNTH_DEMO_SOURCE) $(SMC23_SYNTH_DEMO_TARGET)
-
-$(SMC23_SYNTH_DEMO_EXEC): $(SMC23_SYNTH_DEMO_TARGET)
-	$(call shell_info, Building $(B)smc23$(N) application)
-	@$(call chroot, g++ -O3 /home/syfala/smc23.cpp -o /usr/bin/smc23 -ljack -lpthread)
-
-LINUX_ROOT_DEPENDENCIES += $(SMC23_SYNTH_DEMO_EXEC)
+ifeq ($(CONFIG_EXPERIMENTAL_ETHERNET), TRUE)
+    LINUX_ROOT_DEPENDENCIES += $(ALPINE_ETHERNET_CLIENT)
 endif
 
 # -----------------------------------------------------------------------------
 
-LINUX_ROOT_DEPENDENCIES += alpine-modules
+LINUX_ROOT_DEPENDENCIES += alpine-modules alpine-home
 LINUX_ROOT_DEPENDENCIES += $(ALPINE_FW)
 LINUX_ROOT_DEPENDENCIES += $(ALPINE_REPOSITORIES_FILE)
 LINUX_ROOT_DEPENDENCIES += $(ALPINE_INITTAB_DST)
@@ -522,16 +488,9 @@ LINUX_ROOT_DEPENDENCIES += $(ALPINE_DSP_BITSTREAM)
 LINUX_ROOT_DEPENDENCIES += $(ALPINE_DSP_APPLICATION)
 
 # -----------------------------------------------------------------------------
-
-$(BUILD_LINUX_OUTPUT_ROOT_DIR): $(LINUX_ROOT_DEPENDENCIES)
-	@mkdir -p $(BUILD_LINUX_OUTPUT_ROOT_DIR)
-	$(call shell_info, Now copying rootfs to $(BUILD_LINUX_OUTPUT_ROOT_DIR))
-	@sudo cp -Tr $(ALPINE_ROOT_DIR) $(BUILD_LINUX_OUTPUT_ROOT_DIR)
-
-# -----------------------------------------------------------------------------
 .PHONY: linux-root
 # -----------------------------------------------------------------------------
-linux-root: $(BUILD_LINUX_OUTPUT_ROOT_DIR)
+linux-root: $(LINUX_ROOT_DEPENDENCIES)
 
 # -----------------------------------------------------------------------------
 .PHONY: linux-dsp

@@ -18,7 +18,7 @@
 #include <sleep.h>
 #include <cstdlib>
 
-using namespace Syfala;
+using namespace Syfala::ARM;
 
 int isTUI;
 
@@ -30,7 +30,7 @@ void (*functionTab[MAX_ENTRY]) (void);
 
 
 void TUI::initialize() {
-    sy_info("[tui] Initialize Terminal User Interface");
+    info("[tui] Initialize Terminal User Interface");
     selectedMenu=1;
     TUI::createEntry("Show info",1,true,show_info);
     TUI::createEntry("Print test",2, true,functionTest);
@@ -42,21 +42,21 @@ void TUI::initialize() {
     TUI::drawMenu();
 }
 void TUI::drawMenu() {
-    sy_tuiprint("+------------------------------------------------------------------+\r\n");
-    sy_tuiprint("|                                                                  |\r\n");
+    TUIprint("+------------------------------------------------------------------+\r\n");
+    TUIprint("|                                                                  |\r\n");
     for (int i=1; i<=MAX_ENTRY; i++){
-        if(functionTab[i-1]) sy_tuiprint("| %s %d - %-59s %s|\r\n",SEL_(i,selectedMenu),i,entryTab[i-1],LINEFORMAT_RESET);
-        else if(entryTab[i-1]) sy_tuiprint("| %s %d - %s (unavailable)%-49s|\r\n",LINEFORMAT_RESET,i,entryTab[i-1],LINEFORMAT_RESET);
-        else sy_tuiprint("|  %d -                                                             |\r\n",i);
+        if(functionTab[i-1]) TUIprint("| %s %d - %-59s %s|\r\n",SEL_(i,selectedMenu),i,entryTab[i-1],LINEFORMAT_RESET);
+        else if(entryTab[i-1]) TUIprint("| %s %d - %s (unavailable)%-49s|\r\n",LINEFORMAT_RESET,i,entryTab[i-1],LINEFORMAT_RESET);
+        else TUIprint("|  %d -                                                             |\r\n",i);
     }
-    sy_tuiprint("|                                                                  |\r\n");
-    sy_tuiprint("+------------------------------------------------------------------+\r\033[%dA",MAX_ENTRY+3);
+    TUIprint("|                                                                  |\r\n");
+    TUIprint("+------------------------------------------------------------------+\r\033[%dA",MAX_ENTRY+3);
 }
 
 void TUI::update(int lineToUpdate) {
-    sy_tuiprint("\r\033[%dB",lineToUpdate+1);//go to the righ line from the bottom of the menu
-    sy_tuiprint("| %s %i - %-59s %s",SEL_(lineToUpdate,selectedMenu),lineToUpdate,entryTab[lineToUpdate-1],LINEFORMAT_RESET);
-    sy_tuiprint("\r\033[%dA",lineToUpdate+1);//go on the top of the menu to correctly print futur functions
+    TUIprint("\r\033[%dB",lineToUpdate+1);//go to the righ line from the bottom of the menu
+    TUIprint("| %s %i - %-59s %s",SEL_(lineToUpdate,selectedMenu),lineToUpdate,entryTab[lineToUpdate-1],LINEFORMAT_RESET);
+    TUIprint("\r\033[%dA",lineToUpdate+1);//go on the top of the menu to correctly print futur functions
 }
 
 //index between 1 and MAX_ENTRY
@@ -64,14 +64,14 @@ int TUI::createEntry(const char* name,int index,int condition,void (*function)(v
     int status = XST_FAILURE;
 
     if(index>MAX_ENTRY){
-        sy_info("[tui] Could not add entry \"%s\", index out of bound(%d).",name,index);
+        info("[tui] Could not add entry \"%s\", index out of bound(%d).",name,index);
         return XST_FAILURE;
     }
     if(!condition){
-        sy_info("[tui] Condition not met for entry \"%s\".",name);
+        info("[tui] Condition not met for entry \"%s\".",name);
     }
     else {functionTab[index-1]=function;}
-    
+
     entryTab[index-1]=name;
 
 return status;
@@ -79,7 +79,7 @@ return status;
 
 void TUI::updateUserInput(){
     if(!isTUI)TUI::drawMenu(); //Redraw menu if something else was print since last draw.
-    //WARNING, if the menu is not rebuilded, it's because printf is called instaed of sy_printf. I didn't change it in the linux files for now.
+    //WARNING, if the menu is not rebuilded, it's because printf is called instaed of println. I didn't change it in the linux files for now.
     u32 btnVector=GPIO::read_btn();
     if(!(btnVector == oldBtnVector || btnVector==0)) //wait for button release between two command
     {
@@ -97,8 +97,8 @@ void TUI::updateUserInput(){
                 selectedMenu-=1;
                 if (selectedMenu <=0)selectedMenu=MAX_ENTRY;
             }while(!functionTab[selectedMenu-1]);
-            TUI::update(oldSelectedMenu); 
-            TUI::update(selectedMenu); 
+            TUI::update(oldSelectedMenu);
+            TUI::update(selectedMenu);
             break;
         case BTN_DOWN:
             oldSelectedMenu=selectedMenu;
@@ -106,21 +106,21 @@ void TUI::updateUserInput(){
                 selectedMenu+=1;
                 if (selectedMenu>MAX_ENTRY)selectedMenu=1;
             }while(!functionTab[selectedMenu-1]);
-            TUI::update(oldSelectedMenu); 
-            TUI::update(selectedMenu); 
+            TUI::update(oldSelectedMenu);
+            TUI::update(selectedMenu);
             break;
         case BTN_CENTER:
             functionTab[selectedMenu-1]();
             break;
         }
     }
-    oldBtnVector=btnVector; 
+    oldBtnVector=btnVector;
 }
 
 
 void TUI::writeIIC(){
 
-    sy_info("[tui] Entering I2C write");
+    info("[tui] Entering I2C write");
     cleanMenu();
 
     const char *type[] = {"CUSTOM (1Byte value)","SSM (8bit addr)","ADAU1777 (2Byte addr)","ADAU1787 (2Byte addr)","ADAU1761 (2Byte addr)"};
@@ -174,17 +174,17 @@ void TUI::writeIIC(){
                     valueTab[2]=IIC_ADAU1777_SLAVE_ADDR_0;
                     break;
                 case 3: // ADAU1787
-                    maxTab[3]=0xC0E1;                    
+                    maxTab[3]=0xC0E1;
                     minTab[3]=0xC000;
                     valueTab[2]=IIC_ADAU1787_SLAVE_ADDR_0;
                     break;
                 case 4: // ADAU1761
-                    maxTab[3]=0x40FA;                    
+                    maxTab[3]=0x40FA;
                     minTab[3]=0x4000;
                     valueTab[2]=IIC_ADAU1761_SLAVE_ADDR_0;
                     break;
                 case 0: //CUSTOM
-                    maxTab[3]=0xFF;                    
+                    maxTab[3]=0xFF;
                     minTab[3]=0x00;
                     valueTab[2]=0x00;
                     break;
@@ -194,22 +194,22 @@ void TUI::writeIIC(){
         }
         oldValueTab=valueTab[1];
         if(!isTUI){ //Redraw menu if something else was print since last draw.
-            sy_tuiprint("+----------------------------- I2C REGISTER WRITE -----------------------+                 \r\n");//space at the end to erase "send" and "exit"
-            sy_tuiprint("|  %sBUS%s  |           %sTYPE%s          |  %sI2C ADDR%s  |  %sREG ADDR%s  |  %sREG VALUE%s |  >%sSEND%s\n\033[6D >%sEXIT%s\r",SEL_(place,0),_SEL,SEL_(place,1),_SEL,SEL_(place,2),_SEL,SEL_(place,3),_SEL,SEL_(place,4),_SEL,SEL_(place,5),_SEL,SEL_(place,6),_SEL);
-            sy_tuiprint("|   %d   | %-23s |    0x%02x    |   0x%04x   |     0x%02x   |\r\n",valueTab[0],type[valueTab[1]],valueTab[2],valueTab[3],valueTab[4]);
-            sy_tuiprint("+------------------------------------------------------------------------+\r\033[3A");
+            TUIprint("+----------------------------- I2C REGISTER WRITE -----------------------+                 \r\n");//space at the end to erase "send" and "exit"
+            TUIprint("|  %sBUS%s  |           %sTYPE%s          |  %sI2C ADDR%s  |  %sREG ADDR%s  |  %sREG VALUE%s |  >%sSEND%s\n\033[6D >%sEXIT%s\r",SEL_(place,0),_SEL,SEL_(place,1),_SEL,SEL_(place,2),_SEL,SEL_(place,3),_SEL,SEL_(place,4),_SEL,SEL_(place,5),_SEL,SEL_(place,6),_SEL);
+            TUIprint("|   %d   | %-23s |    0x%02x    |   0x%04x   |     0x%02x   |\r\n",valueTab[0],type[valueTab[1]],valueTab[2],valueTab[3],valueTab[4]);
+            TUIprint("+------------------------------------------------------------------------+\r\033[3A");
         }
-        sy_tuiprint("\n|  %sBUS%s  |           %sTYPE%s          |  %sI2C ADDR%s  |  %sREG ADDR%s  |  %sREG VALUE%s |  >%sSEND%s\n\033[6D >%sEXIT%s\r",SEL_(place,0),_SEL,SEL_(place,1),_SEL,SEL_(place,2),_SEL,SEL_(place,3),_SEL,SEL_(place,4),_SEL,SEL_(place,5),_SEL,SEL_(place,6),_SEL);
-        sy_tuiprint("|   %d   | %-23s |    0x%02x    |   0x%04x   |     0x%02x   |\r\033[2A",valueTab[0],type[valueTab[1]],valueTab[2],valueTab[3],valueTab[4]);//go on the bottom of the menu at the end to correctly print futur functions
-        
+        TUIprint("\n|  %sBUS%s  |           %sTYPE%s          |  %sI2C ADDR%s  |  %sREG ADDR%s  |  %sREG VALUE%s |  >%sSEND%s\n\033[6D >%sEXIT%s\r",SEL_(place,0),_SEL,SEL_(place,1),_SEL,SEL_(place,2),_SEL,SEL_(place,3),_SEL,SEL_(place,4),_SEL,SEL_(place,5),_SEL,SEL_(place,6),_SEL);
+        TUIprint("|   %d   | %-23s |    0x%02x    |   0x%04x   |     0x%02x   |\r\033[2A",valueTab[0],type[valueTab[1]],valueTab[2],valueTab[3],valueTab[4]);//go on the bottom of the menu at the end to correctly print futur functions
+
         do{
-            oldBtnVector=btnVector; 
+            oldBtnVector=btnVector;
             btnVector=GPIO::read_btn(); //wait for button release between two command
         }while(((btnVector == oldBtnVector) || (btnVector==0)) && !exit);
     }while (!exit);
-    sy_tuiprint("\r\033[4B");
+    TUIprint("\r\033[4B");
     isTUI=0; //To rebuild the menu
-    sy_debug("\033[2K[tui] Exiting I2C write \n\r");
+    debug("\033[2K[tui] Exiting I2C write \n\r");
 }
 
 void sendIIC(uint16_t* values){
@@ -235,88 +235,88 @@ void sendIIC(uint16_t* values){
             sizeRegAddr=1;
             regAddr[0] = values[3] & 0xff;
             regAddr[1]=0x00; //for clean printf
-            break; 
+            break;
     }
 
     value[0] = values[4] & 0xFF;
-    sy_printf("Sending 0x%02x to register 0x%04x at I2C address 0x%02x on bus %d",values[4],values[3],values[2],values[0]);
+    println("Sending 0x%02x to register 0x%04x at I2C address 0x%02x on bus %d",values[4],values[3],values[2],values[0]);
     Audio::regwrite(regAddr,sizeRegAddr,value,sizeof(value),values[2],values[0]);
 }
 
 void cleanMenu(){
-    for (int i=0; i<MAX_ENTRY+3;i++) sy_printf("");//cleaning TUI
-    sy_printf("\033[%dA",MAX_ENTRY+4);
+    for (int i=0; i<MAX_ENTRY+3;i++) println("");//cleaning TUI
+    println("\033[%dA",MAX_ENTRY+4);
 }
 void functionTest(){
-        sy_printf("[tui] Hello world");
+        println("[tui] Hello world");
 }
 
 void show_info(){
-        sy_printf("----- GENERAL -----");
-        sy_printf("SYFALA_BOARD: %d",SYFALA_BOARD);
-        sy_printf("SYFALA_MEMORY_USE_DDR: %d",SYFALA_MEMORY_USE_DDR);
-        sy_printf("SYFALA_ADAU_EXTERN: %d",SYFALA_ADAU_EXTERN);
-        sy_printf("SYFALA_ADAU_MOTHERBOARD: %d",SYFALA_ADAU_MOTHERBOARD);
-        sy_printf("SYFALA_VERBOSE: %d",SYFALA_VERBOSE);
-        sy_printf("SYFALA_CONTROLLER_TYPE: %d",SYFALA_CONTROLLER_TYPE);
-        sy_printf("SYFALA_UART_BAUD_RATE: %d",SYFALA_UART_BAUD_RATE);
+        println("----- GENERAL -----");
+        println("SYFALA_BOARD: %d",SYFALA_BOARD);
+        println("SYFALA_MEMORY_USE_DDR: %d",SYFALA_MEMORY_USE_DDR);
+        println("SYFALA_ADAU_EXTERN: %d",SYFALA_ADAU_EXTERN);
+        println("SYFALA_ADAU_MOTHERBOARD: %d",SYFALA_ADAU_MOTHERBOARD);
+        println("SYFALA_VERBOSE: %d",SYFALA_VERBOSE);
+        println("SYFALA_CONTROLLER_TYPE: %d",SYFALA_CONTROLLER_TYPE);
+        println("SYFALA_UART_BAUD_RATE: %d",SYFALA_UART_BAUD_RATE);
 
-        sy_printf("----- I2C -----");
-        sy_printf("IIC_SCLK_RATE: %d",IIC_SCLK_RATE);
+        println("----- I2C -----");
+        println("IIC_SCLK_RATE: %d",IIC_SCLK_RATE);
 #if (SYFALA_ADAU_MOTHERBOARD) // --
-        sy_printf("IIC_MOTHERBOARD_BUS: %d",IIC_MOTHERBOARD_BUS);
-        sy_printf("IIC_MOTHERBOARD_TCA9548A_ADDR: 0x%02x",IIC_MOTHERBOARD_TCA9548A_ADDR);
-        sy_printf("IIC_MOTHERBOARD_TCA9548A_BUS: 0x%02x",IIC_MOTHERBOARD_TCA9548A_BUS);
-        sy_printf("IIC_MOTHERBOARD_PCA9956_ADDR: 0x%02x",IIC_MOTHERBOARD_PCA9956_ADDR);
-        sy_printf("IIC_MOTHERBOARD_PCA9956_BUS: 0x%02x",IIC_MOTHERBOARD_PCA9956_BUS);
-#endif // ------------------- 
+        println("IIC_MOTHERBOARD_BUS: %d",IIC_MOTHERBOARD_BUS);
+        println("IIC_MOTHERBOARD_TCA9548A_ADDR: 0x%02x",IIC_MOTHERBOARD_TCA9548A_ADDR);
+        println("IIC_MOTHERBOARD_TCA9548A_BUS: 0x%02x",IIC_MOTHERBOARD_TCA9548A_BUS);
+        println("IIC_MOTHERBOARD_PCA9956_ADDR: 0x%02x",IIC_MOTHERBOARD_PCA9956_ADDR);
+        println("IIC_MOTHERBOARD_PCA9956_BUS: 0x%02x",IIC_MOTHERBOARD_PCA9956_BUS);
+#endif // -------------------
 
-        sy_printf("----- AUDIO -----");
-        sy_printf("SYFALA_SAMPLE_WIDTH: %d",SYFALA_SAMPLE_WIDTH);
-        sy_printf("SYFALA_SAMPLE_RATE: %d",SYFALA_SAMPLE_RATE);
-        sy_printf("SYFALA_SSM_VOLUME: 0x%02x",SYFALA_SSM_VOLUME);
-        sy_printf("SYFALA_SSM_SPEED: 0x%02x",SYFALA_SSM_SPEED);
+        println("----- AUDIO -----");
+        println("SYFALA_SAMPLE_WIDTH: %d",SYFALA_SAMPLE_WIDTH);
+        println("SYFALA_SAMPLE_RATE: %d",SYFALA_SAMPLE_RATE);
+        println("SYFALA_SSM_VOLUME: 0x%02x",SYFALA_SSM_VOLUME);
+        println("SYFALA_SSM_SPEED: 0x%02x",SYFALA_SSM_SPEED);
 
-        sy_printf("----- OTHER -----");
-        sy_printf("SYFALA_ARM_BENCHMARK: %d",SYFALA_ARM_BENCHMARK);
-        sy_printf("SYFALA_FAUST_TARGET: %d",SYFALA_FAUST_TARGET);
-        sy_printf("SYFALA_CONTROL_MIDI: %d",SYFALA_CONTROL_MIDI);
-        sy_printf("SYFALA_CONTROL_OSC: %d",SYFALA_CONTROL_OSC);
-        sy_printf("SYFALA_CONTROL_HTTP: %d",SYFALA_CONTROL_HTTP);
-        sy_printf("SYFALA_REAL_FIXED_POINT: %d",SYFALA_REAL_FIXED_POINT);
-        sy_printf("SYFALA_CONTROL_BLOCK: %d",SYFALA_CONTROL_BLOCK);
-        sy_printf("SYFALA_CONTROL_BLOCK_FPGA: %d",SYFALA_CONTROL_BLOCK_FPGA);
-        sy_printf("SYFALA_CONTROL_BLOCK_HOST: %d",SYFALA_CONTROL_BLOCK_HOST);
-        sy_printf("SYFALA_CONTROL_RELEASE: %d",SYFALA_CONTROL_RELEASE);
-        sy_printf("SYFALA_DEBUG_AUDIO: %d",SYFALA_DEBUG_AUDIO);
-        sy_printf("SYFALA_BLOCK_NSAMPLES: %d",SYFALA_BLOCK_NSAMPLES);
-        sy_printf("SYFALA_CSIM_NUM_ITER: %d",SYFALA_CSIM_NUM_ITER);
-        sy_printf("SYFALA_CSIM_INPUT_DIR: %d",SYFALA_CSIM_INPUT_DIR);
+        println("----- OTHER -----");
+        println("SYFALA_ARM_BENCHMARK: %d",SYFALA_ARM_BENCHMARK);
+        println("SYFALA_FAUST_TARGET: %d",SYFALA_FAUST_TARGET);
+        println("SYFALA_CONTROL_MIDI: %d",SYFALA_CONTROL_MIDI);
+        println("SYFALA_CONTROL_OSC: %d",SYFALA_CONTROL_OSC);
+        println("SYFALA_CONTROL_HTTP: %d",SYFALA_CONTROL_HTTP);
+        println("SYFALA_REAL_FIXED_POINT: %d",SYFALA_REAL_FIXED_POINT);
+        println("SYFALA_CONTROL_BLOCK: %d",SYFALA_CONTROL_BLOCK);
+        println("SYFALA_CONTROL_BLOCK_FPGA: %d",SYFALA_CONTROL_BLOCK_FPGA);
+        println("SYFALA_CONTROL_BLOCK_HOST: %d",SYFALA_CONTROL_BLOCK_HOST);
+        println("SYFALA_CONTROL_RELEASE: %d",SYFALA_CONTROL_RELEASE);
+        println("SYFALA_DEBUG_AUDIO: %d",SYFALA_DEBUG_AUDIO);
+        println("SYFALA_BLOCK_NSAMPLES: %d",SYFALA_BLOCK_NSAMPLES);
+        println("SYFALA_CSIM_NUM_ITER: %d",SYFALA_CSIM_NUM_ITER);
+        println("SYFALA_CSIM_INPUT_DIR: %d",SYFALA_CSIM_INPUT_DIR);
 
 }
 
 void GPIOtest(){
     cleanMenu();
-    sy_info("[tui] Entering GPIO test");
-    sy_printf("---------- GPIO TEST ----------");
-    sy_printf("Press UP and DOWN simultaneously to quit");
+    info("[tui] Entering GPIO test");
+    println("---------- GPIO TEST ----------");
+    println("Press UP and DOWN simultaneously to quit");
 #if (SYFALA_BOARD_GENESYS) // --
-    sy_tuiprint("+-------------------------------------------------------------------------+\r\n");
-    sy_tuiprint("| UP (B12)  |  DOWN (J12)  |  LEFT (F12)  |  RIGHT (A12)  |  CENTER (H12) |\r\n");
-    sy_tuiprint("|           |              |              |               |               |\r\n");
-    sy_tuiprint("+-------------------------------------------------------------------------+\r\n");
-    sy_tuiprint("|    SW3 (AB14)    |    SW2 (Y13)    |    SW1 (W12)    |    SW0 (AB15)    |\r\n");
-    sy_tuiprint("|                  |                 |                 |                  |\r\n");
-    sy_tuiprint("+-------------------------------------------------------------------------+\r");
+    TUIprint("+-------------------------------------------------------------------------+\r\n");
+    TUIprint("| UP (B12)  |  DOWN (J12)  |  LEFT (F12)  |  RIGHT (A12)  |  CENTER (H12) |\r\n");
+    TUIprint("|           |              |              |               |               |\r\n");
+    TUIprint("+-------------------------------------------------------------------------+\r\n");
+    TUIprint("|    SW3 (AB14)    |    SW2 (Y13)    |    SW1 (W12)    |    SW0 (AB15)    |\r\n");
+    TUIprint("|                  |                 |                 |                  |\r\n");
+    TUIprint("+-------------------------------------------------------------------------+\r");
 #elif (SYFALA_BOARD_ZYBO)  // --
-    sy_tuiprint("+---------------------------------------------------------------------------------+\r\n");
-    sy_tuiprint("| BTN3[UP] (Y16)  |  BTN2[DOWN] (K19)  |  BTN1[LEFT] (P16)  |  BTN0[RIGHT] (K18)  |\r\n");
-    sy_tuiprint("|                 |                    |                    |                     |\r\n");
-    sy_tuiprint("+---------------------------------------------------------------------------------+\r\n");
-    sy_tuiprint("|      SW3 (T16)     |     SW2 (W13)     |     SW1 (P15)     |      SW0 (G15)     |\r\n");
-    sy_tuiprint("|                    |                   |                   |                    |\r\n");
-    sy_tuiprint("+---------------------------------------------------------------------------------+\r");
-#endif // ---------------------- 
+    TUIprint("+---------------------------------------------------------------------------------+\r\n");
+    TUIprint("| BTN3[UP] (Y16)  |  BTN2[DOWN] (K19)  |  BTN1[LEFT] (P16)  |  BTN0[RIGHT] (K18)  |\r\n");
+    TUIprint("|                 |                    |                    |                     |\r\n");
+    TUIprint("+---------------------------------------------------------------------------------+\r\n");
+    TUIprint("|      SW3 (T16)     |     SW2 (W13)     |     SW1 (P15)     |      SW0 (G15)     |\r\n");
+    TUIprint("|                    |                   |                   |                    |\r\n");
+    TUIprint("+---------------------------------------------------------------------------------+\r");
+#endif // ----------------------
     u32 btnVector=0,oldbtnVector=0;
     u32 swVector=0,oldswVector=0;
     do{
@@ -325,18 +325,18 @@ void GPIOtest(){
         swVector=GPIO::read_sw(3)<<3 | GPIO::read_sw(2)<<2 | GPIO::read_sw(1)<<1 | GPIO::read_sw(0);
     }
 #if (SYFALA_BOARD_GENESYS) // --
-    sy_tuiprint("\033[4A|     %d     |       %d      |       %d      |       %d       |       %d       |\r\033[3B",(btnVector & BTN_UP)>>4,(btnVector & BTN_DOWN)>>2,(btnVector & BTN_LEFT)>>1,(btnVector & BTN_RIGHT),(btnVector & BTN_CENTER)>>3);
-    sy_tuiprint("|        %d         |        %d        |        %d        |         %d        |\r\n",GPIO::read_sw(3),GPIO::read_sw(2),GPIO::read_sw(1),GPIO::read_sw(0));
+    TUIprint("\033[4A|     %d     |       %d      |       %d      |       %d       |       %d       |\r\033[3B",(btnVector & BTN_UP)>>4,(btnVector & BTN_DOWN)>>2,(btnVector & BTN_LEFT)>>1,(btnVector & BTN_RIGHT),(btnVector & BTN_CENTER)>>3);
+    TUIprint("|        %d         |        %d        |        %d        |         %d        |\r\n",GPIO::read_sw(3),GPIO::read_sw(2),GPIO::read_sw(1),GPIO::read_sw(0));
 #elif (SYFALA_BOARD_ZYBO)  // --
-    sy_tuiprint("\033[4A|        %d        |          %d         |          %d         |           %d         |\r\033[3B",(btnVector & BTN_UP)>>4,(btnVector & BTN_DOWN)>>2,(btnVector & BTN_LEFT)>>1,(btnVector & BTN_RIGHT));
-    sy_tuiprint("|         %d          |         %d         |         %d         |          %d         |\r\n",GPIO::read_sw(3),GPIO::read_sw(2),GPIO::read_sw(1),GPIO::read_sw(0));
-#endif // ------------------- 
+    TUIprint("\033[4A|        %d        |          %d         |          %d         |           %d         |\r\033[3B",(btnVector & BTN_UP)>>4,(btnVector & BTN_DOWN)>>2,(btnVector & BTN_LEFT)>>1,(btnVector & BTN_RIGHT));
+    TUIprint("|         %d          |         %d         |         %d         |          %d         |\r\n",GPIO::read_sw(3),GPIO::read_sw(2),GPIO::read_sw(1),GPIO::read_sw(0));
+#endif // -------------------
 
     oldbtnVector=btnVector;
     oldswVector=swVector;
     }while (!(((btnVector & BTN_UP)>>4)&((btnVector & BTN_DOWN)>>2)));
-    sy_tuiprint("\r\033[2B");
-    sy_debug("\033[2K[tui] Exiting GPIO test \n\r");
+    TUIprint("\r\033[2B");
+    debug("\033[2K[tui] Exiting GPIO test \n\r");
     isTUI=0; //To rebuild the menu
 
 }
@@ -360,7 +360,7 @@ static uint8_t savedLedStatus[PCA9965_NUM_LEDS];
 
 void EkansInit()
 {
-    sy_info("[tui] Just a trivial function, nothing to see here.");
+    info("[tui] Just a trivial function, nothing to see here.");
     isEkansOver = false;
     tailLen = 0;
     sDir = STOP;
@@ -385,10 +385,10 @@ void EkansRender(void)
 
             if (i == y && j == x){//Snake's head
               LEDdriver::ledSetBrightness(ledCoord, CODEC_LED_BRIGHTNESS_LEVEL*5);
-              LEDdriver::ledOn(ledCoord); 
+              LEDdriver::ledOn(ledCoord);
             }
             else if (i == targetCordY && j == targetCordX){//Snake's food
-                LEDdriver::ledSetBrightness(ledCoord, CODEC_LED_BRIGHTNESS_LEVEL*2); 
+                LEDdriver::ledSetBrightness(ledCoord, CODEC_LED_BRIGHTNESS_LEVEL*2);
                 LEDdriver::ledBlink(ledCoord);
             }
 
@@ -397,7 +397,7 @@ void EkansRender(void)
                 for (int k = 0; k < tailLen; k++) {
                     if (tailX[k] == j
                         && tailY[k] == i) {
-                        LEDdriver::ledSetBrightness(ledCoord, CODEC_LED_BRIGHTNESS_LEVEL);    
+                        LEDdriver::ledSetBrightness(ledCoord, CODEC_LED_BRIGHTNESS_LEVEL);
                         LEDdriver::ledOn(ledCoord);
                         prTail = true;
                     }
@@ -459,7 +459,7 @@ void EkansUpdate()
         targetCordX = rand() % width;
         targetCordY = rand() % height;
         tailLen++;
-        targetNb += 1; 
+        targetNb += 1;
     }
 }
 
@@ -495,7 +495,7 @@ void trivialFunction()
         for (int i=0; i<speed*100000; i++) EkansUserInput();
         EkansUpdate();
     }
-    sy_info("[tui] %d/16 at speed %d!",targetNb,speed);
+    info("[tui] %d/16 at speed %d!",targetNb,speed);
     motherBoard::ledCodecsAllBlink();
     sleep(2);
     motherBoard::ledCodecsAllOff();

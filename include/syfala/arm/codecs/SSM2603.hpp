@@ -12,7 +12,7 @@
     #include <sleep.h>
 #endif
 
-namespace SSM2603 {
+namespace Syfala::ARM::Audio::Codecs::SSM2603 {
    /**
     * @brief xSSM2603 codec register write function
     * (implementation is platform-dependent, either located in

@@ -1,6 +1,6 @@
 #include <faust/gui/meta.h>
 #include <faust/gui/DecoratorUI.h>
-#include <faust/dsp/one-sample-dsp.h>
+#include <faust/dsp/dsp.h>
 #include <syfala/arm/gpio.hpp>
 #include <cstring>
 #include <cstdint>
@@ -47,7 +47,7 @@ d.dsp.var = *(float*) &d.control.p[field++];
     <<includeclass>>
 #endif // --------------------------------------------
 
-namespace Syfala::Faust {
+namespace Syfala::ARM::Faust {
 
 constexpr uint32_t ncontrols_i() {
     return FAUST_INT_CONTROLS;
@@ -176,7 +176,10 @@ inline void update(handle& h, uint32_t index, float value,
                  // If controller has been mapped, and if the index
                  // matches that map:
                  if (c.map >= 0 && c.map == index) {
-                     printf("[faust] Mapped controller: %d\n, index: %d", c.map, index);
+                     printf (
+                        "[faust] Mapped controller: %d\n, index: %d",
+                         c.map, index
+                    );
                      index = n;
                      break;
                  }
@@ -202,7 +205,11 @@ struct data {
 inline void initialize(data& d, int* i_zone, float* f_zone) {
     d.dsp = mydsp(d.control.i, d.control.f, i_zone, f_zone);
     d.control.controllers.reserve(ctrlexpr_n());
+#if FAUST_INTERFACE_NEW // ---------------------------------
+    d.dsp.instanceInit(SYFALA_SAMPLE_RATE);
+#else // ---------------------------------------------------
     d.dsp.init(SYFALA_SAMPLE_RATE, i_zone, f_zone);
+#endif // --------------------------------------------------
     d.dsp.buildUserInterface(&d.control);
     printf("[faust] Faust controller successfully initialized.\r\n");
 }

@@ -28,7 +28,7 @@ use tokio_util::codec::{Decoder, Encoder};
 use crate::buffer_manager::{AudioStreamChange, AudioStreamInError, BufferManagerConfig};
 use bincode::{deserialize, serialize, ErrorKind};
 use bytes::BufMut;
-use std::net::SocketAddrV6;
+use std::net::{SocketAddrV4, SocketAddrV6};
 use std::str::Utf8Error;
 use std::{str, usize};
 
@@ -131,8 +131,12 @@ impl Decoder for PacketCodec {
     type Item = SocketPacket;
     type Error = PacketCodecError;
 
-    fn decode(&mut self, buf: &mut BytesMut) -> Result<Option<SocketPacket>, PacketCodecError> {
-        let read_to = cmp::min(self.max_length.saturating_add(1), buf.len());
+    fn decode(&mut self, buf: &mut BytesMut)
+    -> Result<Option<SocketPacket>, PacketCodecError> {
+        let read_to = cmp::min(self.max_length.
+            saturating_add(1),
+            buf.len()
+        );
         let newline_offset = buf[self.next_index..read_to]
             .iter()
             .position(|b| *b == b'\n');
@@ -145,7 +149,8 @@ impl Decoder for PacketCodec {
                 let line = buf.split_to(newline_index + 1);
                 let line = &line[..line.len() - 1];
                 let line = without_carriage_return(line);
-                let line = str::from_utf8(line).map_err(PacketCodecError::InvalidUtf8)?;
+                let line = str::from_utf8(line)
+                    .map_err(PacketCodecError::InvalidUtf8)?;
                 line.to_string()
             }
             None => {
@@ -169,15 +174,15 @@ impl Decoder for PacketCodec {
 impl Encoder<SocketPacket> for PacketCodec {
     type Error = PacketCodecError;
 
-    fn encode(&mut self, packet: SocketPacket, dst: &mut BytesMut) -> Result<(), PacketCodecError> {
-        let string = serde_json::to_string(&packet).map_err(PacketCodecError::InvalidJson)?;
-
+    fn encode(&mut self, packet: SocketPacket, dst: &mut BytesMut)
+        -> Result<(), PacketCodecError> {
+        let string = serde_json::to_string(&packet).
+            map_err(PacketCodecError::InvalidJson)?;
         // Don't send a string if it is longer than the other end will
         // accept.
         if string.len() > self.max_length {
             return Err(PacketCodecError::MaxLineLengthExceeded);
         }
-
         dst.reserve(string.len() + 1);
         dst.put(string.as_bytes());
         dst.put_u8(b'\n');
@@ -192,11 +197,7 @@ pub struct Frame {
 }
 impl Frame {
     pub fn new(seq: u32, is_first: bool, buffer: Vec<f32>) -> Self {
-        Self {
-            seq,
-            is_first,
-            buffer,
-        }
+        Self { seq, is_first, buffer }
     }
 }
 #[derive(Debug, Error)]
@@ -213,26 +214,27 @@ impl Frame {
     /// Decodes a Frame from a byte slice
     /// throws an error if the slice is not a valid Frame
     pub fn from_u8(bytes: &[u8]) -> Result<Self, FrameEncodingError> {
-        deserialize::<Frame>(bytes).map_err(FrameEncodingError::InvalidFormat)
+        deserialize::<Frame>(bytes)
+            .map_err(FrameEncodingError::InvalidFormat)
     }
 }
 /// this function detects if IPv6 address is local or not and rewrites the scope id
 /// this is important to set the correct scope id
 #[allow(dead_code)]
 pub fn if_local_ipv6_set_scope(ip: String, scope_ip: &str) -> String {
-    // unfortunatally there is no more idiomatic solution to detect if an ip is local or not
+    // Unfortunately, there is no more idiomatic solution to detect if an ip is local or not
     // https://doc.rust-lang.org/std/net/struct.Ipv6Addr.html#method.is_global
-    if ip.starts_with("[fe80") || ip.starts_with("[2001") {
-        if let Ok(mut ip) = ip.parse::<SocketAddrV6>() {
-            if let Ok(scope_ip) = scope_ip.parse::<SocketAddrV6>() {
-                tracing::info!(
-                    "Rewriting scope of link local address {ip} to {}...",
-                    scope_ip.scope_id()
-                );
-                ip.set_scope_id(scope_ip.scope_id());
+    // if ip.starts_with("[fe80") || ip.starts_with("[2001") {
+        if let Ok(mut ip) = ip.parse::<SocketAddrV4>() {
+            if let Ok(scope_ip) = scope_ip.parse::<SocketAddrV4>() {
+                // tracing::info!(
+                //     "Rewriting scope of link local address {ip} to {}...",
+                //     scope_ip.scope_id()
+                // );
+                // ip.set_scope_id(scope_ip.scope_id());
                 return ip.to_string();
             }
         }
-    }
+    // }
     ip
 }

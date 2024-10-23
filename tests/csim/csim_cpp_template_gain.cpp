@@ -9,10 +9,8 @@
 #include <cassert>
 
 void syfala (
-     sy_ap_int audio_in_0,
-    sy_ap_int audio_in_1,
-    sy_ap_int* audio_out_0,
-    sy_ap_int* audio_out_1,
+     sy_ap_int audio_in[2],
+     sy_ap_int audio_out[2],
            int arm_ok,
          bool* i2s_rst,
         float* mem_zone_f,
@@ -24,10 +22,8 @@ void syfala (
 
 int main(int argc, char* argv[]) {
     // Déclaration et initialisation des variables nécessaires
-    sy_ap_int audio_in_0  = sy_ap_int(0);
-    sy_ap_int audio_in_1  = sy_ap_int(0);
-    sy_ap_int audio_out_0 = sy_ap_int(0);
-    sy_ap_int audio_out_1 = sy_ap_int(0);
+    sy_ap_int audio_in[2] = {0, 0};
+    sy_ap_int audio_out[2] = {0, 0};
     int arm_ok = true;
     bool i2s_rst = false;
     float* mem_zone_f = nullptr;
@@ -50,13 +46,12 @@ int main(int argc, char* argv[]) {
             f_inputs[0] = (float)rand()/RAND_MAX;
             f_inputs[1] = (float)rand()/RAND_MAX;
          }
-         Syfala::HLS::iowritef(f_inputs[0], audio_in_0);
-         Syfala::HLS::iowritef(f_inputs[1], audio_in_1);
+         Syfala::HLS::iowritef(f_inputs[0], audio_in[0]);
+         Syfala::HLS::iowritef(f_inputs[1], audio_in[0]);
         // -------------------------------------------------------------------
         // Syfala function call
         // -------------------------------------------------------------------
-        syfala(audio_in_0, audio_in_1,
-              &audio_out_0, &audio_out_1,
+        syfala(audio_in, audio_out,
               arm_ok, &i2s_rst,
               mem_zone_f, mem_zone_i,
               bypass, mute, debug
@@ -64,8 +59,8 @@ int main(int argc, char* argv[]) {
         // -------------------------------------------------------------------
         // Writing outputs
         // -------------------------------------------------------------------
-        f_outputs[0] = Syfala::HLS::ioreadf(audio_out_0);
-        f_outputs[1] = Syfala::HLS::ioreadf(audio_out_1);
+        f_outputs[0] = Syfala::HLS::ioreadf(audio_out[0]);
+        f_outputs[1] = Syfala::HLS::ioreadf(audio_out[1]);
         printf("[ch0] input: %f, result: %f\n", f_inputs[0], f_outputs[0]);
         printf("[ch1] input: %f, result: %f\n", f_inputs[1], f_outputs[1]);
     }

@@ -14,12 +14,16 @@
 #include <syfala/arm/codecs/ADAU1777Reg.h>
 #include <syfala/arm/gpio.hpp>
 #include <syfala/utilities.hpp>
+#include <xstatus.h>
 
 #define CTARGET "[ADAU1777]"
 
+using namespace Syfala::ARM;
+using namespace Syfala::ARM::Audio::Codecs;
+
 #define REGWRITE(_A, _D, _O)                                                        \
 if (ADAU17xx::regwrite(bus, codec_addr, _A, _D, _O) != XST_SUCCESS) {               \
-    sy_debug("\033[2K%s Could not write to register 0x%02x\n\r",CTARGET, _A);       \
+    debug("\033[2K%s Could not write to register 0x%02x\n\r",CTARGET, _A);          \
     return XST_FAILURE;                                                             \
 }
 
@@ -42,7 +46,7 @@ constexpr int get_reg_sai_0_value() {
 
 static constexpr int reg_sai_0_value = get_reg_sai_0_value();
 
-namespace Syfala::ADAU1777 {
+namespace ADAU1777 {
 int initialize(int bus, unsigned long codec_addr) {
 	REGWRITE(REG_CLK_CONTROL_IC_1_ADDR, REG_CLK_CONTROL_IC_1_VALUE, 0)
 	REGWRITE(REG_PLL_CTRL0_IC_1_ADDR, REG_PLL_CTRL0_IC_1_VALUE, 0)

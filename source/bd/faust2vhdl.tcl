@@ -460,10 +460,7 @@ connect "pins" rst_global/slowest_sync_clk          \
 foreach_n $::rt::nchannels_i {{n} {
 # ---------------------------------------------------
 connect "pins" mydsp_0/audio_in_$n                    \
-        "pins" i2s_transceiver_0/to_faust_ch0
-# ---------------------------------------------------
-connect "pins" mydsp_0/audio_in_$n                   \
-        "pins" i2s_transceiver_0/to_faust_ch1
+        "pins" i2s_transceiver_0/to_faust_ch$n
 }}
 # ---------------------------------------------------
 connect "pins" mydsp_0/ws                           \

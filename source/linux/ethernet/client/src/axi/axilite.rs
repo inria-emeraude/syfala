@@ -67,7 +67,7 @@ impl AxiLite {
     pub fn get_status(&mut self) -> u32 {
         self.get_u32(HLS::AXI_LITE_STATUS)
     }
-    /// Sets  memory offset that the FPGA knows where the input ring buffer starts in memory.
+    /// Sets memory offset that the FPGA knows where the input ring buffer starts in memory.
     /// It must fit in the linux memory mapping, so area can't be too small or too tight together.
     pub fn set_input_mem_offset(&mut self, offset: usize) {
         self.set_u64(

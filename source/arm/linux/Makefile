@@ -4,7 +4,8 @@ OUTPUT_DIR = ..
 EXECUTABLE = $(OUTPUT_DIR)/application.elf
 INCLUDES = -Iinclude -I.
 CC = g++
-CXXFLAGS = -O3
+CXXFLAGS += -O3
+CXXFLAGS += -DALPINE
 
 LDFLAGS += -lHTTPDFaust 
 LDFLAGS += -lOSCFaust 
