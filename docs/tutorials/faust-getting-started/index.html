@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A guide to the Syfala toolchain.">
+    
+    
+    <link rel="shortcut icon" href="../../img/favicon.ico">
+
+    
+    <title>Faust tutorial - Syfala Documentation</title>
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/v4-shims.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hack-font@3.3.0/build/web/hack.min.css">
+    <link href='//rsms.me/inter/inter.css' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,300,600,700&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+    <link href="../../css/base.min.css" rel="stylesheet">
+    <link href="../../css/cinder.min.css" rel="stylesheet">
+
+    
+        
+        <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.18.0/build/styles/nord.min.css">
+        
+    
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+            <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+        <![endif]-->
+
+    
+
+     
+</head>
+
+<body>
+
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            
+
+            <!-- Main title -->
+
+            
+              <a class="navbar-brand" href="../..">Syfala Documentation</a>
+            
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                
+                
+                    <li >
+                        <a href="../..">Home</a>
+                    </li>
+                
+                
+                
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Manual <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../../manual/dependencies/">Dependencies</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../../manual/reference/">Reference</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Tutorials <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li class="active">
+    <a href="./">Faust tutorial</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../embedded-linux-getting-started/">Embedded Linux</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../cpp-tutorial-advanced/">C++ tutorial</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                            <i class="fas fa-search"></i> Search
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../../manual/reference/">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="next" href="../embedded-linux-getting-started/">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+    <div class="container">
+        
+        
+        <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="first-level active"><a href="#getting-started-with-syfala-and-faust">Getting started with syfala and Faust</a></li>
+            <li class="second-level"><a href="#introduction">Introduction</a></li>
+                
+                <li class="third-level"><a href="#minimum-hardwaresoftware-requirements">Minimum hardware/software requirements</a></li>
+                <li class="third-level"><a href="#objectives">Objectives</a></li>
+            <li class="second-level"><a href="#faust">Faust</a></li>
+                
+            <li class="second-level"><a href="#syfala">Syfala</a></li>
+                
+                <li class="third-level"><a href="#about-syfala-and-fpgas">About syfala (and FPGAs)</a></li>
+                <li class="third-level"><a href="#installing-the-toolchain">Installing the toolchain</a></li>
+                <li class="third-level"><a href="#your-first-example">Your first example</a></li>
+                <li class="third-level"><a href="#monitoring-and-controlling-the-board-remotely">Monitoring and controlling the board remotely</a></li>
+            <li class="second-level"><a href="#going-further">Going further</a></li>
+                
+                <li class="third-level"><a href="#embedded-linux">Embedded Linux</a></li>
+                <li class="third-level"><a href="#using-syfala-with-c">Using syfala with C++</a></li>
+    </ul>
+</div></div>
+        <div class="col-md-9" role="main">
+
+<h1 id="getting-started-with-syfala-and-faust">Getting started with syfala and Faust</h1>
+<h2 id="introduction">Introduction</h2>
+<p>This tutorial is intended for <strong>beginner</strong>-users with <strong>no background in FPGA or C++</strong> development. Only basic knowledge of <strong>Linux</strong> and using the <strong>terminal</strong> is necessary. Prior experience using the <strong>Faust language</strong> is also preferable, but not required.</p>
+<h3 id="minimum-hardwaresoftware-requirements">Minimum hardware/software requirements</h3>
+<ul>
+<li>
+<p><strong>Linux system</strong> (preferably Ubuntu 18.04 or higher, Debian-based or Archlinux-based distributions in general).</p>
+</li>
+<li>
+<p>16GB of <strong>RAM</strong> (32 is recommended for bigger DSP programs).</p>
+</li>
+<li>
+<p>100 GB of <strong>free disk space</strong> (for AMD-Xilinx tools installation)</p>
+</li>
+</ul>
+<p>One of the following development boards:</p>
+<ul>
+<li>
+<p>Digilent <strong>Zybo Z7-10</strong> - Zynq-7000 ARM/FPGA SoC Development Board</p>
+</li>
+<li>
+<p>Digilent <strong>Zybo Z7-20</strong> - Zynq-7000 ARM/FPGA SoC Development Board</p>
+</li>
+<li>
+<p>Digilent <strong>Genesys ZU-3EG</strong> - Zynq UltraScale+ MPSoC Development Board</p>
+</li>
+</ul>
+<h3 id="objectives">Objectives</h3>
+<p>In this tutorial, we will cover the essential topics to get started with the <strong>Faust programming language</strong>, <strong>syfala</strong>, and audio programming on <strong>FPGAs</strong> in general. We will start by briefly presenting all of these programs and environments, and then we will get our hands on a very concrete audio program example that we're going to build, flash on our FPGA development board, and control remotely, using different protocols, such as <strong>MIDI</strong>, <strong>OSC</strong> and <strong>HTTP</strong>.</p>
+<h2 id="faust">Faust</h2>
+<p>Faust (Functional Audio Stream) is a <strong>functional programming language</strong> for sound synthesis and audio processing with a strong focus on the design  of synthesizers, musical instruments, audio effects, etc. created at the <a href="https://www.grame.fr/recherche">GRAME-CNCM Research Department</a>. </p>
+<p>In order to get you started using Faust, we recommend that you follow this tutorial : https://faustdoc.grame.fr/manual/quick-start</p>
+<h2 id="syfala">Syfala</h2>
+<h3 id="about-syfala-and-fpgas">About syfala (and FPGAs)</h3>
+<p>Syfala is a set of command-line tools &amp; scripts aiming to <strong>facilitate audio programming on FPGAs</strong>. It currently targets <strong>AMD-Xilinx</strong> devices, such as the <strong>Digilent Zybo Z7-10 &amp; Z7-20</strong>, or the <strong>Genesys ZU-3EG</strong>. It takes a <strong>Faust</strong> <code>.dsp</code> file or a <strong>C++</strong> <code>.cpp</code> file as input, and then configures and calls all the AMD-Xilinx softwares that will compile all the required binaries to be flashed on device.</p>
+<p>The <strong>repository</strong> itself is composed of a few different elements:</p>
+<ul>
+<li><strong>Command-line interface</strong> scripts (<code>syfala.tcl</code>).</li>
+<li><strong>Faust architecture files</strong>, for interfacing with <strong>High Level Synthesis</strong> (HLS).</li>
+<li><strong>Tcp scripts</strong>, used to configure and call the AMD-Xilinx softwares, such as Vitis HLS, Vivado, Vitis...</li>
+<li><strong>Baremetal/Linux C++ code</strong>, for the ARM control executable.</li>
+<li><strong>VHDL code</strong>: custom i²s implementations.</li>
+<li>Other types of <strong>scripts</strong> (for preprocessing, Makefile, Embedded Linux...)</li>
+</ul>
+<h3 id="installing-the-toolchain">Installing the toolchain</h3>
+<h4 id="dependencies">Dependencies</h4>
+<p>Please follow the instructions in the file <a href="../../manual/dependencies/">dependencies.md</a> in order to install the <strong>AMD-Xilinx</strong> <strong>toolchain</strong> and various other dependencies.</p>
+<h4 id="installing-syfala">Installing Syfala</h4>
+<pre><code class="language-shell">git clone https://github.com/inria-emeraude/syfala.git syfala
+cd syfala
+make install
+</code></pre>
+<p>You'll also have to add the following <strong>environment variable</strong> to your shell <strong>resource</strong> <strong>file</strong> (~/.<strong>bashrc</strong> / ~/.<strong>zshrc</strong>)</p>
+<pre><code class="language-shell">export XILINX_ROOT_DIR=/my/path/to/Xilinx/root/directory
+</code></pre>
+<p>where <code>XILINX_ROOT_DIR</code> is the root directory where all of the <strong>AMD-Xilinx tools</strong> (<em>Vivado</em>, <em>Vitis</em>, <em>Vitis_HLS</em>) are installed.</p>
+<h3 id="your-first-example">Your first example</h3>
+<h4 id="building">Building</h4>
+<pre><code class="language-shell">syfala &lt;faust-file.dsp&gt; [options]
+</code></pre>
+<pre><code class="language-shell"># Depending on the development board that you have, the command will be:
+syfala examples/faust/virtualAnalog.dsp --board Z10
+                                        --board Z20
+                                        --board GENESYS
+</code></pre>
+<p>This will run the <strong>full syfala toolchain</strong> on the <code>virtualAnalog.dsp</code> <strong>Faust</strong> file, which will then be ready to be <strong>flashed</strong> on your board. Under the hood, <strong>syfala</strong> will follow multiple steps, which you'll be able to monitor from the console log:</p>
+<h5 id="1-sources">1 - <strong>Sources</strong></h5>
+<p>It will <strong>call Faust</strong> to <strong>generate the C++ code</strong> from the <code>virtualAnalog.dsp</code> file, with a custom-made <strong>syfala</strong> <em>architecture file</em>. You'll be able to see the resulting code in <code>build/syfala_ip/syfala_ip_preprocessed.cpp</code>.</p>
+<h5 id="2-hls">2 - <strong>HLS</strong></h5>
+<p>Once the C++ code is generated, it will call <strong>Vitis HLS</strong>, which will translate it into a self-contained <em>Hardware Description Language</em> (<strong>HDL</strong>) program, which we're going in this tutorial to call the <strong>DSP kernel</strong>. The resulting code of this <em>kernel</em> can be viewed in the <code>build/syfala_ip/syfala/impl/vhdl/syfala.vhd</code> <strong>VHDL</strong> file.</p>
+<h5 id="3-project">3 - <strong>Project</strong></h5>
+<p>Here, the <strong>DSP kernel</strong> generated by Vitis HLS is going to be imported  into a more global <em>Vivado design</em>, which will include the <strong>processing system</strong> (PS), our custom-made <strong>Integrated Interchip Sound</strong> (<strong>i²s</strong>) transceiver, and various other modules as well. The resulting code can be viewed in <code>build/syfala_project/syfala_project.gen/sources_1/bd/main/hdl/main_wrapper.vhd</code></p>
+<h5 id="4-synthesis-implementation">4 - <strong>Synthesis &amp; implementation</strong></h5>
+<p>From here, <strong>Vivado</strong> will 'compile' the project's final <em>design</em> into what we call a <strong>bitstream</strong>, which is a hardware configuration file: it includes the description of the hardware logic, routing, and initial values for both registers and on-chip memory (e.g. LUT).</p>
+<h5 id="5-arm-control-executable">5 - <strong>ARM control executable</strong></h5>
+<p>Finally, we will also need to cross-compile an ARM elf executable to take care of all initialization and control-rate computations, which are done on the CPU, and exchanged with the DSP kernel using a specific set of buses.</p>
+<h4 id="reading-performance-reports">Reading performance reports</h4>
+<p>If the build went well, you should be able to see on your terminal a recap of the <strong>build's configuration</strong> and an <strong>overview of its performance reports</strong>. Since the <strong>HLS report</strong> is only an <strong>estimate</strong>, the <strong>Vivado summary</strong> is the one that you should really pay attention to.</p>
+<pre><code>virtualAnalog Z20
+
+- DSP:  15% (35)
+- Reg:  9% (9730)
+- LUT:  16% (8820)
+- BRAM:  0% (0)
+
+Tot. 344 Cycles, 2.799us
+Max. 2604 Cycles, 20,8333us
+Lat. 13%
+</code></pre>
+<h5 id="resources"><strong>Resources</strong></h5>
+<p>Here we can see that, on our Zybo Z7-20 development board, the final <em>design</em> doesn't take a lot of FPGA resources, so there's potentially room to add more cool stuff to our Faust program, if the latency is sufficiently low as well.</p>
+<h5 id="latency"><strong>Latency</strong></h5>
+<p>The report shows that the <em>DSP kernel</em>'s computations are done in 2.799 microseconds (344 FPGA clock cycles at 122 MHz): that is way <strong>below</strong> the <strong>maximum allowed for the computation of a single sample</strong>, which is defined by the reciprocal of the sample-rate (<code>1/48000</code> in our case, which equals to <code>20,8333</code> microseconds).</p>
+<h4 id="exporting-and-re-importing-your-builds">Exporting and re-importing your builds</h4>
+<p>Before flashing, or doing anything else, it's generally a good idea to <strong>save and export your build outputs</strong>, especially when compilation times are really long, like ours. You can do this with the following <strong>syfala command</strong>:</p>
+<pre><code class="language-shell">syfala export my-faust-virtual-analog-build
+# output in 'export/my-faust-virtual-analog-build.zip'
+</code></pre>
+<p>The resulting <code>.zip</code> file is then going to be available in the repository's <code>export</code> directory. Later, you'll be able to <strong>re-import</strong> it by doing:</p>
+<pre><code class="language-shell">syfala import export/my-faust-virtual-analog-build.zip
+</code></pre>
+<h4 id="flashing">Flashing</h4>
+<p>Now we have our program fully compiled and exported, we can try it on our development Board. In order to do so, two options:</p>
+<ol>
+<li>Flash it <strong>from USB</strong> (with <em>JTAG</em>), by connecting an USB cable to the board's <strong>UART port</strong>.</li>
+<li>Flash it from a bootable <strong>SD card</strong>.</li>
+</ol>
+<h5 id="hardware-configuration"><strong>Hardware configuration</strong></h5>
+<p>In both cases, you'll have first to make sure that the board is set up with this configuration:</p>
+<ul>
+<li>
+<p><strong>Power select</strong> jumper (JP6) should be on <em>USB</em></p>
+</li>
+<li>
+<p>Board should be connected (<strong>UART PROG port</strong>) to your machine with a micro-USB to USB cable.</p>
+</li>
+<li>
+<p><strong>Switches</strong> SW0, SW1, SW2, SW3 should be <strong>down</strong></p>
+</li>
+<li>
+<p>The <strong>audio input</strong> is <strong>LINE IN</strong> (blue), not ~~MIC IN~~.</p>
+</li>
+<li>
+<p>The <strong>audio output</strong> is the black <strong>HPH OUT</strong> jack.</p>
+</li>
+</ul>
+<h5 id="usb-jtag"><strong>USB (JTAG)</strong></h5>
+<ul>
+<li>
+<p>Hardware configuration: jumper <strong>JP5</strong> should be on <em>JTAG</em>.</p>
+</li>
+<li>
+<p>Board should be powered up with <strong>SW4</strong>.</p>
+</li>
+</ul>
+<p>You can then quickly flash your program by entering the following syfala command from your terminal:</p>
+<pre><code class="language-shell">syfala flash
+</code></pre>
+<p>Keep in mind that when you shutdown your device and power it up again, <strong>it won't start your program again automatically</strong> (because it is not kept in memory), so you'll have to enter the <code>syfala flash</code> command again. This is why working with SD cards is going to be a better solution if you have the need to reload your program every time your power up the board.</p>
+<h5 id="sd-card"><strong>SD card</strong></h5>
+<ul>
+<li>
+<p>Jumper <strong>JP5</strong> should be on <em>SD</em>.</p>
+</li>
+<li>
+<p><strong>SD card</strong> should have a <strong>FAT32 bootable partition</strong>.</p>
+</li>
+</ul>
+<p>To generate the bootable binary file <code>boot.bin</code>, you can add the <code>--boot</code> flag to your syfala command :</p>
+<pre><code class="language-shell">syfala examples/faust/virtualAnalog.dsp --board Z20 --boot
+</code></pre>
+<p>It won't re-compile the whole project, it will just take the hardware and software outputs of your build and package them into a single <strong>bootable binary file</strong> (<code>boot.bin</code>), which you'll find in the <code>build/sw_export</code> directory. You can then just copy this file into your SD card, and insert it in the board's SD card socket, and then power the board up with <strong>SW4</strong>.</p>
+<h3 id="monitoring-and-controlling-the-board-remotely">Monitoring and controlling the board remotely</h3>
+<p>Once your build is flashed on your board, you'll first want to make sure that the program has been <strong>loaded</strong> and <strong>executed properly</strong>. You can obviously plug in a headset or a pair of speakers to check its audio output, but there are also a couple of ways of getting <em>debug</em> information, which you'll need in case the program is not working the way it is supposed to:</p>
+<h4 id="leds"><strong>LEDs</strong></h4>
+<p>Right after flashing your build, you can directly look at the board's <strong>LD12</strong> LED, which is supposed to <strong>turn green when a bitstream has been properly loaded</strong>. Then, you can look at the <strong>LD5 RGB LED</strong>, which will go from <strong>blue</strong> to <strong>green</strong> during the ARM control program execution. Audio will usually start right after this LED turns green.</p>
+<p>If an error occurs, and <strong>LD12</strong> is still off, or <strong>LD5</strong> turns <strong>red</strong>, the next step would be to check the board's console output, which is accessible through UART.</p>
+<h4 id="uart-console"><strong>UART console</strong></h4>
+<p>In order to view the board's console output, you will need to install a <strong>serial device i/o tool</strong>, such as <code>minicom</code> or <code>tio</code>. For this tutorial, we will use <code>tio</code>. Once the board is connected with an USB cable (<strong>PROG UART port</strong>) to your laptop or desktop computer, you can enter the following command:</p>
+<pre><code class="language-shell">tio -b 115200 /dev/ttyUSB1
+</code></pre>
+<p>This will tell <code>tio</code> to connect to the <code>ttyUSB1</code> serial device interface with a baud rate of <code>115200</code>. Once it is done and the board has been powered-up again, you should see debug information being displayed on the console.</p>
+<h4 id="remote-control-of-faust-parameters"><strong>Remote control of Faust parameters</strong></h4>
+<h5 id="usb-uart-control"><strong>USB-UART control</strong></h5>
+<p>All of the user-interface elements declared in the Faust DSP code are controllable. In <em>baremetal</em> mode, the preferred way of doing this remotely from your machine would be using the available GUI to Serial interface, that you can start with the following command, once the DSP program is running on your board:</p>
+<pre><code class="language-shell">syfala start-gui
+</code></pre>
+<p>Syfala should now be building the user-interface after having retrieved the <code>.dsp</code> file's control parameters, and display it with a <strong>GTK interface</strong> when it's ready. You should now be able to play with the different <em>buttons</em>, <em>sliders</em> and <em>knobs</em> that have been defined in your Faust file.</p>
+<p>Now, GTK-based sliders and buttons are perfectly fine for testing your program, but you'll probably want at some point to have a nicer way to control its parameters, by using for instance <strong>MIDI</strong> or <strong>OSC</strong> interfaces. For now, in <em>baremetal</em> mode, it is not possible (yet) to plug a MIDI controller directly on the board's USB port and control your Faust parameters, because MIDI-USB baremetal drivers are unfortunately not yet implemented in syfala. The same goes for Ethernet-OSC.  To remedy this problem, we offer at the moment two solutions :</p>
+<ol>
+<li>The <strong>Embedded Linux</strong> for syfala (<a href="../embedded-linux-getting-started/">tutorials/embedded-linux-getting-started.md</a>)</li>
+<li>On <strong>Linux</strong>, MIDI, OSC &amp; HTTP libraries are available, and ready-to-use with syfala.</li>
+<li><strong>MIDI</strong>, <strong>OSC</strong>, <strong>HTTP</strong> layers <strong>on top of the Serial interface</strong>.</li>
+<li>MIDI, OSC &amp; HTTP interfaces will be used on your machine, and translated/channeled into the <strong>Serial interface</strong> to be transmitted to the board. This is not ideal and will introduce some more control latency to the setup, but is easy to use.</li>
+</ol>
+<h5 id="midi-control"><strong>MIDI control</strong></h5>
+<p>In order to build a target with MIDI-Serial support, you can add the <code>--midi</code> flag to the command line, and reload the <code>start-gui</code> command:</p>
+<pre><code class="language-shell">syfala examples/faust/virtualAnalogMIDI.dsp --board Z20 --midi
+syfala start-gui
+</code></pre>
+<p>You'll also have to explicitly map in your Faust code the controls (sliders, knobs, etc.) to a MIDI control element (note, cc, pressure, etc.). An example of MIDI-mapping can be viewed in <code>examples/faust/virtualAnalogMIDI.dsp</code>, and the Faust MIDI-mapping process is fully explained here : <a href="https://faustdoc.grame.fr/manual/midi">https://faustdoc.grame.fr/manual/midi</a></p>
+<h5 id="osc-control"><strong>OSC control</strong></h5>
+<p>In order to build a target with <strong>OSC support</strong>, you can add the <code>--osc</code> flag to the command line:</p>
+<pre><code class="language-shell">syfala examples/faust/virtualAnalog.dsp --board Z20 --osc
+syfala start-gui
+</code></pre>
+<p>The GUI control application will create an <strong>Open Sound Control-compliant UDP server</strong>. You'll be then able to control remotely the Faust DSP parameters by sending OSC messages like so:</p>
+<ul>
+<li>
+<p><em>/virtualAnalog/lfoRange 2000</em></p>
+</li>
+<li>
+<p><em>/virtualAnalog/oscFreq 500</em></p>
+</li>
+<li>
+<p>etc.</p>
+</li>
+</ul>
+<p>More on: <a href="https://faustdoc.grame.fr/manual/osc">https://faustdoc.grame.fr/manual/osc</a></p>
+<h5 id="http-control"><strong>HTTP control</strong></h5>
+<p>In order to build a target with <strong>HTTP support</strong>, you can add the <code>--http</code> flag to the command line:</p>
+<pre><code class="language-shell">syfala examples/faust/virtualAnalog.dsp --board Z20 --http
+syfala start-gui
+</code></pre>
+<p>The GUI control application <strong>will create a HTTP server</strong> allowing users to <strong>control the Faust DSP parameters remotely</strong> (given that you are on the same network as your FPGA board).</p>
+<p>At runtime, when executed, the <strong>application will print the device's current network IP</strong> (IPv4), and the <strong>port</strong> used by the HTTP server. You can then <strong>use any web browser</strong>, and control the application by entering the server's URL, for example <a href="http://192.168.0.1:5510">http://192.168.0.1:5510</a></p>
+<h4 id="spi-based-controllers">SPI-based controllers</h4>
+<p>[...]</p>
+<h2 id="going-further">Going further</h2>
+<h3 id="embedded-linux">Embedded Linux</h3>
+<p><em>Note: only available for Zybo Z7-10/Z7-20 boards (Genesys not yet supported)</em> .</p>
+<p>Starting from <strong>syfala 0.8</strong>, you can choose to build our <strong>custom-made embedded Linux</strong>, which will provide, in addition to all the things an OS has to offer (SSH control over Ethernet or Wi-Fi, package manager, etc.), the following features:</p>
+<ul>
+<li><strong>No latency cost</strong> (the <em>DSP kernel</em> still dwells in the Programmable Logic)</li>
+<li><strong>On-the-fly FPGA reprogramming</strong> from Linux (with no need to reboot or re-login).</li>
+<li><strong>On-board USB-MIDI control</strong> (from the board's USB OTG port).</li>
+<li>Direct <strong>OSC/HTTP control</strong>, pre-mapped to the Faust DSP program's user-defined GUI elements (sliders, buttons, checkboxes, etc.). </li>
+</ul>
+<p>From the syfala command line interface, all you need to do is add the <code>--linux</code> flag:</p>
+<pre><code class="language-shell">syfala examples/virtualAnalog.dsp --linux
+</code></pre>
+<p>For the rest of the procedure, you can follow the <a href="../embedded-linux-getting-started/">linux getting-started tutorial</a></p>
+<h3 id="using-syfala-with-c">Using syfala with C++</h3>
+<p>If you'd rather write your DSP code directly in C++, or you have a more imperative need for performance and optimization, you can follow our <a href="../cpp-tutorial-advanced/">C++ tutorial here</a> (advanced users).</p></div>
+        
+        
+    </div>
+
+    
+      <footer class="col-md-12 text-center">
+          
+          
+            <hr>
+            <p>
+            <small>Copyright &copy; 2023 <a href="https://team.inria.fr/emeraude/">Emeraude</a></small><br>
+            
+            <small>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</small>
+            </p>
+          
+
+          
+          
+      </footer>
+    
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="../../js/bootstrap-3.0.3.min.js"></script>
+
+    
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.18.0/build/highlight.min.js"></script>
+        
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+
+    <script>var base_url = "../.."</script>
+    
+    <script src="../../js/base.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="../../search/main.js"></script>
+
+    <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                    <span class="sr-only">Close</span>
+                </button>
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+    </body>
+
+</html>

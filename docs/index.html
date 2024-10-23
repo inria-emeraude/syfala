@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A guide to the Syfala toolchain.">
+    
+    
+    <link rel="shortcut icon" href="img/favicon.ico">
+
+    
+    <title>Home - Syfala Documentation</title>
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/v4-shims.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hack-font@3.3.0/build/web/hack.min.css">
+    <link href='//rsms.me/inter/inter.css' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,300,600,700&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href="css/bootstrap-custom.min.css" rel="stylesheet">
+    <link href="css/base.min.css" rel="stylesheet">
+    <link href="css/cinder.min.css" rel="stylesheet">
+
+    
+        
+        <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.18.0/build/styles/nord.min.css">
+        
+    
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+            <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+        <![endif]-->
+
+    
+
+     
+</head>
+
+<body class="homepage" >
+
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            
+
+            <!-- Main title -->
+
+            
+              <a class="navbar-brand" href=".">Syfala Documentation</a>
+            
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                
+                
+                    <li class="active">
+                        <a href=".">Home</a>
+                    </li>
+                
+                
+                
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Manual <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="manual/dependencies/">Dependencies</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="manual/reference/">Reference</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Tutorials <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="tutorials/faust-getting-started/">Faust tutorial</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="tutorials/embedded-linux-getting-started/">Embedded Linux</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="tutorials/cpp-tutorial-advanced/">C++ tutorial</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                            <i class="fas fa-search"></i> Search
+                        </a>
+                    </li>
+                    <li class="disabled">
+                        <a rel="prev" >
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="next" href="manual/dependencies/">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+    <div class="container">
+        
+        
+        <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="first-level active"><a href="#syfala-v080">syfala v0.8.0</a></li>
+            <li class="second-level"><a href="#supported-platforms">Supported platforms</a></li>
+                
+            <li class="second-level"><a href="#dependencies">Dependencies</a></li>
+                
+            <li class="second-level"><a href="#installing">Installing</a></li>
+                
+            <li class="second-level"><a href="#tutorials">Tutorials</a></li>
+                
+                <li class="third-level"><a href="#getting-started-with-syfala-and-faust">Getting started with syfala and Faust</a></li>
+                <li class="third-level"><a href="#embedded-linux">Embedded Linux</a></li>
+                <li class="third-level"><a href="#using-syfala-with-c-advanced">Using syfala with C++ (advanced)</a></li>
+            <li class="second-level"><a href="#quick-getting-started">Quick getting-started</a></li>
+                
+                <li class="third-level"><a href="#software">Software</a></li>
+                <li class="third-level"><a href="#exporting-and-re-importing-your-builds">Exporting and re-importing your builds</a></li>
+                <li class="third-level"><a href="#building-another-dsp-target">Building another DSP target</a></li>
+                <li class="third-level"><a href="#hardware-digilent-zybo-z7-1020-boards">Hardware (Digilent Zybo-Z7-10/20 boards)</a></li>
+            <li class="second-level"><a href="#going-further">Going further</a></li>
+                
+            <li class="second-level"><a href="#the-syfala-team">The syfala team</a></li>
+                
+    </ul>
+</div></div>
+        <div class="col-md-9" role="main">
+
+<h1 id="syfala-v080">syfala v0.8.0</h1>
+<p>Automatic compilation of Faust and C++ audio DSP programs for AMD/Xilinx FPGA platforms.</p>
+<h2 id="supported-platforms">Supported platforms</h2>
+<ul>
+<li>
+<p>Digilent <strong>Zybo Z7-10</strong> - Zynq-7000 ARM/FPGA SoC Development Board</p>
+</li>
+<li>
+<p>Digilent <strong>Zybo Z7-20</strong> - Zynq-7000 ARM/FPGA SoC Development Board</p>
+</li>
+<li>
+<p>Digilent <strong>Genesys ZU-3EG</strong> - Zynq UltraScale+ MPSoC Development Board</p>
+</li>
+</ul>
+<p>and more to come...</p>
+<h2 id="dependencies">Dependencies</h2>
+<p>Please follow the instructions in the file <a href="manual/dependencies/">dependencies.md</a> in order to install the <strong>AMD-Xilinx</strong> <strong>toolchain</strong> and various other dependencies.</p>
+<h2 id="installing">Installing</h2>
+<p>the command <code>make install</code> will install a <strong>symlink</strong> in <strong>/usr/bin</strong>. After this you'll be able to just run on your terminal: </p>
+<p><code>syfala myfaustprogram.dsp</code> </p>
+<p>You'll also have to <strong>edit</strong> your shell <strong>resource</strong> <strong>file</strong> (~/.<strong>bashrc</strong> / ~/.<strong>zshrc</strong>) and set the following environment variable: </p>
+<pre><code class="language-shell">export XILINX_ROOT_DIR=/my/path/to/Xilinx/root/directory
+</code></pre>
+<p><code>XILINX_ROOT_DIR</code> is the root directory where all of the AMD-Xilinx tools (Vivado, Vitis, Vitis_HLS) are installed.</p>
+<h2 id="tutorials">Tutorials</h2>
+<h3 id="getting-started-with-syfala-and-faust">Getting started with syfala and Faust</h3>
+<p><a href="tutorials/faust-getting-started/">tutorials/getting-started-faust.md</a></p>
+<p>In this tutorial, we will cover the essential topics to get you started with the <strong>Faust programming language</strong>, <strong>syfala</strong>, and audio programming on <strong>FPGAs</strong>. </p>
+<h3 id="embedded-linux">Embedded Linux</h3>
+<p>Please report to the <a href="tutorials/embedded-linux-getting-started/">tutorials/embedded-linux-getting-started.md</a> document in order to get you started with the Embedded Linux for Syfala</p>
+<h3 id="using-syfala-with-c-advanced">Using syfala with C++ (advanced)</h3>
+<p><a href="tutorials/cpp-tutorial-advanced/">tutorials/cpp-tutorial-advanced.md</a></p>
+<p>This tutorial will show you how to program a syfala DSP <em>kernel</em> using C++. It is intended for advanced users.</p>
+<h2 id="quick-getting-started">Quick getting-started</h2>
+<h3 id="software">Software</h3>
+<h4 id="faust-targets">Faust targets</h4>
+<p>Building a simple example for the <strong>default board</strong> (Digilent Zybo <strong>Z7-10)</strong>:</p>
+<pre><code class="language-shell">syfala examples/faust/virtualAnalog.dsp
+</code></pre>
+<p>This will run the <strong>full syfala toolchain</strong> on the virtualAnalog.dsp <strong>Faust</strong> file, which will then be ready to be flashed on the board. Y<strong>ou can specify the targeted board</strong> using the <code>-b (--board)</code> option:</p>
+<pre><code class="language-shell">syfala examples/faust/virtualAnalog.dsp --board Z20
+syfala examples/faust/virtualAnalog.dsp --board GENESYS
+</code></pre>
+<p>Once the build is finished (depending on your computer, it usually takes between 15 and 30 minutes to complete), you can <strong>connect the board</strong> to your computer with the proper <strong>USB/Serial port cable</strong> and run the <code>flash</code> command:</p>
+<pre><code class="language-shell">syfala flash
+</code></pre>
+<p>The board's <strong>RGB LED</strong> should then flash <strong>green</strong> after a few seconds, indicating that your program is running. You can now <strong>start the Faust GUI application</strong>, which will display a set of sliders/knobs/buttons and <strong>update the DSP parameters in real-time through USB-UART</strong>:</p>
+<pre><code class="language-shell">syfala start-gui
+</code></pre>
+<h4 id="c-targets">C++ targets</h4>
+<p>For C++ targets, the process is exactly the same (excepted for the GUI part, which is not available):</p>
+<pre><code class="language-shell">syfala examples/cpp/templates/bypass.cpp --board Z20
+syfala flash
+</code></pre>
+<h3 id="exporting-and-re-importing-your-builds">Exporting and re-importing your builds</h3>
+<p>When you're done playing with your program, you can <strong>save and export it</strong> as a <code>.zip</code> file with the following command:</p>
+<pre><code class="language-shell">syfala export my-faust-virtual-analog-build
+# output in 'export/my-faust-virtual-analog-build.zip'
+</code></pre>
+<p>The resulting <code>.zip</code> file is now available in the repository's <code>export</code> directory, you can <strong>re-import</strong> it by typing:</p>
+<pre><code class="language-shell">syfala import export/my-faust-virtual-analog-build.zip
+</code></pre>
+<h3 id="building-another-dsp-target">Building another DSP target</h3>
+<p>Before building another DSP program, please <strong>make sure you have saved and exported your previous build</strong> beforehand, otherwise <strong>it will be overwritten</strong> whenever you start a new build. </p>
+<pre><code class="language-shell">syfala examples/my-new-dsp-build.dsp
+</code></pre>
+<h3 id="hardware-digilent-zybo-z7-1020-boards">Hardware (Digilent <strong>Zybo-Z7-10/20</strong> boards)</h3>
+<ul>
+<li>
+<p>Jumper <strong>JP5</strong> should be on <em>JTAG</em> </p>
+</li>
+<li>
+<p><strong>Power select</strong> jumper should be on <em>USB</em>  </p>
+</li>
+<li>
+<p><strong>Switches</strong> SW0, SW1, SW2, SW3 should be <strong>down</strong>  </p>
+</li>
+<li>
+<p>The <strong>audio input</strong> is <strong>LINE IN</strong> (blue), not MIC IN  </p>
+</li>
+<li>
+<p>The <strong>audio output</strong> is the black <strong>HPH OUT</strong> jack  </p>
+</li>
+</ul>
+<h2 id="going-further">Going further</h2>
+<p>Please report to the <a href="manual/reference/">reference</a> for more information on available <strong>commands</strong>, <strong>options</strong> and documentation.</p>
+<h2 id="the-syfala-team">The syfala team</h2>
+<p>Here is a list of person that have contributed to the Syfala project :</p>
+<ul>
+<li>Tanguy Risset</li>
+<li>Yann Orlarey </li>
+<li>Romain Michon</li>
+<li>Stephane Letz</li>
+<li>Florent de Dinechin</li>
+<li>Anastasia Volkova</li>
+<li>Alain Darte</li>
+<li>Yohan Uguen</li>
+<li>Gero Müller</li>
+<li>Adeyemi Gbadamosi</li>
+<li>Ousmane Touat</li>
+<li>Luc Forget</li>
+<li>Antonin Dudermel</li>
+<li>Maxime Popoff</li>
+<li>Thomas Delmas</li>
+<li>Oussama Bouksim</li>
+<li>Pierre Cochard</li>
+<li>Joseph Bizien</li>
+<li>Agathe Herrou</li>
+<li>Jurek Weber</li>
+<li>Aloïs Rautureau</li>
+<li>Jessica Zaki-Sewa</li>
+</ul></div>
+        
+        
+    </div>
+
+    
+      <footer class="col-md-12 text-center">
+          
+          
+            <hr>
+            <p>
+            <small>Copyright &copy; 2023 <a href="https://team.inria.fr/emeraude/">Emeraude</a></small><br>
+            
+            <small>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</small>
+            </p>
+          
+
+          
+          
+      </footer>
+    
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="js/bootstrap-3.0.3.min.js"></script>
+
+    
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.18.0/build/highlight.min.js"></script>
+        
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+
+    <script>var base_url = "."</script>
+    
+    <script src="js/base.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="search/main.js"></script>
+
+    <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                    <span class="sr-only">Close</span>
+                </button>
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+    </body>
+
+</html>
+
+<!--
+MkDocs version : 1.5.3
+Build Date UTC : 2024-10-23 11:23:15.762156+00:00
+-->

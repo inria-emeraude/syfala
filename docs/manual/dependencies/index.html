@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A guide to the Syfala toolchain.">
+    
+    
+    <link rel="shortcut icon" href="../../img/favicon.ico">
+
+    
+    <title>Dependencies - Syfala Documentation</title>
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/v4-shims.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hack-font@3.3.0/build/web/hack.min.css">
+    <link href='//rsms.me/inter/inter.css' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,300,600,700&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+    <link href="../../css/base.min.css" rel="stylesheet">
+    <link href="../../css/cinder.min.css" rel="stylesheet">
+
+    
+        
+        <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.18.0/build/styles/nord.min.css">
+        
+    
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+            <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+        <![endif]-->
+
+    
+
+     
+</head>
+
+<body>
+
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            
+
+            <!-- Main title -->
+
+            
+              <a class="navbar-brand" href="../..">Syfala Documentation</a>
+            
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                
+                
+                    <li >
+                        <a href="../..">Home</a>
+                    </li>
+                
+                
+                
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Manual <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li class="active">
+    <a href="./">Dependencies</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../reference/">Reference</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Tutorials <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../../tutorials/faust-getting-started/">Faust tutorial</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../../tutorials/embedded-linux-getting-started/">Embedded Linux</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../../tutorials/cpp-tutorial-advanced/">C++ tutorial</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                            <i class="fas fa-search"></i> Search
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../..">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="next" href="../reference/">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+    <div class="container">
+        
+        
+        <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="first-level active"><a href="#syfala-toolchain-dependencies">Syfala toolchain dependencies</a></li>
+            <li class="second-level"><a href="#linux-platforms">Linux platforms</a></li>
+                
+                <li class="third-level"><a href="#ubuntu-dependencies">Ubuntu dependencies</a></li>
+                <li class="third-level"><a href="#archlinux-dependencies">Archlinux dependencies</a></li>
+            <li class="second-level"><a href="#faust">Faust</a></li>
+                
+            <li class="second-level"><a href="#vivado-vitis-vitis-hls-20241-version">Vivado, Vitis &amp; Vitis HLS (2024.1 version)</a></li>
+                
+                <li class="third-level"><a href="#installing-cable-drivers-on-linux">Installing Cable Drivers on Linux</a></li>
+                <li class="third-level"><a href="#installing-digilent-board-files">Installing Digilent Board Files</a></li>
+            <li class="second-level"><a href="#cloning-the-syfala-repository">Cloning the Syfala repository</a></li>
+                
+            <li class="second-level"><a href="#troubleshooting">Troubleshooting</a></li>
+                
+                <li class="third-level"><a href="#vitisjava-issues">Vitis/Java issues</a></li>
+                <li class="third-level"><a href="#installing-the-2022-patch-amd-xilinx-toolchain-v20202-only">Installing the 2022 patch (AMD-Xilinx toolchain v2020.2 only)</a></li>
+            <li class="second-level"><a href="#_1"></a></li>
+                
+    </ul>
+</div></div>
+        <div class="col-md-9" role="main">
+
+<h1 id="syfala-toolchain-dependencies">Syfala toolchain dependencies</h1>
+<p>The Syfala toolchain is a compilation toolchain of Faust programs onto AMD-Xilinx FPGA targets. This document explains how to install and run the <strong>version 0.10.0</strong> of the toolchain  on a Linux machine. In practice, installing the Syfala toolchain means:</p>
+<ul>
+<li>Installing the required <strong>linux-packages</strong>, depending on your Linux distribution.</li>
+<li>Installing the <strong>Faust</strong> compiler</li>
+<li>Creating a <strong>AMD-Xilinx account</strong> and downloading/installing the <strong>2024.1 version</strong> (2022.2 and 2023.2 are also still supported) of the AMD-Xilinx toolchain (providing softwares such as Vivado, Vitis, Vitis HLS).</li>
+<li>Installing the additional <strong>Vivado Board Files</strong> for Digilent Boards.</li>
+<li>Installing <em>udev</em> rules in order to use the JTAG connection.</li>
+<li>Cloning the <strong>Syfala repository</strong>, and running a <strong>simple example</strong> to make sure everything is working properly.</li>
+</ul>
+<h2 id="linux-platforms">Linux platforms</h2>
+<p>We recommend using <strong>Ubuntu</strong> (&gt;= 18.04 LTS) for installing and using the toolchain, since it is officially supported by AMD-Xilinx. While it is still possible to use other distributions, such as Archlinux, you may encounter unresolved bugs, which won't necessarily appear in our <em>Troubleshooting</em> section below. </p>
+<h3 id="ubuntu-dependencies">Ubuntu dependencies</h3>
+<pre><code class="language-shell">sudo apt-get update 
+sudo apt-get install git libncurses5 libtinfo-dev build-essential default-jre pkg-config g++-multilib gtk+2.0 locales
+</code></pre>
+<h3 id="archlinux-dependencies">Archlinux dependencies</h3>
+<pre><code class="language-shell"># faust (required)
+sudo pacman -S faust
+
+# for xilinx vivado/vitis etc.
+yay -S ncurses5-compat-libs libxcrypt-compat libpng12 lib32-libpng12 xorg-xlsclients gtk2
+</code></pre>
+<h2 id="faust">Faust</h2>
+<p>It is recommended to clone Faust from the official github repository: https://github.com/grame-cncm/faust</p>
+<pre><code class="language-shell">git clone https://github.com/grame-cncm/faust.git 
+cd faust
+make -j8
+sudo make install
+</code></pre>
+<h2 id="vivado-vitis-vitis-hls-20241-version">Vivado, Vitis &amp; Vitis HLS (2024.1 version)</h2>
+<ul>
+<li>
+<p>Open an account on https://www.xilinx.com/registration</p>
+</li>
+<li>
+<p>The AMD-Xilinx <a href="https://www.xilinx.com/support/download.html">download page</a> contains links for downloading the <strong>Vivado Design Suite - HLx Editions - Full Product</strong>. It is available for both Linux and Windows. </p>
+</li>
+<li>
+<p>Download the Linux installer <code>FPGAs_AdaptiveSoCs_Unified_2024.1_0522_2023_Lin64.bin</code> and execute the following commands:</p>
+</li>
+</ul>
+<pre><code class="language-shell">chmod a+x FPGAs_AdaptiveSoCs_Unified_2024.1_0522_2023_Lin64.bin
+./FPGAs_AdaptiveSoCs_Unified_2024.1_0522_2023_Lin64.bin
+</code></pre>
+<ul>
+<li>
+<p>We suggest to use the "<strong>Download Image (Install Separately)</strong>" option. It creates a directory with a <strong>xsetup</strong> file to execute that you can reuse in case of failure during the installation</p>
+</li>
+<li>
+<p>Execute <code>./xsetup</code></p>
+</li>
+<li>
+<p>Choose to install <strong>Vitis</strong> (it will still install <strong>Vivado</strong>, <strong>Vitis</strong>, and <strong>Vitis HLS</strong>). </p>
+</li>
+<li>It will need <strong>110GB of disk space</strong>: if you uncheck <em>Ultrascale</em>, <em>Ultrascale+</em>, <em>Versal ACAP</em> and <em>Alveo acceleration platform</em>, it will use less space and still work.</li>
+<li><strong>Agree</strong> with everything and choose a directory to install (e.g. ~/Xilinx)</li>
+<li>
+<p><strong>Install and wait</strong> (it may take quite a while)</p>
+</li>
+<li>
+<p><strong>Setup a shell environment variable</strong> allowing to use the tools when necessary (add this to your <code>~/.bashrc</code>, <code>~/.zshrc</code> or whatever you're currently using, replacing <code>$XILINX_ROOT_DIR</code> by the directory you chose to install all the tools)</p>
+</li>
+</ul>
+<pre><code class="language-shell">export XILINX_ROOT_DIR=$HOME/Xilinx
+</code></pre>
+<h3 id="installing-cable-drivers-on-linux">Installing Cable Drivers on Linux</h3>
+<pre><code class="language-shell">cd $XILINX_ROOT_DIR/Vivado/2024.1/data/xicom/cable_drivers/lin64/install_script/install_drivers
+./install_drivers
+# Allow JTAG-USB connection:
+sudo cp 52-xilinx-digilent-usb.rules /etc/udev/rules.d
+</code></pre>
+<h3 id="installing-digilent-board-files">Installing Digilent Board Files</h3>
+<ul>
+<li>Download the board files from <a href="https://github.com/Digilent/vivado-boards/archive/master.zip?_ga=2.76732885.1953828090.1655988025-1125947215.1655988024">github</a>:</li>
+<li>Open the folder extracted from the archive and navigate to its <code>new/board_files</code> folder. You will be copying all of this folder's subfolders</li>
+<li>For the <strong>2020.2 version</strong>, go to <code>$XILINX_ROOT_DIR/Vivado/2020.2/data/boards/board_files</code></li>
+<li>
+<p>For the <strong>2022.2 version and above</strong>, go to <code>$XILINX_ROOT_DIR/Vivado/202x.x/data/xhub/boards/XilinxBoardStore/boards/Xilinx</code></p>
+</li>
+<li>
+<p><strong>Copy</strong> all of the folders found in vivado-boards <code>new/board_files</code>folder and <strong>paste</strong> them into this folder</p>
+</li>
+</ul>
+<h2 id="cloning-the-syfala-repository">Cloning the Syfala repository</h2>
+<p>To clone and install the latest stable version of the Syfala toolchain, you can use the following commands:</p>
+<pre><code class="language-shell">git clone https://github.com/inria-emeraude/syfala 
+cd syfala
+make install
+syfala --help
+</code></pre>
+<p>In order to use the Syfala toolchain to compile your first example, please report to the main <a href="../../">README</a> file located in the repository's root directory.</p>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<p>On <strong>Archlinux</strong>, if you see an error like this one </p>
+<pre><code class="language-shell">/lib/../lib64/crti.o: file not recognized: File format not recognized
+</code></pre>
+<p>you'll have to rename the <code>Vivado/202x.x/tps/lnx64/binutils-2.26</code> (Vitis will then search in the system libraries).</p>
+<h3 id="vitisjava-issues">Vitis/Java issues</h3>
+<p>On recent systems (or with <strong>Archlinux</strong>), you might have problems compiling the host-side (<strong>ARM</strong>) application. The problem is caused by system libraries requiring newer versions of GCC than the one provided by Vitis. Replacing GCC target in Vitis' path <strong>by system GCC</strong> works:</p>
+<pre><code class="language-bash">cd $XILINX_ROOT_DIR/Vitis/202x.x/lib/lnx64.o/Default
+mv libstdc++.so.6 libstdc++.so.6.old
+rm -rf libstdc++.so (symlink)
+sudo ln -s /usr/lib/libstdc++.so.6 libstdc++.so.6
+</code></pre>
+<h3 id="installing-the-2022-patch-amd-xilinx-toolchain-v20202-only">Installing the 2022 patch (AMD-Xilinx toolchain v2020.2 only)</h3>
+<p>Vivado and Vitis tools that use HLS in the background are also affected by this issue. HLS tools set the ip_version in the format YYMMDDHHMM and this value is accessed as a signed integer (32-bit) that causes an overflow and generates the errors below (or something similar).</p>
+<ul>
+<li>Follow this link: https://support.xilinx.com/s/article/76960?language=en_US</li>
+<li>
+<p>Download the file at the bottom of th page and unzip it in <code>$XILINX_ROOT_DIR</code></p>
+</li>
+<li>
+<p>Run the following commands: </p>
+</li>
+</ul>
+<pre><code class="language-shell">cd $XILINX_ROOT_DIR
+export LD_LIBRARY_PATH=$PWD/Vivado/2020.2/tps/lnx64/python-3.8.3/lib/
+Vivado/2022.2/tps/lnx64/python-3.8.3/bin/python3 y2k22_patch/patch.py
+</code></pre>
+<h2 id="_1"></h2></div>
+        
+        
+    </div>
+
+    
+      <footer class="col-md-12 text-center">
+          
+          
+            <hr>
+            <p>
+            <small>Copyright &copy; 2023 <a href="https://team.inria.fr/emeraude/">Emeraude</a></small><br>
+            
+            <small>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</small>
+            </p>
+          
+
+          
+          
+      </footer>
+    
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="../../js/bootstrap-3.0.3.min.js"></script>
+
+    
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.18.0/build/highlight.min.js"></script>
+        
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+
+    <script>var base_url = "../.."</script>
+    
+    <script src="../../js/base.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="../../search/main.js"></script>
+
+    <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                    <span class="sr-only">Close</span>
+                </button>
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+    </body>
+
+</html>

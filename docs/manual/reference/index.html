@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A guide to the Syfala toolchain.">
+    
+    
+    <link rel="shortcut icon" href="../../img/favicon.ico">
+
+    
+    <title>Reference - Syfala Documentation</title>
+    
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/v4-shims.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/hack-font@3.3.0/build/web/hack.min.css">
+    <link href='//rsms.me/inter/inter.css' rel='stylesheet' type='text/css'>
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,700italic,400,300,600,700&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+    <link href="../../css/base.min.css" rel="stylesheet">
+    <link href="../../css/cinder.min.css" rel="stylesheet">
+
+    
+        
+        <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.18.0/build/styles/nord.min.css">
+        
+    
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+            <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+        <![endif]-->
+
+    
+
+     
+</head>
+
+<body>
+
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            
+
+            <!-- Main title -->
+
+            
+              <a class="navbar-brand" href="../..">Syfala Documentation</a>
+            
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+                <!-- Main navigation -->
+                <ul class="nav navbar-nav">
+                
+                
+                    <li >
+                        <a href="../..">Home</a>
+                    </li>
+                
+                
+                
+                    <li class="dropdown active">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Manual <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../dependencies/">Dependencies</a>
+</li>
+
+                        
+                            
+<li class="active">
+    <a href="./">Reference</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Tutorials <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                        
+                            
+<li >
+    <a href="../../tutorials/faust-getting-started/">Faust tutorial</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../../tutorials/embedded-linux-getting-started/">Embedded Linux</a>
+</li>
+
+                        
+                            
+<li >
+    <a href="../../tutorials/cpp-tutorial-advanced/">C++ tutorial</a>
+</li>
+
+                        
+                        </ul>
+                    </li>
+                
+                
+                </ul>
+
+            <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                            <i class="fas fa-search"></i> Search
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="prev" href="../dependencies/">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </a>
+                    </li>
+                    <li >
+                        <a rel="next" href="../../tutorials/faust-getting-started/">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+    <div class="container">
+        
+        
+        <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="first-level active"><a href="#command-line-interface-reference">Command-line interface reference</a></li>
+            <li class="second-level"><a href="#general-options">General options</a></li>
+                
+            <li class="second-level"><a href="#commands">Commands</a></li>
+                
+            <li class="second-level"><a href="#build-options">Build options</a></li>
+                
+            <li class="second-level"><a href="#design-options">Design options</a></li>
+                
+            <li class="second-level"><a href="#hls-options">HLS options</a></li>
+                
+            <li class="second-level"><a href="#arm-options">ARM options</a></li>
+                
+            <li class="second-level"><a href="#run-steps">Run steps</a></li>
+                
+            <li class="second-level"><a href="#run-parameters">Run parameters</a></li>
+                
+            <li class="second-level"><a href="#hardware-configuration-zybo-z7-1020">Hardware configuration (Zybo Z7-10/20)</a></li>
+                
+                <li class="third-level"><a href="#syfala-hardware-controller-board-sw3-up">Syfala Hardware Controller Board (SW3 UP)</a></li>
+                <li class="third-level"><a href="#switch-description">Switch description</a></li>
+                <li class="third-level"><a href="#status-leds">Status LEDs</a></li>
+                <li class="third-level"><a href="#sd-card-files-baremetal-configuration">SD card files (baremetal configuration)</a></li>
+    </ul>
+</div></div>
+        <div class="col-md-9" role="main">
+
+<h1 id="command-line-interface-reference">Command-line interface reference</h1>
+<h2 id="general-options">General options</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>description</th>
+<th>arguments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-x</code> <code>--xilinx-root</code></td>
+<td>sets <code>XILINX_ROOT_DIR</code> for the current build</td>
+<td>path</td>
+</tr>
+<tr>
+<td><code>--xversion</code></td>
+<td>sets <code>XILINX_VERSION</code> for the current build</td>
+<td><code>2020.2|2022.2*</code></td>
+</tr>
+<tr>
+<td><code>--board, -b</code></td>
+<td>Defines the target board: Digilent Zybo Z7-10/20 or Genesys ZU-3EG</td>
+<td><code>Z10*|Z20|GENESYS</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="commands">Commands</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>description</th>
+<th>arguments</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tidy</code></td>
+<td>removes all temporary files generated by the toolchain</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>clean</code></td>
+<td>deletes current build directory</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>reset</code></td>
+<td>deletes current build directory as well as the syfala_log &amp; resets the current toolchain configuration</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>import</code></td>
+<td>sets previously exported .zip build as the current build</td>
+<td>path to the .zip build</td>
+</tr>
+<tr>
+<td><code>export</code></td>
+<td>exports current build in a .zip file located in the 'export' directory</td>
+<td>name of the build</td>
+</tr>
+<tr>
+<td><code>report</code></td>
+<td>displays HLS or global report</td>
+<td><hls\|**any***></td>
+</tr>
+<tr>
+<td><code>log</code></td>
+<td>displays the current build's full log</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>test</code></td>
+<td>builds &amp; runs all toolchain tests</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>flash</code></td>
+<td>flashes current build onto target device</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>start-gui</code></td>
+<td>executes the Faust-generated GUI application</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>open-project</code></td>
+<td>opens the generated .xpr project with Vivado</td>
+<td><hls\|**any***></td>
+</tr>
+<tr>
+<td><code>help</code></td>
+<td>prints list of available commands, options and run-time parameters</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>version</code></td>
+<td>displays the current script's version</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+<h2 id="build-options">Build options</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--linux</code></td>
+<td>builds the embedded linux if doesn't already exist and exports the build in the root partition (<code>/home/syfala/mybuild</code>)</td>
+</tr>
+<tr>
+<td><code>--midi</code></td>
+<td>adds MIDI control for the Faust GUI and/or the Embedded Linux Control Application</td>
+</tr>
+<tr>
+<td><code>--osc</code></td>
+<td>adds OSC control for the Faust GUI and/or the Embedded Linux Control Application</td>
+</tr>
+<tr>
+<td><code>--http</code></td>
+<td>adds HTTP control for the Faust GUI and/or the Embedded Linux Control Application</td>
+</tr>
+</tbody>
+</table>
+<h2 id="design-options">Design options</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>arguments</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--multisample</code></td>
+<td>power of two integer (e.g. 16, 24, 32, <em>etc.</em>)</td>
+<td>DSP block will compute a block of samples instead of a single one. This may improve overall throughput but will introduce audio i/o latency.</td>
+</tr>
+<tr>
+<td><code>--sigma-delta</code></td>
+<td>none</td>
+<td>Builds the project with a <em>sigma-delta</em> dac configuration (<em>experimental</em>)</td>
+</tr>
+<tr>
+<td><code>--tdm</code></td>
+<td>none</td>
+<td>Builds the project with <em>i2s TDM</em> (<em>experimental</em>)</td>
+</tr>
+<tr>
+<td><code>--ethernet</code></td>
+<td>none</td>
+<td>(<strong>linux only</strong>) uses tcp/ip ethernet to convey input/output signals from &amp; to faust</td>
+</tr>
+</tbody>
+</table>
+<h2 id="hls-options">HLS options</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>arguments</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--accurate-use</code></td>
+<td>none</td>
+<td>Runs HLS with the impl flow, shows more accurate resources/latency reports, but takes longer to run.</td>
+</tr>
+<tr>
+<td><code>--csim</code></td>
+<td>path to simulation .cpp file</td>
+<td>Runs C simulation for the syfala DSP IP</td>
+</tr>
+<tr>
+<td><code>--csim-iter</code></td>
+<td>integer (1 to ...)</td>
+<td>Sets the number of <code>syfala</code> calls during the C simulation</td>
+</tr>
+<tr>
+<td><code>--csim-inputs</code></td>
+<td>path to directory containing <code>in0.txt / in1.txt etc.</code></td>
+<td>Set the directory containing input samples files (as <code>.txt</code> files). Each sample should be normalized floating point values going from -1.f to 1.f separated by a white space or a line return.</td>
+</tr>
+<tr>
+<td><code>--mcd</code></td>
+<td>none</td>
+<td>(<strong>faust only</strong>) Max-copy-delay: threshold between copy and ring buffer implementation (default 16).</td>
+</tr>
+<tr>
+<td><code>--unsafe-math-optimizations</code></td>
+<td><code>--umo</code></td>
+<td>Adds the Vitis HLS <code>unsafe_math_optimizations</code> directive to the syfala DSP IP.</td>
+</tr>
+<tr>
+<td><code>--hls-flags</code></td>
+<td>Tcl string</td>
+<td>n/a</td>
+</tr>
+</tbody>
+</table>
+<h2 id="arm-options">ARM options</h2>
+<table>
+<thead>
+<tr>
+<th>name</th>
+<th>arguments</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--shield</code></td>
+<td><code>adau|motherboard</code></td>
+<td>Adds support for <em>ADAU1777</em>/<em>ADAU1787</em> external codecs, or for the <em>ADAU Motherboard</em></td>
+</tr>
+<tr>
+<td><code>--benchmark</code></td>
+<td>none</td>
+<td>(<strong>faust only</strong>) Enables benchmark for the ARM control-loop.</td>
+</tr>
+<tr>
+<td><code>--verbose</code></td>
+<td>none</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td><code>--arm-target</code></td>
+<td>path to .cpp file</td>
+<td>Selects the main (.cpp) source file for the ARM control application.</td>
+</tr>
+<tr>
+<td><code>--controller-type</code></td>
+<td><code>DEMO|PCB1*|PCB2|PCB3|PCB4|TEENSY</code></td>
+<td>Defines the controller used to drive the controls when SW3 is UP.</td>
+</tr>
+<tr>
+<td><code>--ssm-volume</code></td>
+<td><code>FULL|HEADPHONE*|DEFAULT</code></td>
+<td>(<strong>Zybo boards only</strong>)  <code>HEADPHONE</code>: lower volume for headphone use. <code>DEFAULT</code>: default value +1dB, the true 0dB (<code>0b001111001</code>) decreases the signal a little bit.</td>
+</tr>
+<tr>
+<td><code>--ssm-speed</code></td>
+<td><code>FAST|DEFAULT*</code></td>
+<td>(<strong>Zybo boards only</strong>) changes <strong>SSM ADC/DAC</strong> sample rate. <code>DEFAULT</code>: 48kHz sample rate. <strong>FAST</strong>: 96Khz sample rate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="run-steps">Run steps</h2>
+<p><strong>Note</strong>: the <code>--all</code> is not necessary if you wish to run all steps, just run <code>syfala myfaustdsp.dsp</code></p>
+<table>
+<thead>
+<tr>
+<th><code>--all</code></th>
+<th>runs all toolchain compilation steps (from <code>--sources</code> to <code>--gui</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--sources</code></td>
+<td>uses Faust to generate ip/host cpp files for HLS  and Host application compilation</td>
+</tr>
+<tr>
+<td><code>--hls</code></td>
+<td>runs Vitis HLS on generated ip cpp file</td>
+</tr>
+<tr>
+<td><code>--project</code></td>
+<td>generates Vivado project</td>
+</tr>
+<tr>
+<td><code>--synth</code></td>
+<td>synthesizes full Vivado project</td>
+</tr>
+<tr>
+<td><code>--host</code></td>
+<td>compiles Host application, exports sources and .elf output to <code>build/sw_export</code></td>
+</tr>
+<tr>
+<td><code>--gui</code></td>
+<td>compiles Faust GUI control application</td>
+</tr>
+<tr>
+<td><code>--flash</code></td>
+<td>flashes boot files on device at the end of the run</td>
+</tr>
+<tr>
+<td><code>--report</code></td>
+<td>prints HLS report at the end of the run</td>
+</tr>
+<tr>
+<td><code>--export</code></td>
+<td><code>&lt;id&gt;</code> exports build to export/ directory at the end of the run</td>
+</tr>
+</tbody>
+</table>
+<h2 id="run-parameters">Run parameters</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">parameter</th>
+<th>accepted values</th>
+<th>description</th>
+<th>default value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>--memory, -m</code></td>
+<td><code>DDR - STATIC</code></td>
+<td>(<strong>faust only</strong>) Choose between DDR &amp; static memory layout for faust delay-lines, rd/rwtables.</td>
+<td><code>DDR</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--sample-rate</code></td>
+<td><code>48000 - 96000 - 192000 - 384000 - 768000</code></td>
+<td>Changes <strong>sample rate</strong> value (Hz). Only 48kHz and 96kHz is available for <strong>SSM</strong> embeded codec. 192000 (<strong>ADAU1777</strong> and <strong>ADAU1787</strong> only)  384000 (<strong>ADAU1787</strong> only)  768000 (<strong>ADAU1787</strong> only and with <code>--sample--width 16</code> only)</td>
+<td><code>48000</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>--sample-width</code></td>
+<td><code>16 - 24 - 32</code></td>
+<td>Defines <strong>sample bit depth</strong> (16|24|32)</td>
+<td><code>16</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="hardware-configuration-zybo-z7-1020">Hardware configuration (Zybo Z7-10/20)</h2>
+<h3 id="syfala-hardware-controller-board-sw3-up">Syfala Hardware Controller Board (SW3 UP)</h3>
+<p>If you use a Hardware Controller Board, please set the <code>--controller-type</code> command-line parameter to the proper value (see below)</p>
+<h4 id="controller-type-values-description">Controller-type values description</h4>
+<ul>
+<li><code>DEMO</code>:  Popophone demo box</li>
+<li><code>PCB1</code>: Emeraude PCB config 1: 4 knobs, 2 switches, 2 sliders (default)</li>
+<li><code>PCB2</code>: Emeraude PCB config 2: 8 knobs</li>
+<li><code>PCB3</code>: Emeraude PCB config 3: 4 knobs, 4 switches</li>
+<li><code>PCB4</code>: Emeraude PCB config 4: 4 knobs above, 4 switches below</li>
+<li><code>TEENSY</code>: Teensy-based controller.</li>
+</ul>
+<p>You can <strong>swap from hardware to software controller</strong> during DSP execution by changing <strong>SW3</strong>.</p>
+<h3 id="switch-description">Switch description</h3>
+<p>Default configuration in <strong>bold</strong></p>
+<pre>
+  SW3   SW2    SW1    SW0
++-----+-----+-------+------+
+| Hard| ADAU| BYPASS| MUTE |
+|     |     |       |      |
+|     |     |       |      |
+| <b>GUI</b> | <b>SSM</b> |<b>USE DSP</b>|<b>UNMUTE</b>|
++-----+-----+-------+------+
+</pre>
+
+<ul>
+<li><strong>SW3</strong>: Controller type select: hardware (Controller board) or software (GUI).</li>
+<li><strong>SW2</strong>: Audio codec input select (ADAU=external or SSM=onboard). Does not affect output.</li>
+<li><strong>SW1</strong>: Bypass audio dsp.</li>
+<li><strong>SW0</strong>: Mute.</li>
+</ul>
+<h3 id="status-leds">Status LEDs</h3>
+<p>The RGB led indicate the program state:</p>
+<ul>
+<li><strong>BLUE</strong>: waiting</li>
+<li><strong>GREEN</strong>: all good!</li>
+<li><strong>ORANGE</strong>: warning (bypass or mute enabled)</li>
+<li><strong>RED</strong>: ERROR! (configuration failed or incompatible), could happen if you select the SSM codec with incompatible sample rate.</li>
+</ul>
+<p>The 4 LEDs above the switches indicate the switches state. If one of them blink, it indicates the source of the warning/error.</p>
+<h3 id="sd-card-files-baremetal-configuration">SD card files (baremetal configuration)</h3>
+<p>You can put the program on an SD card (if you want something reproducible and easily launchable, for the demos...).
+After a <code>make</code> command, you should see a <code>BOOT.bin</code> file in SW_export (or you can build it with <code>make boot_file</code>).
+Put the file on the root of SD card. And don't forget to put JP5 on 'SD' position !</p></div>
+        
+        
+    </div>
+
+    
+      <footer class="col-md-12 text-center">
+          
+          
+            <hr>
+            <p>
+            <small>Copyright &copy; 2023 <a href="https://team.inria.fr/emeraude/">Emeraude</a></small><br>
+            
+            <small>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</small>
+            </p>
+          
+
+          
+          
+      </footer>
+    
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="../../js/bootstrap-3.0.3.min.js"></script>
+
+    
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.18.0/build/highlight.min.js"></script>
+        
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+
+    <script>var base_url = "../.."</script>
+    
+    <script src="../../js/base.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="../../search/main.js"></script>
+
+    <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                    <span class="sr-only">Close</span>
+                </button>
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+    </body>
+
+</html>
