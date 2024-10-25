@@ -13,7 +13,7 @@ The Syfala toolchain is a compilation toolchain of Faust programs onto AMD-Xilin
 
 We recommend using **Ubuntu** (>= 18.04 LTS) for installing and using the toolchain, since it is officially supported by AMD-Xilinx. While it is still possible to use other distributions, such as Archlinux, you may encounter unresolved bugs, which won't necessarily appear in our *Troubleshooting* section below. 
 
-### Ubuntu dependencies
+### Ubuntu/Debian dependencies
 
 ```shell
 sudo apt-get update 
@@ -43,7 +43,16 @@ sudo make install
 
 ## Vivado, Vitis & Vitis HLS (2024.1 version)
 
-- Open an account on https://www.xilinx.com/registration
+- Open an account on https://www.amd.com/en/registration/create-account.html
+
+### A) Using flatpak
+
+- Install flatpak and run `flatpak install flathub com.github.corna.Vivado` 
+- Run `flatpak run com.github.corna.Vivado` and choose the 2024.1 version.
+- Type-in your AMD/Xilinx account login and password.
+- Proceed with installation following the information below.
+
+### B) Manually
 
 - The AMD-Xilinx [download page](https://www.xilinx.com/support/download.html) contains links for downloading the **Vivado Design Suite - HLx Editions - Full Product**. It is available for both Linux and Windows. 
 
@@ -55,18 +64,43 @@ chmod a+x FPGAs_AdaptiveSoCs_Unified_2024.1_0522_2023_Lin64.bin
 ```
 
 - We suggest to use the "**Download Image (Install Separately)**" option. It creates a directory with a **xsetup** file to execute that you can reuse in case of failure during the installation
-
 - Execute `./xsetup`
 
-  -  Choose to install **Vitis** (it will still install **Vivado**, **Vitis**, and **Vitis HLS**). 
-  -  It will need **110GB of disk space**: if you uncheck *Ultrascale*, *Ultrascale+*, *Versal ACAP* and *Alveo acceleration platform*, it will use less space and still work.
-  -  **Agree** with everything and choose a directory to install (e.g. ~/Xilinx)
-  -  **Install and wait** (it may take quite a while)
+### Choosing the components to install (for both installation methods)
+
+-  Choose to install **Vitis** (it will still install **Vivado**, **Vitis**, and **Vitis HLS**). 
+-  For a **minimal syfala installation**, since only **Zybo Z7** and **Genesys ZU-3EG boards** are currently supported, you can **use** the following configuration:
+   - [ ] *Install devices for Alveo and edge acceleration platforms* (uncheck)
+   - [ ] *Install devices for Kria SOMs and Starter Kits* (uncheck)
+   - [ ] *Devices for Custom Platforms*
+     - [ ] SoCs
+       - [x] Zynq-7000 (**keep checked**)
+       - [x] Zynq UltraScale+ MPSoC (keep checked if you're planning to use the Genesys ZU-3EG board)
+       - [ ] Zynq UltraScale+ RFSoC
+     - [ ] 7 series (all unchecked)
+     - [ ] UltraScale (all unchecked)
+     - [ ] UltraScale+ (all unchecked)
+     - [ ] Versal ACAP (all unchecked)
+-  This should bring the **download size** down to approximately **20/25 GB**, and the **installation size** to approximately **110 GB**.
+-  **Agree** with everything and choose a directory to install (e.g. `~/Xilinx`)
+-  **Install and wait** (it may take quite a while)
 
 - **Setup a shell environment variable** allowing to use the tools when necessary (add this to your `~/.bashrc`, `~/.zshrc` or whatever you're currently using, replacing `$XILINX_ROOT_DIR` by the directory you chose to install all the tools)
 
 ```shell
 export XILINX_ROOT_DIR=$HOME/Xilinx
+```
+
+- If you're using `fish`, you can set the following configuration for example in `~/.config/fish/config.fish`:
+
+```shell
+set -x XILINX_ROOT_DIR $HOME/Xilinx
+```
+
+- **If you're using flatpak**, please add the following environment variable to as well:
+
+```shell
+export XILINX_FLATPAK=TRUE
 ```
 
 ### Installing Cable Drivers on Linux
@@ -135,5 +169,3 @@ cd $XILINX_ROOT_DIR
 export LD_LIBRARY_PATH=$PWD/Vivado/2020.2/tps/lnx64/python-3.8.3/lib/
 Vivado/2022.2/tps/lnx64/python-3.8.3/bin/python3 y2k22_patch/patch.py
 ```
-
-## 

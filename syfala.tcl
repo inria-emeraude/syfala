@@ -434,7 +434,7 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
             set_parameter "XILINX_VERSION" [get_argument_value index]
         }
         --flatpak {
-            set_parameter "FLATPAK" TRUE
+            set_parameter "XILINX_FLATPAK" TRUE
         }
         --unsafe-math-optimizations - --umo {
             set_parameter "HLS_DIRECTIVES_UNSAFE_MATH_OPTIMIZATIONS" TRUE

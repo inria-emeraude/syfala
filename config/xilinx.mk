@@ -72,7 +72,7 @@ VIVADO_PATH     ?= $(XILINX_ROOT_DIR)/Vivado/$(XILINX_VERSION)
 # -----------------------------------------------------------------------------
 VITIS_PATH      := $(XILINX_ROOT_DIR)/Vitis/$(XILINX_VERSION)
 
-ifeq ($(FLATPAK), TRUE)
+ifeq ($(XILINX_FLATPAK), TRUE)
     define flatrun
         flatpak run --filesystem=$(MK_ROOT_DIR) \
                     --command=$(1) com.github.corna.Vivado

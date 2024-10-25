@@ -153,12 +153,15 @@
         <li class="first-level active"><a href="#syfala-toolchain-dependencies">Syfala toolchain dependencies</a></li>
             <li class="second-level"><a href="#linux-platforms">Linux platforms</a></li>
                 
-                <li class="third-level"><a href="#ubuntu-dependencies">Ubuntu dependencies</a></li>
+                <li class="third-level"><a href="#ubuntudebian-dependencies">Ubuntu/Debian dependencies</a></li>
                 <li class="third-level"><a href="#archlinux-dependencies">Archlinux dependencies</a></li>
             <li class="second-level"><a href="#faust">Faust</a></li>
                 
             <li class="second-level"><a href="#vivado-vitis-vitis-hls-20241-version">Vivado, Vitis &amp; Vitis HLS (2024.1 version)</a></li>
                 
+                <li class="third-level"><a href="#a-using-flatpak">A) Using flatpak</a></li>
+                <li class="third-level"><a href="#b-manually">B) Manually</a></li>
+                <li class="third-level"><a href="#choosing-the-components-to-install-for-both-installation-methods">Choosing the components to install (for both installation methods)</a></li>
                 <li class="third-level"><a href="#installing-cable-drivers-on-linux">Installing Cable Drivers on Linux</a></li>
                 <li class="third-level"><a href="#installing-digilent-board-files">Installing Digilent Board Files</a></li>
             <li class="second-level"><a href="#cloning-the-syfala-repository">Cloning the Syfala repository</a></li>
@@ -167,8 +170,6 @@
                 
                 <li class="third-level"><a href="#vitisjava-issues">Vitis/Java issues</a></li>
                 <li class="third-level"><a href="#installing-the-2022-patch-amd-xilinx-toolchain-v20202-only">Installing the 2022 patch (AMD-Xilinx toolchain v2020.2 only)</a></li>
-            <li class="second-level"><a href="#_1"></a></li>
-                
     </ul>
 </div></div>
         <div class="col-md-9" role="main">
@@ -185,7 +186,7 @@
 </ul>
 <h2 id="linux-platforms">Linux platforms</h2>
 <p>We recommend using <strong>Ubuntu</strong> (&gt;= 18.04 LTS) for installing and using the toolchain, since it is officially supported by AMD-Xilinx. While it is still possible to use other distributions, such as Archlinux, you may encounter unresolved bugs, which won't necessarily appear in our <em>Troubleshooting</em> section below. </p>
-<h3 id="ubuntu-dependencies">Ubuntu dependencies</h3>
+<h3 id="ubuntudebian-dependencies">Ubuntu/Debian dependencies</h3>
 <pre><code class="language-shell">sudo apt-get update 
 sudo apt-get install git libncurses5 libtinfo-dev build-essential default-jre pkg-config g++-multilib gtk+2.0 locales
 </code></pre>
@@ -205,9 +206,17 @@ sudo make install
 </code></pre>
 <h2 id="vivado-vitis-vitis-hls-20241-version">Vivado, Vitis &amp; Vitis HLS (2024.1 version)</h2>
 <ul>
-<li>
-<p>Open an account on https://www.xilinx.com/registration</p>
-</li>
+<li>Open an account on https://www.amd.com/en/registration/create-account.html</li>
+</ul>
+<h3 id="a-using-flatpak">A) Using flatpak</h3>
+<ul>
+<li>Install flatpak and run <code>flatpak install flathub com.github.corna.Vivado</code> </li>
+<li>Run <code>flatpak run com.github.corna.Vivado</code> and choose the 2024.1 version.</li>
+<li>Type-in your AMD/Xilinx account login and password.</li>
+<li>Proceed with installation following the information below.</li>
+</ul>
+<h3 id="b-manually">B) Manually</h3>
+<ul>
 <li>
 <p>The AMD-Xilinx <a href="https://www.xilinx.com/support/download.html">download page</a> contains links for downloading the <strong>Vivado Design Suite - HLx Editions - Full Product</strong>. It is available for both Linux and Windows. </p>
 </li>
@@ -219,17 +228,28 @@ sudo make install
 ./FPGAs_AdaptiveSoCs_Unified_2024.1_0522_2023_Lin64.bin
 </code></pre>
 <ul>
-<li>
-<p>We suggest to use the "<strong>Download Image (Install Separately)</strong>" option. It creates a directory with a <strong>xsetup</strong> file to execute that you can reuse in case of failure during the installation</p>
+<li>We suggest to use the "<strong>Download Image (Install Separately)</strong>" option. It creates a directory with a <strong>xsetup</strong> file to execute that you can reuse in case of failure during the installation</li>
+<li>Execute <code>./xsetup</code></li>
+</ul>
+<h3 id="choosing-the-components-to-install-for-both-installation-methods">Choosing the components to install (for both installation methods)</h3>
+<ul>
+<li>Choose to install <strong>Vitis</strong> (it will still install <strong>Vivado</strong>, <strong>Vitis</strong>, and <strong>Vitis HLS</strong>). </li>
+<li>For a <strong>minimal syfala installation</strong>, since only <strong>Zybo Z7</strong> and <strong>Genesys ZU-3EG boards</strong> are currently supported, you can <strong>use</strong> the following configuration:</li>
+<li>[ ] <em>Install devices for Alveo and edge acceleration platforms</em> (uncheck)</li>
+<li>[ ] <em>Install devices for Kria SOMs and Starter Kits</em> (uncheck)</li>
+<li>[ ] <em>Devices for Custom Platforms</em><ul>
+<li>[ ] SoCs</li>
+<li>[x] Zynq-7000 (<strong>keep checked</strong>)</li>
+<li>[x] Zynq UltraScale+ MPSoC (keep checked if you're planning to use the Genesys ZU-3EG board)</li>
+<li>[ ] Zynq UltraScale+ RFSoC</li>
+<li>[ ] 7 series (all unchecked)</li>
+<li>[ ] UltraScale (all unchecked)</li>
+<li>[ ] UltraScale+ (all unchecked)</li>
+<li>[ ] Versal ACAP (all unchecked)</li>
+</ul>
 </li>
-<li>
-<p>Execute <code>./xsetup</code></p>
-</li>
-<li>
-<p>Choose to install <strong>Vitis</strong> (it will still install <strong>Vivado</strong>, <strong>Vitis</strong>, and <strong>Vitis HLS</strong>). </p>
-</li>
-<li>It will need <strong>110GB of disk space</strong>: if you uncheck <em>Ultrascale</em>, <em>Ultrascale+</em>, <em>Versal ACAP</em> and <em>Alveo acceleration platform</em>, it will use less space and still work.</li>
-<li><strong>Agree</strong> with everything and choose a directory to install (e.g. ~/Xilinx)</li>
+<li>This should bring the <strong>download size</strong> down to approximately <strong>20/25 GB</strong>, and the <strong>installation size</strong> to approximately <strong>110 GB</strong>.</li>
+<li><strong>Agree</strong> with everything and choose a directory to install (e.g. <code>~/Xilinx</code>)</li>
 <li>
 <p><strong>Install and wait</strong> (it may take quite a while)</p>
 </li>
@@ -238,6 +258,16 @@ sudo make install
 </li>
 </ul>
 <pre><code class="language-shell">export XILINX_ROOT_DIR=$HOME/Xilinx
+</code></pre>
+<ul>
+<li>If you're using <code>fish</code>, you can set the following configuration for example in <code>~/.config/fish/config.fish</code>:</li>
+</ul>
+<pre><code class="language-shell">set -x XILINX_ROOT_DIR $HOME/Xilinx
+</code></pre>
+<ul>
+<li><strong>If you're using flatpak</strong>, please add the following environment variable to as well:</li>
+</ul>
+<pre><code class="language-shell">export XILINX_FLATPAK=TRUE
 </code></pre>
 <h3 id="installing-cable-drivers-on-linux">Installing Cable Drivers on Linux</h3>
 <pre><code class="language-shell">cd $XILINX_ROOT_DIR/Vivado/2024.1/data/xicom/cable_drivers/lin64/install_script/install_drivers
@@ -291,8 +321,7 @@ sudo ln -s /usr/lib/libstdc++.so.6 libstdc++.so.6
 <pre><code class="language-shell">cd $XILINX_ROOT_DIR
 export LD_LIBRARY_PATH=$PWD/Vivado/2020.2/tps/lnx64/python-3.8.3/lib/
 Vivado/2022.2/tps/lnx64/python-3.8.3/bin/python3 y2k22_patch/patch.py
-</code></pre>
-<h2 id="_1"></h2></div>
+</code></pre></div>
         
         
     </div>
