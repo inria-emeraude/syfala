@@ -780,9 +780,8 @@ open-project: $(PROJECT_OUTPUT)
 SYNTH_OUTPUT := $(BUILD_PROJECT_DIR)/syfala_project.runs/synth_1/__synthesis_is_complete__
 
 SYNTH_COMMAND = open_project $(PROJECT_FILE);    \
-				set_param general.maxThreads 32; \
                 reset_run synth_1;               \
-                launch_runs synth_1 -jobs 32;    \
+                launch_runs synth_1;    \
                 wait_on_run synth_1;
 
 synth: $(SYNTH_OUTPUT)
@@ -801,9 +800,8 @@ IMPL_OUTPUT  := $(BUILD_PROJECT_DIR)/syfala_project.runs/impl_1/main_wrapper.bit
 BITSTREAM    := $(IMPL_OUTPUT)
 
 IMPL_COMMAND := open_project $(PROJECT_FILE);                   \
-				set_param general.maxThreads 32; \
                 reset_run impl_1;                               \
-                launch_runs -to_step write_bitstream impl_1 -jobs 32;    \
+                launch_runs -to_step write_bitstream impl_1;    \
                 wait_on_run impl_1;
 
 impl: $(IMPL_OUTPUT)
