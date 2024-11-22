@@ -462,7 +462,7 @@ define set_config_definition # ------------------------------------------------
 endef # -----------------------------------------------------------------------
 
 hls-includes: $(HLS_INCLUDES)
-$(HLS_INCLUDES): $(SYFALA_CONFIG_H) $(SYFALA_UTILITIES_H) $(HLS_TARGET_FILE)
+$(HLS_INCLUDES): $(SYFALA_CONFIG_H) $(SYFALA_UTILITIES_H)
 	$(call shell_info, Preparing $(B)HLS$(N) sources...)
 	@mkdir -p $(BUILD_INCLUDE_DIR)/syfala
 	@cp -r $(SYFALA_CONFIG_H) $(BUILD_SYFALA_CONFIG_H)
