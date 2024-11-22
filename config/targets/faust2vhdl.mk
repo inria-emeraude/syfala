@@ -6,6 +6,7 @@ get_nchannels_i := $(call set_preprocessor_data,$(INPUTS))
 get_nchannels_o := $(call set_preprocessor_data,$(OUTPUTS))
 
 FAUST_VHDL_OUTPUT       := $(BUILD_RTL_DIR)/faust.vhd
+I2S_DEPENDENCIES 		:= $(FAUST_VHDL_OUTPUT)
 PROJECT_DEPENDENCIES    += $(FAUST_VHDL_OUTPUT)
 HOST_MAIN_SOURCE        ?= $(ARM_BAREMETAL_CPP_MAIN_FAUST2VHDL)
 SCRIPT_HOST_CONFIG      :=  faust2vhdl

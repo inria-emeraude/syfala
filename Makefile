@@ -85,6 +85,7 @@ endif
 # -----------------------------------------------------------------------------
 
 HLS_FLAGS_INCLUDE = -I$(BUILD_INCLUDE_DIR)
+HLS_OUTPUT := $(BUILD_IP_DIR)/syfala/impl/vhdl/syfala.vhd
 
 # -----------------------------------------------------------------------------
 # Including designs
@@ -279,6 +280,10 @@ endif # ---------------------------------------------------
 
 ifeq ($(TARGET_TYPE), faust2vhdl) # -----------------------
     include $(MK_CONFIG_DIR)/targets/faust2vhdl.mk
+endif # ---------------------------------------------------
+
+ifeq ($(TARGET_TYPE), vhdl) # -----------------------
+    include $(MK_CONFIG_DIR)/targets/vhdl.mk
 endif # ---------------------------------------------------
 
 ifeq ($(CONFIG_EXPERIMENTAL_PD), TRUE) # ------------------
@@ -483,7 +488,6 @@ endif
 .PHONY: hls
 # Synthesizes the Syfala DSP IP using Vitis HLS
 # -----------------------------------------------------------------------------
-HLS_OUTPUT      := $(BUILD_IP_DIR)/syfala/impl/vhdl/syfala.vhd
 HLS_REPORT      := $(BUILD_IP_DIR)/syfala/syn/report/syfala_csynth.rpt
 HLS_TOP_LEVEL   := syfala
 ADD_FILES_CMD   += -cflags "$(HLS_FLAGS_INCLUDE)";
@@ -675,12 +679,6 @@ report-hls: $(HLS_OUTPUT)
 I2S_SOURCE ?= $(SOURCE_I2S_DIR)/i2s_template.vhd
 I2S_TARGET := $(BUILD_RTL_DIR)/i2s_transceiver.vhd
 
-ifeq ($(TARGET_TYPE), faust2vhdl) # -------------
-    I2S_DEPENDENCIES := $(FAUST_VHDL_OUTPUT)
-else # -------------------------------------
-    I2S_DEPENDENCIES := $(HLS_OUTPUT)
-endif #-------------------------------------
-
 i2s: $(I2S_TARGET)
 
 ifeq ($(call file_exists, $(I2S_SOURCE)), 1) # -----------------------
@@ -781,9 +779,10 @@ open-project: $(PROJECT_OUTPUT)
 # -----------------------------------------------------------------------------
 SYNTH_OUTPUT := $(BUILD_PROJECT_DIR)/syfala_project.runs/synth_1/__synthesis_is_complete__
 
-SYNTH_COMMAND = open_project $(PROJECT_FILE);   \
-                reset_run synth_1;              \
-                launch_runs synth_1;            \
+SYNTH_COMMAND = open_project $(PROJECT_FILE);    \
+				set_param general.maxThreads 32; \
+                reset_run synth_1;               \
+                launch_runs synth_1 -jobs 32;    \
                 wait_on_run synth_1;
 
 synth: $(SYNTH_OUTPUT)
@@ -802,8 +801,9 @@ IMPL_OUTPUT  := $(BUILD_PROJECT_DIR)/syfala_project.runs/impl_1/main_wrapper.bit
 BITSTREAM    := $(IMPL_OUTPUT)
 
 IMPL_COMMAND := open_project $(PROJECT_FILE);                   \
+				set_param general.maxThreads 32; \
                 reset_run impl_1;                               \
-                launch_runs -to_step write_bitstream impl_1;    \
+                launch_runs -to_step write_bitstream impl_1 -jobs 32;    \
                 wait_on_run impl_1;
 
 impl: $(IMPL_OUTPUT)

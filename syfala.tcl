@@ -49,6 +49,7 @@ namespace eval p {
         "HLS_CSIM_SOURCE"       \
         "HLS_CSIM_NUM_ITER"     \
         "HLS_CSIM_INPUTS_DIR"   \
+        "VHDL_TARGET"           \
         "XILINX_ROOT"           \
         "XILINX_VERSION"        \
         "HLS_DIRECTIVES_UNSAFE_MATH_OPTIMIZATIONS"  \
@@ -434,7 +435,7 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
             set_parameter "XILINX_VERSION" [get_argument_value index]
         }
         --flatpak {
-            set_parameter "FLATPAK" TRUE
+            set_parameter "XILINX_FLATPAK" TRUE
         }
         --unsafe-math-optimizations - --umo {
             set_parameter "HLS_DIRECTIVES_UNSAFE_MATH_OPTIMIZATIONS" TRUE
@@ -480,7 +481,7 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
             set_parameter "LINUX" TRUE
             add_target "linux-dsp"
         }
-        --vhdl - --faust2vhdl {
+        --faust2vhdl {
             set_parameter "TARGET_TYPE" faust2vhdl
             set ::runtime::faust2vhdl 1
         }
@@ -640,6 +641,10 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
                  set_parameter "HLS_SOURCE_MAIN" [file normalize $argument]
                  set_parameter "TARGET_TYPE" cpp
                  set ::runtime::mode "build"
+            } elseif [string match "*.vhd" $argument] {
+                set_parameter "VHDL_TARGET" [file normalize $argument]
+                set_parameter "TARGET_TYPE" vhdl
+                set ::runtime::mode "build"
             } else {
                 print_error "Invalid argument ($argument), aborting"
                 exit 1
