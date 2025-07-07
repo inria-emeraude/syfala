@@ -75,14 +75,14 @@ foreach_n $::rt::nchannels_o {{n} {
 # Invert reset for FIFO through the 'NOT' unit vector logic
 connect "pins" rst_global/peripheral_aresetn        \
         "pins" uvl_not_rst/Op1
+        
+# ---------------------------------------------------------------
+connect "pins" syfala/ap_done                                   \
+        "pins" i2s_transceiver_0/ap_done
 
 # -----------------------------------------------------------------------------
 # Transceiver <-> IP Faust
 # -----------------------------------------------------------------------------
-# ---------------------------------------------------
-#connect "pins" syfala/ap_done                       \
-#        "pins" i2s_transceiver_0/ap_done
-# ---------------------------------------------------
 
 if {$::rt::nchannels_i == 1} {
 # ---------------------------------------------------
@@ -171,3 +171,4 @@ connect "pins" fifo_out_$n/dout                     \
 connect "pins" i2s_transceiver_0/faust_ch$n\_rd     \
         "pins" fifo_out_$n/rd_en
 }}
+

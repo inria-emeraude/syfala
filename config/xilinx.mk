@@ -14,8 +14,8 @@ else
 endif
 
 # -----------------------------------------------------------------------------
-XILINX_VERSION      ?= 2022.2
-XILINX_SUPPORTED    := 2020.2 2022.2 2023.2 2024.1
+XILINX_VERSION      ?= 2024.2
+XILINX_SUPPORTED    := 2020.2 2022.2 2023.2 2024.1 2024.2
 # checks Xilinx toolchain versions
 # -----------------------------------------------------------------------------
 ifneq ($(XILINX_VERSION), $(filter $(XILINX_VERSION), $(XILINX_SUPPORTED)))

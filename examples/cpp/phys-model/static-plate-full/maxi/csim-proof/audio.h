@@ -21,6 +21,7 @@
 #include <cstdint>
 #include "Filter.hpp"
 #include <assert.h>
+#include <cstring>
 
 #if defined _WIN32 || defined _WIN64
 #pragma comment(lib, "Winmm")

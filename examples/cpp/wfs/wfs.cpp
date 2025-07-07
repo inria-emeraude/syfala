@@ -2,7 +2,7 @@
 #include <math.h>
 
 // Ideally this should be declared in a shared .h file but this seems to break the system
-#define INPUTS 4 // number of sources...
+#define INPUTS 16 // number of sources...
 #define OUTPUTS 32 // number of speakers...
 #define DEL_MAX 512 // this could be computed automatically based on OUPUTS and speakers_dist (must be a power of 2 here)
 
@@ -49,6 +49,7 @@ void syfala (
                 for (int i = 0; i < INPUTS; ++i){
                     for (int o = 0; o < OUTPUTS; ++o){
                         for (int n = 0; n < SYFALA_BLOCK_NSAMPLES; ++n){
+                            #pragma HLS pipeline
                             audio_out[o][n] = audio_in[i][n];
                         }
                     }
@@ -57,6 +58,7 @@ void syfala (
             else if (mute) {
                 for (int o = 0; o < 2; ++o){
                     for (int n = 0; n < SYFALA_BLOCK_NSAMPLES; ++n){
+                        #pragma HLS pipeline
                          audio_out[o][n] = 0;
                     }
                 }
@@ -72,6 +74,7 @@ void syfala (
                 // derivating filter
                 for (int i = 0; i < INPUTS; ++i){
                     for (int n = 0; n < SYFALA_BLOCK_NSAMPLES; ++n) {
+                        #pragma HLS pipeline
                         ins[i][n] = ins[i][n] - devfilter_fbdel[i][0]*devfilter_a1 + devfilter_fbdel[i][1]*devfilter_a2;
                         devfilter_fbdel[i][1] = devfilter_fbdel[i][0];
                         devfilter_fbdel[i][0] = ins[i][n];
@@ -84,6 +87,7 @@ void syfala (
                 // ring buffer for delay (shared between all delay lines)
                 for (int i = 0; i < INPUTS; ++i){
                     for (int n = 0; n < SYFALA_BLOCK_NSAMPLES; ++n) {
+                        #pragma HLS pipeline
                         fdel_del[i][fdel_idx[i] & 511] = ins[i][n];
                         fdel_idx[i] = fdel_idx[i] + 1;
                     }
@@ -92,6 +96,7 @@ void syfala (
                 for (int i = 0; i < INPUTS; ++i){
                     for (int o = 0; o < OUTPUTS; ++o){
                         for (int n = 0; n < SYFALA_BLOCK_NSAMPLES; ++n) {
+                            #pragma HLS pipeline
                             int d_idx = o + OUTPUTS*i*2;
                             int g_idx = d_idx + OUTPUTS;
                             int c_idx = ((int)(fdel_idx[i] - 1 - SYFALA_BLOCK_NSAMPLES - int(ctrl[d_idx]) + n)) & 511;

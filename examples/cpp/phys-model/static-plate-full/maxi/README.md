@@ -1,5 +1,3 @@
-### FPGA models used:
-
 > Note: prices are for the FPGA chips, not the development boards
 
 - **xc7z010clg400** (Zynq-7000 SoC family)

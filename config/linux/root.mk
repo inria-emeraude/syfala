@@ -3,8 +3,8 @@
 # -----------------------------------------------------------------------------
 ALPINE_VERSION_MAJOR	:= 3
 ALPINE_VERSION_MINOR	:= 19
-ALPINE_VERSION_PATCH	:= 1
-ALPINE_VERSION_DATE	:= 20231111
+ALPINE_VERSION_PATCH	:= 6
+ALPINE_VERSION_DATE	:= 20240312
 ALPINE_VERSION		:= $(ALPINE_VERSION_MAJOR).$(ALPINE_VERSION_MINOR)
 ALPINE_VERSION_FULL	:= $(ALPINE_VERSION).$(ALPINE_VERSION_PATCH)
 ALPINE_BUILD_DIR	:= $(BUILD_LINUX_ROOT_DIR)/alpine-$(ALPINE_VERSION_FULL)
@@ -94,8 +94,7 @@ $(ALPINE_SOURCES):
 	)
 
 define chroot # --------------------------------------------------------------
-    @export PATH=$PATH:/usr/bin:/sbin:/bin:/usr/sbin &&                     \
-    sudo chroot $(ALPINE_ROOT_DIR) /usr/bin/qemu-arm-static /bin/sh -c '$(1)'
+    sudo chroot $(ALPINE_ROOT_DIR) /bin/sh -c 'export PATH=$$PATH:/usr/bin:/sbin:/bin:/usr/sbin && $(1)'
 endef # ----------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
@@ -301,18 +300,24 @@ $(ALPINE_FPGA_BIT2BIN_DST): $(ALPINE_FPGA_BIT2BIN_SRC)
 .PHONY: alpine-syfala-load
 # -----------------------------------------------------------------------------
 
-ALPINE_SYFALA_LOAD_SRC_DIR := $(SOURCE_LINUX_DIR)/syfala-load
+ALPINE_SYFALA_SHARED_SRC_DIR := $(SOURCE_LINUX_DIR)/syfala-shared
+ALPINE_SYFALA_SHARED_DST_DIR := $(ALPINE_ROOT_DIR)/root
+
+ALPINE_SYFALA_LOAD_SRC_DIR := $(SOURCE_LINUX_DIR)/syfala-client
 ALPINE_SYFALA_LOAD_DST_DIR := $(ALPINE_ROOT_DIR)/root
+
 ALPINE_SYFALA_LOAD_BIN := $(ALPINE_ROOT_DIR)/usr/bin/syfala-load
 
-ALPINE_SYFALA_LOAD_SOURCES += $(ALPINE_SYFALA_LOAD_SRC_DIR)/src/main.rs
+ALPINE_SYFALA_LOAD_SOURCES += $(wildcard $(ALPINE_SYFALA_LOAD_SRC_DIR)/src/*.rs)
+ALPINE_SYFALA_LOAD_SOURCES += $(wildcard $(ALPINE_SYFALA_LOAD_SRC_DIR)/src/ethernet/*.rs)
 
 alpine-syfala-load: $(ALPINE_SYFALA_LOAD_BIN)
 
-$(ALPINE_SYFALA_LOAD_BIN): $(ALPINE_SYFALA_LOAD_SOURCES)
-	$(call shell_info, Compiling $(B)syfala-load$(N) utility)
-	@sudo cp -rf $(ALPINE_SYFALA_LOAD_SRC_DIR) $(ALPINE_SYFALA_LOAD_DST_DIR)
-	$(call chroot, cargo install --path /root/syfala-load --root /usr -j 8)
+$(ALPINE_SYFALA_LOAD_BIN): $(ALPINE_SYFALA_LOAD_SOURCES) 
+	$(call shell_info, Compiling $(B)syfala-client$(N) utility)
+	@sudo cp -r $(ALPINE_SYFALA_SHARED_SRC_DIR) $(ALPINE_SYFALA_SHARED_DST_DIR)
+	@sudo cp -r $(ALPINE_SYFALA_LOAD_SRC_DIR) $(ALPINE_SYFALA_LOAD_DST_DIR)
+	$(call chroot, cargo install --path /root/syfala-client --root /usr -j 8)
 	@sudo rm -rf $(ALPINE_SYFALA_LOAD_DST_DIR)
 
 # -----------------------------------------------------------------------------
@@ -399,6 +404,7 @@ $(ALPINE_DSP_APPLICATION_XSOURCES): $(XSOURCES)
 ALPINE_DSP_APPLICATION := $(ALPINE_DSP_DIR)/application.elf
 alpine-application: $(ALPINE_DSP_APPLICATION)
 
+ALPINE_DSP_APPLICATION_DEPENDENCIES += $(ALPINE_INITTAB_DST)
 ALPINE_DSP_APPLICATION_DEPENDENCIES += $(ALPINE_DSP_APPLICATION_SOURCES_TARGETS)
 ALPINE_DSP_APPLICATION_DEPENDENCIES += $(ALPINE_DSP_APPLICATION_XSOURCES)
 ALPINE_DSP_APPLICATION_DEPENDENCIES += $(BUILD_SYFALA_UTILITIES_H)
@@ -421,59 +427,6 @@ endif
 	$(call chroot, make -C $(ALPINE_DSP_DIR_CH)/src -j8)
 	@mkdir -p $(BUILD_DIR)/linux
 	@cp -r $(ALPINE_DSP_DIR) $(BUILD_DIR)/linux
-
-# -----------------------------------------------------------------------------------
-ALPINE_ETHERNET_CLIENT := $(ALPINE_ROOT_DIR)/usr/bin/syfala-ethernet
-# -----------------------------------------------------------------------------------
-
-ALPINE_ETHERNET_SOURCE_DIR := $(SOURCE_DIR)/linux/ethernet
-ALPINE_ETHERNET_TARGET_DIR := $(ALPINE_ROOT_DIR)/home/ethernet
-
-ALPINE_ETHERNET_SOURCES += $(ALPINE_ETHERNET_SOURCE_DIR)/Cargo.toml
-ALPINE_ETHERNET_SOURCES += $(ALPINE_ETHERNET_SOURCE_DIR)/Cross.toml
-ALPINE_ETHERNET_SOURCES += $(ALPINE_ETHERNET_SOURCE_DIR)/client/Cargo.toml
-ALPINE_ETHERNET_SOURCES += $(ALPINE_ETHERNET_SOURCE_DIR)/client/build.rs
-ALPINE_ETHERNET_SOURCES += $(wildcard $(ALPINE_ETHERNET_SOURCE_DIR)/client/src/*.rs)
-ALPINE_ETHERNET_SOURCES += $(wildcard $(ALPINE_ETHERNET_SOURCE_DIR)/client/src/axi/*.rs)
-ALPINE_ETHERNET_SOURCES += $(ALPINE_ETHERNET_SOURCE_DIR)/shared/Cargo.toml
-ALPINE_ETHERNET_SOURCES += $(wildcard $(ALPINE_ETHERNET_SOURCE_DIR)/shared/src/*.rs)
-
-ALPINE_ETHERNET_TARGETS := $(subst $(ALPINE_ETHERNET_SOURCE_DIR),$(ALPINE_ETHERNET_TARGET_DIR),$(ALPINE_ETHERNET_SOURCES)))
-
-ALPINE_ETHERNET_JSON_SOURCE	:= $(BUILD_ETHERNET_HLS_DIR)/eth_audio/eth_audio_data.json
-ALPINE_ETHERNET_JSON_TARGET	:= $(ALPINE_DSP_DIR)/eth_audio_data.json
-ALPINE_ETHERNET_JSON_TARGET_CH	:= $(ALPINE_DSP_DIR_CH)/eth_audio_data.json
-
-$(ALPINE_ETHERNET_JSON_TARGET): $(ALPINE_DSP_APPLICATION) $(ETHERNET_HLS_OUTPUT) $(ALPINE_ETHERNET_JSON_SOURCE)
-	$(call shell_info, Installing Ethernet Audio register map)
-	@sudo mkdir -p $(ALPINE_DSP_DIR)
-	@sudo cp -r $(ALPINE_ETHERNET_JSON_SOURCE) $(ALPINE_DSP_DIR)/
-
-ALPINE_ETHERNET_DEPENDENCIES += $(ALPINE_ETHERNET_SOURCES)
-ALPINE_ETHERNET_DEPENDENCIES += $(ALPINE_ETHERNET_JSON_TARGET)
-
-$(ALPINE_ETHERNET_TARGET_DIR): $(ALPINE_ETHERNET_DEPENDENCIES)
-	$(call shell_info, Preparing Ethernet client application sources)
-	@sudo cp -Tr $(ALPINE_ETHERNET_SOURCE_DIR) $(ALPINE_ETHERNET_TARGET_DIR)
-	@sudo touch $(ALPINE_ETHERNET_TARGET_DIR)
-
-$(ALPINE_ETHERNET_TARGETS): $(ALPINE_ETHERNET_TARGET_DIR)
-
-$(ALPINE_ETHERNET_CLIENT): $(ALPINE_ETHERNET_TARGET_DIR) alpine-packages
-	$(call shell_info, Compiling Ethernet client application (this could take a while...))
-	$(call chroot,								\
-	    export HLS_ETHERNET_DATA_JSON=$(ALPINE_ETHERNET_JSON_TARGET_CH)	\
-	    && export CARGO_TARGET_DIR=/home					\
-	    && cd /home/ethernet/client						\
-	    && cargo --config "net.git-fetch-with-cli = true" build --release	\
-	)
-	$(call shell_ok, Installing Ethernet client application in /usr/bin/syfala-ethernet)
-	@sudo cp -r $(ALPINE_ROOT_DIR)/home/release/client	\
-		    $(ALPINE_ETHERNET_CLIENT)
-
-ifeq ($(CONFIG_EXPERIMENTAL_ETHERNET), TRUE)
-    LINUX_ROOT_DEPENDENCIES += $(ALPINE_ETHERNET_CLIENT)
-endif
 
 # -----------------------------------------------------------------------------
 

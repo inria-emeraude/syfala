@@ -6,7 +6,7 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #include <iostream>
-#include "plateModalData.h"
+#include "plateModalData_mid.h"
 #include "audio.h"
 #include <chrono>
 
@@ -21,7 +21,7 @@ int main(int argc, const char * argv[])
 //if nonzero limits the maximum frequency, useful to limit the number of modes to a specitic chosen value.
 #define maxFreq 0
     
-#define durSec 2  //duration in seconds of the simulation
+#define durSec 1  //duration in seconds of the simulation
 #define baseSR 48000
     
     const unsigned int timeSamples = baseSR * durSec;
@@ -32,11 +32,11 @@ int main(int argc, const char * argv[])
     double SR = baseSR;
     double k = 1.0 / SR;
 
-    int modesNumber = 30000;
+    int modesNumber = 12952;
 
     if(maxFreq)
     {
-        for(int i = 0; i < modesNumberFull; ++i)
+        for(int i = 0; i < modesNumber; ++i)
         {
             if(eigenFreqs[i] > 2*PI*maxFreq)
             {
@@ -104,7 +104,7 @@ int main(int argc, const char * argv[])
     
     for (int n = 0;  n < timeSamples; ++n)
     {
-        double exc = excit[n];
+        float exc = excit[n];
         for (int m = 0 ; m < modesNumber; ++m) {
             xNext[m] = c1[m] * x[m] + c2[m] * xPrev[m] + c3[m] * exc;
             xPrev[m] = x[m];
@@ -125,7 +125,7 @@ int main(int argc, const char * argv[])
     {
         for (int n = 0; n < timeSamples; ++n)
         {
-            outFile << output[n] * 100000 << '\n';
+            outFile << output[n] * 1000000 << '\n';
         }
 
         outFile.close();

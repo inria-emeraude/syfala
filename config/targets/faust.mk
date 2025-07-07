@@ -8,6 +8,8 @@ FAUST_FPGA_MEM          ?= 10000
 FAUST_DSP_TARGET        ?= examples/faust/virtualAnalog.dsp
 FAUST_DSP_TARGET_NAME   := $(basename $(notdir $(FAUST_DSP_TARGET)))
 
+I2S_DEPENDENCIES        := $(HLS_OUTPUT)
+
 # -----------------------------------------------------------------------------
 ifeq ($(shell expr $(FAUST_VERSION) \<= 2.72.10),1)
 # -----------------------------------------------------------------------------

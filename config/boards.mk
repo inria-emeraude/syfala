@@ -165,6 +165,8 @@ else ifeq ($(XILINX_VERSION), 2023.2)
     BOARD_XPATH := $(XPATH_BOARDSTORE)
 else ifeq ($(XILINX_VERSION), 2024.1)
     BOARD_XPATH := $(XPATH_BOARDSTORE)
+else ifeq ($(XILINX_VERSION), 2024.2)
+    BOARD_XPATH := $(XPATH_BOARDSTORE)
 else
     $(call static_error, Please update file config/boards.mk with new Xilinx version)
 endif # -------------------------------------------------

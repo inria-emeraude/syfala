@@ -818,7 +818,7 @@ then
     print_error "Application build Failed! See syfala.log for more informations." 1
 elif [[ $project_exist == "2" ]] #only print this if vivado is done to avoid multiple messages
 then
-    print_error "Application not builded, please use the --app or --app-rebuild option to build it." 3
+    print_error "Application not built, please use the --app or --app-rebuild option to build it." 3
 fi
 
 if [[ $gui_exist == "2" ]]
@@ -829,7 +829,7 @@ then
     print_error "GUI build Failed! See syfala.log for more informations." 1
 elif [[ $app_exist == "2" ]] #only print this if the App is done to avoid multiple messages
 then
-    print_error "GUI not builded, please use the --gui option to build it." 3
+    print_error "GUI not built, please use the --gui option to build it." 3
 fi
 
 if [[ $app_exist == "2" ]]

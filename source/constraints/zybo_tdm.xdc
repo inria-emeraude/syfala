@@ -29,7 +29,7 @@ set_property -dict { PACKAGE_PIN D18   IOSTANDARD LVCMOS33 } [get_ports { green_
 set_property -dict { PACKAGE_PIN R19   IOSTANDARD LVCMOS33 } [get_ports { internal_codec_bclk }]; #IO_0_34 Sch=ac_bclk
 set_property -dict { PACKAGE_PIN R17   IOSTANDARD LVCMOS33 } [get_ports { internal_codec_mclk }]; #IO_L19N_T3_VREF_34 Sch=ac_mclk
 set_property -dict { PACKAGE_PIN P18   IOSTANDARD LVCMOS33 } [get_ports { internal_codec_out_mute }]; #IO_L23N_T3_34 Sch=ac_muten
-#set_property -dict { PACKAGE_PIN R18   IOSTANDARD LVCMOS33 } [get_ports { internal_codec_sd_tx }]; #IO_L20N_T3_34 Sch=ac_pbdat
+set_property -dict { PACKAGE_PIN R18   IOSTANDARD LVCMOS33 } [get_ports { internal_codec_sd_tx }]; #IO_L20N_T3_34 Sch=ac_pbdat
 set_property -dict { PACKAGE_PIN T19   IOSTANDARD LVCMOS33 } [get_ports { internal_codec_ws_tx }]; #IO_25_34 Sch=ac_pblrc
 set_property -dict { PACKAGE_PIN R16   IOSTANDARD LVCMOS33 } [get_ports { internal_codec_sd_rx }]; #IO_L19P_T3_34 Sch=ac_recdat
 set_property -dict { PACKAGE_PIN Y18   IOSTANDARD LVCMOS33 } [get_ports { internal_codec_ws_rx }]; #IO_L17P_T2_34 Sch=ac_reclrc

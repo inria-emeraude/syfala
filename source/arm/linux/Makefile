@@ -4,17 +4,18 @@ OUTPUT_DIR = ..
 EXECUTABLE = $(OUTPUT_DIR)/application.elf
 INCLUDES = -Iinclude -I.
 CC = g++
-CXXFLAGS += -O3
+CXXFLAGS += -O3 -Wall -Wextra -Wconversion -Wfloat-conversion
+# CXXFLAGS += -ggdb
 CXXFLAGS += -DALPINE
 
-LDFLAGS += -lHTTPDFaust 
-LDFLAGS += -lOSCFaust 
-LDFLAGS += -llo 
-LDFLAGS += -lmicrohttpd 
-LDFLAGS += -lasound 
-LDFLAGS += -lavahi-client 
-LDFLAGS += -lavahi-common 
-LDFLAGS += -lgpiod 
+LDFLAGS += -lHTTPDFaust
+LDFLAGS += -lOSCFaust
+LDFLAGS += -llo
+LDFLAGS += -lmicrohttpd
+LDFLAGS += -lasound
+LDFLAGS += -lavahi-client
+LDFLAGS += -lavahi-common
+LDFLAGS += -lgpiod
 LDFLAGS += -liio
 
 CXX_SOURCES := $(wildcard *.cpp)

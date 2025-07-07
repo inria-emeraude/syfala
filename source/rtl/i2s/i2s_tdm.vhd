@@ -25,6 +25,7 @@ port (
     ssm_sclk   : out std_logic;  -- SSM bit clock
     ssm_ws     : out std_logic;  -- SSM word select
     ssm_sd_#L_#R_rx  : in std_logic;   -- SSM rx pin
+    ssm_sd_#L_#R_tx  : out std_logic;   -- SSM tx pin (unused)
 -------------------------------------------------------------------------------
     to_faust_#L : out std_logic_vector(d_width-1 downto 0);   -- left audio in
     to_faust_#R : out std_logic_vector(d_width-1 downto 0);   -- right audio in

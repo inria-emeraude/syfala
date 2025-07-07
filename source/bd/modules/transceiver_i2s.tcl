@@ -102,8 +102,8 @@ declare_user_module "mux_2to1" $::Syfala::BUILD_SOURCES_DIR/mux_2to1.vhd
 #connect "ports" debug_btn                           \
 #        "pins"  syfala/debug
 # ---------------------------------------------------
-connect "pins" syfala/ap_done                       \
-        "pins" i2s_transceiver_0/ap_done
+# connect "pins" syfala/ap_done                       \
+#         "pins" i2s_transceiver_0/ap_done
 # ---------------------------------------------------
 connect "pins" syfala/ap_start                      \
         "pins" i2s_transceiver_0/rdy

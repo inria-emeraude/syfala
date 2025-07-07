@@ -119,8 +119,6 @@ void eth_audio (
     }
     // Read data from RAM and output it
     for (int n = 0; n < SYFALA_ETHERNET_NCHANNELS_TO_I2S; ++n) {
-        #pragma HLS unroll
-        // /!\ This loop imperatively needs to be unrolled (not pipelined)
          float f = ram_in[read_index];
          Syfala::HLS::iowritef(f, audio_out[n]);
          ram_in[read_index] = 0.0f;
@@ -131,8 +129,6 @@ void eth_audio (
     }
     // Write data back to RAM
     for (int n = 0; n < SYFALA_ETHERNET_NCHANNELS_FROM_I2S; ++n) {
-         #pragma HLS unroll
-         // /!\ This loop imperatively needs to be unrolled (not pipelined)
          float f = Syfala::HLS::ioreadf(audio_in[n]);
          ram_out[out_write_index] = f;
          out_write_index++;

@@ -43,18 +43,19 @@ static void update_state(){
         float r[OUTPUTS];
         float r_long = 1000;
         for (int o = 0; o < OUTPUTS; ++o){
-            r[o] = norm(x_pos[i],y_pos[i],z_pos[i],x_speakers_pos[o],0,0);
+            r[o] = norm(x_pos[i],y_pos[i],z_pos[i],x_speakers_pos[o],1.0,0);
             if (r[o]<r_long) r_long = r[o];
         }
         for (int o = 0; o < OUTPUTS; ++o){
             int d_idx = o + OUTPUTS*i*2;
             int g_idx = d_idx + OUTPUTS;
-            ctrl[g_idx] = speakers_norm[o]*y_pos[i]/pow(r[o],2.0f)*2.0f;
+            ctrl[g_idx] = speakers_norm[o]*y_pos[i]/pow(r[o],2.0f);
             ctrl[d_idx] = (r[o]-r_long)/c*SYFALA_SAMPLE_RATE;
         }
     }
     XSyfala_Write_ctrl_Words(&dsp,0,reinterpret_cast<u32*>(ctrl),INPUTS*OUTPUTS*2);
 }
+
 
 static void initialize_dsp() {
     for (int i = 0; i < INPUTS; ++i) {
@@ -63,8 +64,8 @@ static void initialize_dsp() {
         z_pos[i] = 0;
     }
     for (int o = 0; o < OUTPUTS; ++o) {
-        x_speakers_pos[o] = -speakers_dist*OUTPUTS/2 + speakers_dist/2 + o*speakers_dist;
-        speakers_norm[o] = norm(xref,yref,zref,x_speakers_pos[o],0,0);
+        x_speakers_pos[o] = -speakers_dist*OUTPUTS/2.0f + speakers_dist/2.0f + o*speakers_dist;
+        speakers_norm[o] = norm(xref,yref,zref,x_speakers_pos[o],1.0,0);
     }
     update_state();
 };

@@ -204,7 +204,9 @@ impl Report {
             Source::Estimate(..) => {
                 Latency::from(&rpt)
             } _ => {
-                let f = std::fs::read_to_string(RPT_ESTIM).unwrap();
+                let mut p = PathBuf::from(&path);
+                p.push(RPT_ESTIM);
+                let f = std::fs::read_to_string(p).unwrap();
                 Latency::from(&f)
             }
         };

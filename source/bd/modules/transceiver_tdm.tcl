@@ -18,7 +18,7 @@ set IIC_0 [add_intf_port "xilinx.com:interface:iic_rtl:1.0" IIC_0]
 add_port "internal_codec_bclk"   O
 add_port "internal_codec_mclk"   O
 add_port "internal_codec_sd_rx"  I
-#add_port "internal_codec_sd_tx"  O
+add_port "internal_codec_sd_tx"  O
 add_port "internal_codec_ws_tx"  O
 
 switch $::rt::board {
@@ -34,7 +34,7 @@ Z10 - Z20 {
 # Code is simplier than with ADAU because we only have outputs
 # we round to superior 8 to match TDM8 protocol
 proc round_sup_div8 {x} {
-    return [expr ($x+(8-($x%8)))/8]
+    return [expr ($x/8) + ($x%8 > 0)]
 }
 
 switch $::rt::board {
@@ -130,6 +130,8 @@ connect "pins" clk_wiz_I2S/clk_24Mhz                            \
 connect "pins" i2s_transceiver_0/ssm_sd_ch0_ch1_rx              \
         "ports" internal_codec_sd_rx
 # ---------------------------------------------------------------
+connect "pins" i2s_transceiver_0/ssm_sd_ch0_ch1_tx              \
+        "ports" internal_codec_sd_tx
 
 switch $::rt::board {
 Z10 - Z20 {

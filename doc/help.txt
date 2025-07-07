@@ -5,7 +5,7 @@ $ syfala <faustfile.dsp|cfile.cpp> [run_parameters] [run_steps]
 
 examples:
 $ syfala examples/faust/virtualAnalog.dsp --board Z20
-$ syfala examples/cpp/bypass.cpp --board Z10 --hls --report hls
+$ syfala examples/cpp/templates/bypass.cpp --board Z10 --hls
 
 -------------------------------------------------------------------------------
 Commands

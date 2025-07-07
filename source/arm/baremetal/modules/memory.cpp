@@ -1,3 +1,4 @@
+#include "syfala/arm/gpio.hpp"
 #include <xil_cache.h>
 #include <syfala/arm/memory.hpp>
 #include <syfala/utilities.hpp>
@@ -23,8 +24,12 @@ static void reset() {
 void Memory::initialize(XSyfala& x, Memory::data& d, int ilen, int flen) {
     // Get iZone/fZone from the global DDR zone
     println("[mem] Initializing Memory");
+    if ((ilen + flen) * 4 > FRAME_BUFFER_DEPTH) {
+        Status::fatal("[mem] Memory allocation goes beyond FRAME_BUFFER_DEPTH");
+    }
     d.i_zone = reinterpret_cast<int*>(ddr_ptr);
     d.f_zone = reinterpret_cast<float*>(ddr_ptr + ilen);
+    println("[mem] Clearing memory");
     reset();
     /* Send base address and depth to IP  */
     DSP::set_mem_zone_i(&x, reinterpret_cast<u64>(d.i_zone));

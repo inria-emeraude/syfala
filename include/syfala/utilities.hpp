@@ -79,7 +79,7 @@ inline void println(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     print(fmt, args);
-    print("\n");
+    print("\r\n");
     va_end(args);
 }
 

@@ -85,6 +85,7 @@ endif
 # -----------------------------------------------------------------------------
 
 HLS_FLAGS_INCLUDE = -I$(BUILD_INCLUDE_DIR)
+HLS_OUTPUT := $(BUILD_IP_DIR)/syfala/impl/vhdl/syfala.vhd
 
 # -----------------------------------------------------------------------------
 # Including designs
@@ -281,6 +282,10 @@ ifeq ($(TARGET_TYPE), faust2vhdl) # -----------------------
     include $(MK_CONFIG_DIR)/targets/faust2vhdl.mk
 endif # ---------------------------------------------------
 
+ifeq ($(TARGET_TYPE), vhdl) # -----------------------
+    include $(MK_CONFIG_DIR)/targets/vhdl.mk
+endif # ---------------------------------------------------
+
 ifeq ($(CONFIG_EXPERIMENTAL_PD), TRUE) # ------------------
     include $(MK_CONFIG_DIR)/targets/pd.mk
 endif # ---------------------------------------------------
@@ -456,7 +461,7 @@ define set_config_definition # ------------------------------------------------
     @sed -i 's/^#define\s$(1)\s[^ ]\+/#define $(1) $(2)/g' $(BUILD_SYFALA_CONFIG_H)
 endef # -----------------------------------------------------------------------
 
-hls-includes: $(HLS_INCLUDES)
+hls-includes: $(HLS_INCLUDES) 
 $(HLS_INCLUDES): $(SYFALA_CONFIG_H) $(SYFALA_UTILITIES_H) $(HLS_TARGET_FILE)
 	$(call shell_info, Preparing $(B)HLS$(N) sources...)
 	@mkdir -p $(BUILD_INCLUDE_DIR)/syfala
@@ -483,7 +488,6 @@ endif
 .PHONY: hls
 # Synthesizes the Syfala DSP IP using Vitis HLS
 # -----------------------------------------------------------------------------
-HLS_OUTPUT      := $(BUILD_IP_DIR)/syfala/impl/vhdl/syfala.vhd
 HLS_REPORT      := $(BUILD_IP_DIR)/syfala/syn/report/syfala_csynth.rpt
 HLS_TOP_LEVEL   := syfala
 ADD_FILES_CMD   += -cflags "$(HLS_FLAGS_INCLUDE)";
@@ -584,6 +588,9 @@ HLS_CSIM_TARGET := $(BUILD_CSIM_DIR)/csim_main.cpp
 HLS_CSIM_INCLUDE_SRC := $(TESTS_DIR)/csim/csim_template_utilities.hpp
 HLS_CSIM_INCLUDE_DST := $(BUILD_CSIM_DIR)/csim_template_utilities.hpp
 
+HLS_CSIM_AUDIOFILE_SRC := $(TESTS_DIR)/csim/AudioFile/AudioFile.h
+HLS_CSIM_AUDIOFILE_DST := $(BUILD_CSIM_DIR)/AudioFile/AudioFile.h
+
 hls-csim-target: $(HLS_CSIM_TARGET)
 
 define set_csim_definition # --------------------------------------------------
@@ -595,8 +602,9 @@ endef # -----------------------------------------------------------------------
 
 $(HLS_CSIM_INCLUDE_DST): $(HLS_CSIM_INCLUDE_SRC) $(HLS_TARGET_FILE)
 	$(call shell_info, Creating $(B)CSIM build includes$(N))
-	@mkdir -p $(BUILD_CSIM_DIR)
-	@cp -r $(HLS_CSIM_INCLUDE_SRC) $(HLS_CSIM_INCLUDE_DST)
+	@mkdir -p $(BUILD_CSIM_DIR)/AudioFile
+	@cp $(HLS_CSIM_INCLUDE_SRC) $(HLS_CSIM_INCLUDE_DST)
+	@cp $(HLS_CSIM_AUDIOFILE_SRC) $(HLS_CSIM_AUDIOFILE_DST)
 	$(call shell_info, Setting $(B)CSIM definitions$(N))
 	$(call set_csim_definition,SYFALA_NUM_INPUTS,$(shell $(get_nchannels_i)))
 	$(call set_csim_definition,SYFALA_NUM_OUTPUTS,$(shell $(get_nchannels_o)))
@@ -632,21 +640,21 @@ CSIM_FILES += -cflags "-I$(BUILD_INCLUDE_DIR) -I$(dir $(HLS_SOURCE_MAIN)) -D__CS
 
 # Finally, include the testbench file, with all the required includes and definitions:
 CSIM_TB += add_files -tb $(HLS_CSIM_TARGET)
-CSIM_TB += -cflags "-I$(BUILD_INCLUDE_DIR) -I$(BUILD_IP_DIR) -I$(dir $(HLS_CSIM_SOURCE)) -D__CSIM__"
+CSIM_TB += -cflags "-I$(BUILD_INCLUDE_DIR) -I$(BUILD_IP_DIR) -I$(abspath $(dir $(HLS_CSIM_SOURCE))) -D__CSIM__"
 
 CSIM_ARGV += $(HLS_CSIM_OUTPUTS_DIR)
 CSIM_ARGV += $(HLS_CSIM_INPUTS_DIR)
 
 # -------------------------------------------------------------------------------
-CSIM_COMMAND := cd $(BUILD_DIR);						\
+CSIM_COMMAND := cd $(BUILD_DIR);											\
 	       open_project -reset $(notdir $(BUILD_CSIM_DIR));                 \
-               $(CSIM_FILES);							\
+           $(CSIM_FILES);													\
 	       set_top $(HLS_TOP_LEVEL);                                        \
-	       $(CSIM_TB);							\
-	       open_solution -reset syfala_csim -flow_target vivado;		\
+	       $(CSIM_TB);														\
+	       open_solution -reset syfala_csim -flow_target vivado;			\
 	       set_part $(BOARD_PART);                                          \
 	       create_clock -period $(HLS_CLOCK_PERIOD);                        \
-	       csim_design -argv "$(CSIM_ARGV)";				\
+	       csim_design -argv "$(CSIM_ARGV)";								\
 	       exit;
 # -------------------------------------------------------------------------------
 
@@ -674,12 +682,6 @@ report-hls: $(HLS_OUTPUT)
 
 I2S_SOURCE ?= $(SOURCE_I2S_DIR)/i2s_template.vhd
 I2S_TARGET := $(BUILD_RTL_DIR)/i2s_transceiver.vhd
-
-ifeq ($(TARGET_TYPE), faust2vhdl) # -------------
-    I2S_DEPENDENCIES := $(FAUST_VHDL_OUTPUT)
-else # -------------------------------------
-    I2S_DEPENDENCIES := $(HLS_OUTPUT)
-endif #-------------------------------------
 
 i2s: $(I2S_TARGET)
 
@@ -781,9 +783,9 @@ open-project: $(PROJECT_OUTPUT)
 # -----------------------------------------------------------------------------
 SYNTH_OUTPUT := $(BUILD_PROJECT_DIR)/syfala_project.runs/synth_1/__synthesis_is_complete__
 
-SYNTH_COMMAND = open_project $(PROJECT_FILE);   \
-                reset_run synth_1;              \
-                launch_runs synth_1;            \
+SYNTH_COMMAND = open_project $(PROJECT_FILE); \
+                reset_run synth_1; 		\
+                launch_runs synth_1;    \
                 wait_on_run synth_1;
 
 synth: $(SYNTH_OUTPUT)
@@ -801,9 +803,9 @@ $(SYNTH_OUTPUT): $(PROJECT_OUTPUT)
 IMPL_OUTPUT  := $(BUILD_PROJECT_DIR)/syfala_project.runs/impl_1/main_wrapper.bit
 BITSTREAM    := $(IMPL_OUTPUT)
 
-IMPL_COMMAND := open_project $(PROJECT_FILE);                   \
-                reset_run impl_1;                               \
-                launch_runs -to_step write_bitstream impl_1;    \
+IMPL_COMMAND := open_project $(PROJECT_FILE); \
+                reset_run impl_1; \
+                launch_runs -to_step write_bitstream impl_1; \
                 wait_on_run impl_1;
 
 impl: $(IMPL_OUTPUT)

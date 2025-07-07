@@ -26,6 +26,7 @@ port (
     ssm_sclk   : out std_logic;  -- SSM bit clock
     ssm_ws     : out std_logic;  -- SSM word select
     ssm_sd_#L_#R_rx  : in std_logic;   -- SSM rx pin
+    ssm_sd_#L_#R_tx  : out std_logic;   -- SSM tx pin (unused)
 -------------------------------------------------------------------------------
     to_faust_#L : out std_logic_vector(d_width-1 downto 0);   -- left audio in
     to_faust_#R : out std_logic_vector(d_width-1 downto 0);   -- right audio in
@@ -137,7 +138,7 @@ begin
             tdm_sclk_cnt  := 0;    -- clear mclk/sclk counter
             ssm_sclk_cnt  := 0;    -- clear mclk/sclk counter
             tdm_cnt       := 127;
-            tdm_tx_#T1    <= '0';     -- clear serial data transmit output
+            tdm_tx_#T1    <= '0';  -- clear serial data transmit output
             rdy1 <= '0';
 
         elsif (mclk'event and mclk = '1') and start = '1' then
@@ -159,12 +160,6 @@ begin
                         ssm_ws_int <= '1';
                     elsif (ssm_cnt = d_width*2-1) then
                         ssm_ws_int <= '0';
-                    end if;
-
-                    if (ssm_cnt = 2) then
-                        rdy1 <= '1'; -- rdy happens upon a new buffer
-                    else
-                        rdy1 <= '0';
                     end if;
 
                     if (ssm_cnt < d_width*2-1) then
@@ -196,8 +191,10 @@ begin
                     end if;
                     if (tdm_cnt > 0) then
                         tdm_cnt := tdm_cnt - 1;
+                        rdy1 <= '0';
                     else
                         tdm_cnt := 127;
+                        rdy1 <= '1';
                     end if;
                 end if;
             end if;

@@ -58,6 +58,8 @@ else ifeq ($(XILINX_VERSION), 2023.2)
     KERNEL_VERSION := 6.1.0-xilinx
 else ifeq ($(XILINX_VERSION), 2024.1)
     KERNEL_VERSION := 6.6.0-xilinx
+else ifeq ($(XILINX_VERSION), 2024.2)
+    KERNEL_VERSION := 6.6.0-xilinx
 endif
 
 KERNEL_XTAG     := xilinx-v$(XILINX_VERSION)
@@ -82,7 +84,7 @@ $(KERNEL_SRC_DIR):
 
 kernel: $(KERNEL_UIMAGE_DST)
 
-$(KERNEL_UIMAGE_DST): $(KERNEL_SRC_DIR)
+$(KERNEL_UIMAGE_DST): $(KERNEL_SRC_DIR) $(KERNEL_CONFIG_SRC)
 	$(call shell_info, Compiling Linux Kernel $(KERNEL_VERSION))
 	@cp -r $(KERNEL_CONFIG_SRC) $(KERNEL_CONFIG_DST)
 	@cd $(KERNEL_SRC_DIR)		     \

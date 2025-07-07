@@ -157,7 +157,7 @@ static inline void write(Faust::data& faust, XSyfala& dsp) {
     // don't exist if the matching macros are equal to 0.
     #if (FAUST_REAL_CONTROLS == 1)
         u32 v = *reinterpret_cast<u32*>(faust.control.f);
-        IP::write_control_f(&ip, v);
+        DSP::write_control_f(&dsp, v);
     #elif (FAUST_REAL_CONTROLS > 1)
         DSP::write_control_f(
             &dsp, 0, reinterpret_cast<u32*>(faust.control.f),

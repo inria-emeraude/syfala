@@ -1,7 +1,5 @@
 #include <syfala/utilities.hpp>
 #include "csim_template_utilities.hpp"
-#include "plateModalData.h"
-
 #include <iostream>
 #include <algorithm>
 #include <cmath>
@@ -9,16 +7,21 @@
 #include <string.h>
 #include <cassert>
 #include <vector>
+// #include "AudioFile/AudioFile.h"
+// #include "plateModalData.h"
+// #include "plateModalData_small.h"
+#include "plateModalData_mid.h"
+#include "syfala/config_common.hpp"
 
-#define modesNumber 30000
+#define modesNumber 12952
 
 void syfala (
     sy_ap_int audio_out[2][SYFALA_BLOCK_NSAMPLES],
           int arm_ok,
         bool* i2s_rst,
- const float* coeffs,
        float* mem_zone_f,
          int* mem_zone_i,
+       float* out_samples,
          bool bypass,
          bool mute,
          bool debug
@@ -67,10 +70,15 @@ static bool i2s_rst = false;
 
 int main(int argc, char* argv[])
 {
-    printf("[syfala-csim] csim start\n");
     float* mem = new float[modesNumber * 4];
+    static float out_samples[SYFALA_SAMPLE_RATE];
+    static int mem_zone_i[10];
+    // AudioFile<float> out;
     bool rst = true;
     initialize_coeffs(mem);
+    // out.setNumChannels(2);
+    // out.setSampleRate(48000);
+    // out.setNumSamplesPerChannel(48000);
 
     static sy_ap_int
     audio_out[2][SYFALA_BLOCK_NSAMPLES];
@@ -87,16 +95,16 @@ int main(int argc, char* argv[])
     std::vector<std::ofstream> fstreams_o;
     fstreams_o = Syfala::CSIM::get_fstreams<std::ofstream>(argv[1], "out", 2);
     // -------------------------------------------------------------------
-    printf("[syfala-csim] csim start\n");
+    fprintf(stderr, "[syfala-csim] csim start\n");
     // -------------------------------------------------------------------
     for (int i = 0; i < SYFALA_CSIM_NUM_ITER; i++) {
-        printf("[syfala-csim] csim iteration: %d\n", i+1);
+         fprintf(stderr, "[syfala-csim] csim iteration: %d\n", i+1);
         // Don't fetch inputs for the first iteration:
         // The DSP IP will initialize itself and won't process the samples.
         // -------------------------------------------------------------------
         // Syfala function call
         // -------------------------------------------------------------------
-        syfala(audio_out, true, &rst, mem, 0, 0,
+        syfala(audio_out, true, &rst, mem, nullptr, out_samples,
                false, false, false
         );
         // -------------------------------------------------------------------
@@ -104,11 +112,15 @@ int main(int argc, char* argv[])
         // -------------------------------------------------------------------
         for (int c = 0; c < 2; ++c) {
             for (int n = 0; n < SYFALA_BLOCK_NSAMPLES; ++n) {
-                f_outputs[c][n] = Syfala::HLS::ioreadf(audio_out[c][n]);
-                // printf("[syfala-csim] Sample %d of audio_out_%d: %f\n",
-                //        n, c, f_outputs[c][n]);
+                int w = i*SYFALA_BLOCK_NSAMPLES+n;
+                float f = Syfala::HLS::ioreadf(audio_out[c][n]);
+                f_outputs[c][n] = f;
+                // out.samples[c][w] = f;
+                // hls::print("[syfala-csim] Sample %d of audio_out_%d:" %f\n",
+                //        w, c, f_outputs[c][n]);
             }
         }
+
         if (fstreams_o.size() > 0) {
             for (int c = 0; c < 2; ++c) {
                 for (int n = 0; n < SYFALA_BLOCK_NSAMPLES; ++n) {
@@ -124,6 +136,7 @@ int main(int argc, char* argv[])
     for (auto& fstream : fstreams_o) {
          fstream.close();
     }
+    // out.save("res.wav", AudioFileFormat::Wave);
     delete[] mem;
     return 0;
 }
