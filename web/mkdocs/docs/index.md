@@ -50,6 +50,15 @@ This tutorial will show you how to program a syfala DSP *kernel* using C++. It i
 
 ## Quick getting-started
 
+### Quick One-Minute Test
+
+To quickly verify that your Syfala toolchain is installed and working, you can run the following command:
+
+```shell
+syfala examples/faust/virtualAnalog.dsp --hls
+```
+This command provides an estimate of FPGA resource usage and latency for the implementation of the built-in virtualAnalog.dsp example. It's perfect if you don't have an FPGA yet but just want to see the toolchain in action with a working example.
+
 ### Software
 
 #### Faust targets
