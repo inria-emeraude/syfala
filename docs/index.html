@@ -164,6 +164,7 @@
                 <li class="third-level"><a href="#using-syfala-with-c-advanced">Using syfala with C++ (advanced)</a></li>
             <li class="second-level"><a href="#quick-getting-started">Quick getting-started</a></li>
                 
+                <li class="third-level"><a href="#quick-one-minute-test">Quick One-Minute Test</a></li>
                 <li class="third-level"><a href="#software">Software</a></li>
                 <li class="third-level"><a href="#exporting-and-re-importing-your-builds">Exporting and re-importing your builds</a></li>
                 <li class="third-level"><a href="#building-another-dsp-target">Building another DSP target</a></li>
@@ -210,6 +211,11 @@
 <p><a href="tutorials/cpp-tutorial-advanced/">tutorials/cpp-tutorial-advanced.md</a></p>
 <p>This tutorial will show you how to program a syfala DSP <em>kernel</em> using C++. It is intended for advanced users.</p>
 <h2 id="quick-getting-started">Quick getting-started</h2>
+<h3 id="quick-one-minute-test">Quick One-Minute Test</h3>
+<p>To quickly verify that your Syfala toolchain is installed and working, you can run the following command:</p>
+<pre><code class="language-shell">syfala examples/faust/virtualAnalog.dsp --hls
+</code></pre>
+<p>This command provides an estimate of FPGA resource usage and latency for the implementation of the built-in virtualAnalog.dsp example. It's perfect if you don't have an FPGA yet but just want to see the toolchain in action with a working example.</p>
 <h3 id="software">Software</h3>
 <h4 id="faust-targets">Faust targets</h4>
 <p>Building a simple example for the <strong>default board</strong> (Digilent Zybo <strong>Z7-10)</strong>:</p>
@@ -394,6 +400,6 @@ syfala flash
 </html>
 
 <!--
-MkDocs version : 1.5.3
-Build Date UTC : 2024-10-25 08:05:25.010895+00:00
+MkDocs version : 1.6.1
+Build Date UTC : 2025-07-30 09:51:45.975048+00:00
 -->
