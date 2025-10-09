@@ -49,5 +49,5 @@ ALPINE_PACKAGES += linux-tools-iio
 ALPINE_PACKAGES += htop
 ALPINE_PACKAGES += screen
 
-ALPINE_PACKAGES_EDGE_MAIN += cargo llvm16
+ALPINE_PACKAGES_EDGE_MAIN += cargo llvm16 llvm20
 ALPINE_PACKAGES_EDGE_TESTING += faust-dev libiio-dev
