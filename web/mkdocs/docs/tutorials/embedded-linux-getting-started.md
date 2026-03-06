@@ -23,13 +23,16 @@ gcc-arm-none-eabi gnutls-dev bison flex libssl-dev bc u-boot-tools cpio libyaml-
 syfala examples/virtualAnalog.dsp --linux
 ```
 
-The `--linux` option is used for **compiling the host-side** (**ARM**) **application** with the **linux-specific source files** (otherwise, it would be compiling the standard baremetal one).
+The `--linux` option is used for **compiling the host-side** (**ARM**) **application** with the **linux-specific source files** (otherwise, it would be compiling the standard baremetal one). This application can be controlled with `http`, `osc` or `midi` (see further).
 
-After **synthesis**, the script will detect that you don't currently have a linux build, which is required for building the application, and will download and build everything for you, you'll just have to flash it to your formatted SD card afterwards
+
+After **synthesis**, the script will detect that you don't currently have a linux build, which is required for building the application, and will download and build everything for you to build the Linux distribution.
+
+During the execution of the compilation, `syfala` will build the Linux root file system. For that, some commands will be executed as **sudo** and will ask you for your password. After compilation, all Linux files will be provided in the `build-linux` directory, you'll just have to flash it to your formatted SD card as exeplained hereafter.
 
 ### Outputs
 
-The build outputs are located in the`build-linux/output` directory, with two distinct `boot` and `root` subdirectories, which then will have to be be flashed on the first and second partitions of your SD card. 
+The build outputs are located in the`build-linux/` directory, with two distinct `boot` and `root` subdirectories, which then will have to be be flashed on the first and second partitions of your SD card. 
 
 ## Usage
 
@@ -60,12 +63,12 @@ sudo parted /dev/... --script print
 # In case your SD device is /dev/sda
 # 1. Copying boot partition files
 sudo mount /dev/sda1 /mnt
-sudo cp -r build-linux/output/boot/* /mnt
+sudo cp -r build-linux/boot/output/* /mnt
 sync
 sudo umount /mnt
 # 2. Copying root partition contents
 sudo mount /dev/sda2 /mnt
-sudo cp -r ~/Repositories/syfala/dev/main/build-linux/root/alpine-3.19.1/alpine-root/* .
+sudo cp -r build-linux/root/alpine-3.19.1/alpine-root/* .
 # This might take a while...
 sync 
 sudo umount /mnt
@@ -90,30 +93,37 @@ Kernel 6.6.0-xilinx on an armv7l (/dev/ttyPS0)
 
 syfala login: 
 ```
-- for  **SSH** connection, make sure that you are connected on the same network as your device's, get its IP address by serial connection as explained above and log as root:
+- for  **SSH** connection, make sure that you are connected on the same network as your device's. There are two situations:
+
+       - If the Ethernet cable is direclty connected to your machine, the default  get its IP address is `192.168.0.2/24`, you will have to set up an IP for your machine on the same network.
+       - If the Ethernet cable is plug on a LAN, the `dhcp` client will be launch and you can get the IP address of the Zybo by using `avahi` (explained later)
+       
+then you can log as root once the IP address is known:
 ```shell
-ssh root@192.168.0.1 . 
+ssh root@192.168.0.2
 ```
+
+
 ### Login/users
 
 The rootfs has the same structure as any Linux build. All DSP builds are located in the`/root/` directory
 
-- The password required to **login as root** is *syfala*
+  - The password for   ** root login** is **syfala**
 
 ### Faust DSP builds
 
-All the **DSP builds** made with the **syfala toolchain** are placed in the */root* directory by default. For instance, if you make a build from the **virtualAnalog.dsp** file , the *bitstream*/*application* outputs will be located in: 
+All the **DSP builds** made with the **syfala toolchain** are placed in a directiory (which has the name of the source program) in the */root* directory by default. For instance, if you make a build from the **virtualAnalog.dsp** file , the *bitstream*/*application* outputs will be located in: 
 
 - */root/virtualAnalog/bitstream.bin*
 - */root/virtualAnalog/application.elf*
 
-You can then use the 
+You can then use the  `syfala-load` utility command
 
 ```shell
 syfala-load <target> [--list | --help]
 ```
 
-utility command (e.g. `syfala-load virtualAnalog`), which will take care of **loading the bitstream** and **executing the app** properly.
+For instance,  `syfala-load virtualAnalog`, will take care of **loading the bitstream** on the FPGA and **execute the app**  on the ARM of the Zybo.
 
 You can also do all of that manually of course: first, **load the bitstream** by entering the following command line:
 
