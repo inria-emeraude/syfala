@@ -190,10 +190,11 @@
 <p><strong>First</strong>, a regular <strong>syfala project</strong> has to be built with the following options: </p>
 <pre><code class="language-shell">syfala examples/virtualAnalog.dsp --linux
 </code></pre>
-<p>The <code>--linux</code> option is used for <strong>compiling the host-side</strong> (<strong>ARM</strong>) <strong>application</strong> with the <strong>linux-specific source files</strong> (otherwise, it would be compiling the standard baremetal one).</p>
-<p>After <strong>synthesis</strong>, the script will detect that you don't currently have a linux build, which is required for building the application, and will download and build everything for you, you'll just have to flash it to your formatted SD card afterwards</p>
+<p>The <code>--linux</code> option is used for <strong>compiling the host-side</strong> (<strong>ARM</strong>) <strong>application</strong> with the <strong>linux-specific source files</strong> (otherwise, it would be compiling the standard baremetal one). This application can be controlled with <code>http</code>, <code>osc</code> or <code>midi</code> (see further).</p>
+<p>After <strong>synthesis</strong>, the script will detect that you don't currently have a linux build, which is required for building the application, and will download and build everything for you to build the Linux distribution.</p>
+<p>During the execution of the compilation, <code>syfala</code> will build the Linux root file system. For that, some commands will be executed as <strong>sudo</strong> and will ask you for your password. After compilation, all Linux files will be provided in the <code>build-linux</code> directory, you'll just have to flash it to your formatted SD card as exeplained hereafter.</p>
 <h3 id="outputs">Outputs</h3>
-<p>The build outputs are located in the<code>build-linux/output</code> directory, with two distinct <code>boot</code> and <code>root</code> subdirectories, which then will have to be be flashed on the first and second partitions of your SD card. </p>
+<p>The build outputs are located in the<code>build-linux/</code> directory, with two distinct <code>boot</code> and <code>root</code> subdirectories, which then will have to be be flashed on the first and second partitions of your SD card. </p>
 <h2 id="usage">Usage</h2>
 <h3 id="formatting-the-sd-card">Formatting the SD card</h3>
 <p>The <strong>SD card</strong> has to be formatted like so:</p>
@@ -216,12 +217,12 @@ sudo parted /dev/... --script print
 <pre><code class="language-shell"># In case your SD device is /dev/sda
 # 1. Copying boot partition files
 sudo mount /dev/sda1 /mnt
-sudo cp -r build-linux/output/boot/* /mnt
+sudo cp -r build-linux/boot/output/* /mnt
 sync
 sudo umount /mnt
 # 2. Copying root partition contents
 sudo mount /dev/sda2 /mnt
-sudo cp -r ~/Repositories/syfala/dev/main/build-linux/root/alpine-3.19.1/alpine-root/* .
+sudo cp -r build-linux/root/alpine-3.19.1/alpine-root/* .
 # This might take a while...
 sync 
 sudo umount /mnt
@@ -242,25 +243,32 @@ Kernel 6.6.0-xilinx on an armv7l (/dev/ttyPS0)
 syfala login: 
 </code></pre>
 <ul>
-<li>for  <strong>SSH</strong> connection, make sure that you are connected on the same network as your device's, get its IP address by serial connection as explained above and log as root:</li>
+<li>
+<p>for  <strong>SSH</strong> connection, make sure that you are connected on the same network as your device's. There are two situations:</p>
+<ul>
+<li>If the Ethernet cable is direclty connected to your machine, the default  get its IP address is <code>192.168.0.2/24</code>, you will have to set up an IP for your machine on the same network.</li>
+<li>If the Ethernet cable is plug on a LAN, the <code>dhcp</code> client will be launch and you can get the IP address of the Zybo by using <code>avahi</code> (explained later)</li>
 </ul>
-<pre><code class="language-shell">ssh root@192.168.0.1 . 
+</li>
+</ul>
+<p>then you can log as root once the IP address is known:</p>
+<pre><code class="language-shell">ssh root@192.168.0.2
 </code></pre>
 <h3 id="loginusers">Login/users</h3>
 <p>The rootfs has the same structure as any Linux build. All DSP builds are located in the<code>/root/</code> directory</p>
 <ul>
-<li>The password required to <strong>login as root</strong> is <em>syfala</em></li>
+<li>The password for   <strong> root login</strong> is <strong>syfala</strong></li>
 </ul>
 <h3 id="faust-dsp-builds">Faust DSP builds</h3>
-<p>All the <strong>DSP builds</strong> made with the <strong>syfala toolchain</strong> are placed in the <em>/root</em> directory by default. For instance, if you make a build from the <strong>virtualAnalog.dsp</strong> file , the <em>bitstream</em>/<em>application</em> outputs will be located in: </p>
+<p>All the <strong>DSP builds</strong> made with the <strong>syfala toolchain</strong> are placed in a directiory (which has the name of the source program) in the <em>/root</em> directory by default. For instance, if you make a build from the <strong>virtualAnalog.dsp</strong> file , the <em>bitstream</em>/<em>application</em> outputs will be located in: </p>
 <ul>
 <li><em>/root/virtualAnalog/bitstream.bin</em></li>
 <li><em>/root/virtualAnalog/application.elf</em></li>
 </ul>
-<p>You can then use the </p>
+<p>You can then use the  <code>syfala-load</code> utility command</p>
 <pre><code class="language-shell">syfala-load &lt;target&gt; [--list | --help]
 </code></pre>
-<p>utility command (e.g. <code>syfala-load virtualAnalog</code>), which will take care of <strong>loading the bitstream</strong> and <strong>executing the app</strong> properly.</p>
+<p>For instance,  <code>syfala-load virtualAnalog</code>, will take care of <strong>loading the bitstream</strong> on the FPGA and <strong>execute the app</strong>  on the ARM of the Zybo.</p>
 <p>You can also do all of that manually of course: first, <strong>load the bitstream</strong> by entering the following command line:</p>
 <pre><code class="language-shell">fpgautil -b /root/virtualAnalog/bitstream.bin
 </code></pre>
