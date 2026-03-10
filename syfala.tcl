@@ -1,4 +1,4 @@
-#!/usr/bin/tclsh
+#!/usr/bin/tclsh 
 
 # -------------------------------------------------------------------------------------------------
 # configuration
@@ -98,7 +98,7 @@ if [file exists "$::runtime::root/makefile.env"] {
             set p [string trimright [lindex $s 0]]
             set v [string trimleft [lindex $s 2]]
             lappend ::runtime::mkenv_parameters [list $p $v]
-            # print_info "Retrieved parameter $p with value $v"
+            #print_info "Retrieved parameter $p with value $v"
         }
     }
 } else {
@@ -365,7 +365,7 @@ for {set index 0} {$index < [llength $::argv]} {incr index} {
                     add_target "report-hls"
                 }
                 default {
-                    add_target "report"
+                    add_target "reports"
                 }
             }
         }
