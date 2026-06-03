@@ -1,4 +1,4 @@
-![TheLine banner](images/banner.jpg)
+![TheLine banner](../images/thelinebanner.jpg)
 
 # The LINE
 
